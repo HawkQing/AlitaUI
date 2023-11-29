@@ -68,7 +68,7 @@ const PromptList = () => {
   const renderCard = React.useCallback(
     (cardData) => {
       return (
-        <PromptCard data={cardData} />
+        <PromptCard data={cardData} viewMode='public'/>
       );
     },
     [],

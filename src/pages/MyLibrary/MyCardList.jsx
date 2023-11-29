@@ -13,7 +13,7 @@ import Categories from '../../components/Categories';
 const LOAD_PROMPT_LIMIT = 20;
 
 // eslint-disable-next-line no-unused-vars
-const MyCardList = ({ type, mode }) => {
+const MyCardList = ({ type, viewMode }) => {
   const location = useLocation();
   const [selectedTags, setSelectedTags] = React.useState([]);
   const [offset, setOffset] = React.useState(0);
@@ -35,11 +35,11 @@ const MyCardList = ({ type, mode }) => {
   const { filteredList, tagList } = useSelector((state) => state.prompts);
 
   React.useEffect(() => {
-    if (mode !== 'owner' || privateProjectId) {
+    if (viewMode !== 'owner' || privateProjectId) {
       const tags = getTagsFromUrl();
       setSelectedTags(tags);
       loadPrompts({
-        projectId: mode !== 'owner' ? SOURCE_PROJECT_ID : privateProjectId,
+        projectId: viewMode !== 'owner' ? SOURCE_PROJECT_ID : privateProjectId,
         params: {
           limit: LOAD_PROMPT_LIMIT,
           offset: 0,
@@ -51,13 +51,13 @@ const MyCardList = ({ type, mode }) => {
       });
       setOffset(0);
     }
-  }, [getTagsFromUrl, loadPrompts, mode, privateProjectId, tagList]);
+  }, [getTagsFromUrl, loadPrompts, viewMode, privateProjectId, tagList]);
 
   const loadMorePrompts = React.useCallback(() => {
     const newOffset = offset + LOAD_PROMPT_LIMIT;
     setOffset(newOffset);
     loadMore({
-      projectId: mode !== 'owner' ? SOURCE_PROJECT_ID : privateProjectId,
+      projectId: viewMode !== 'owner' ? SOURCE_PROJECT_ID : privateProjectId,
       params: {
         limit: LOAD_PROMPT_LIMIT,
         offset: newOffset,
@@ -67,15 +67,15 @@ const MyCardList = ({ type, mode }) => {
           .join(','),
       }
     })
-  }, [offset, loadMore, mode, privateProjectId, tagList, selectedTags]);
+  }, [offset, loadMore, viewMode, privateProjectId, tagList, selectedTags]);
 
   const renderCard = React.useCallback(
     (cardData) => {
       return (
-        <PromptCard data={cardData} />
+        <PromptCard data={cardData} viewMode={viewMode} />
       );
     },
-    [],
+    [viewMode],
   )
 
   const onScroll = React.useCallback(() => {
@@ -98,7 +98,7 @@ const MyCardList = ({ type, mode }) => {
         rightPanelContent={
           <>
             <Categories tagList={tagList} selectedTags={selectedTags} />
-            {mode === 'owner' && <LastVisitors />}
+            {viewMode === 'owner' && <LastVisitors />}
           </>
         }
         renderCard={renderCard}

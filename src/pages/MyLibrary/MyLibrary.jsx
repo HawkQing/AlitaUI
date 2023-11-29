@@ -103,19 +103,19 @@ export default function MyLibrary() {
 
   const tabs = useMemo(() => [{
     label: 'All',
-    content: <MyCardList type='all' mode={viewMode} />
+    content: <MyCardList type='all' viewMode={viewMode} />
   },
   {
     label: 'Prompts',
-    content: <MyCardList type='prompts' mode={viewMode}/>
+    content: <MyCardList type='prompts' viewMode={viewMode}/>
   },
   {
     label: 'Datasources',
-    content: <MyCardList type='datasources' mode={viewMode}/>
+    content: <MyCardList type='datasources' viewMode={viewMode}/>
   },
   {
     label: 'Collections',
-    content: <MyCardList type='collections' mode={viewMode} />
+    content: <MyCardList type='collections' viewMode={viewMode} />
   }], [viewMode]);
 
   const onChangeSortBy = useCallback(
