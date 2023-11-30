@@ -1,4 +1,4 @@
-import { PROMPT_PAYLOAD_KEY, SOURCE_PROJECT_ID } from '@/common/constants.js';
+import { PROMPT_PAYLOAD_KEY, SOURCE_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import { contextResolver, listMapper } from '@/common/utils';
 import { actions as promptSliceActions } from '@/reducers/prompts';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,7 +9,7 @@ export const useProjectIdForEditPrompt = () => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const { state: { from, viewMode } } = useLocation();
   const projectId = useMemo(() => {
-    return from === '/my-library' && viewMode === 'owner' ?
+    return from === '/my-library' && viewMode === ViewMode.Owner ?
       privateProjectId : SOURCE_PROJECT_ID;
   }, [from, privateProjectId, viewMode]);
 

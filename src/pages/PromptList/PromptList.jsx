@@ -1,5 +1,5 @@
 import { useLazyLoadMorePromptsQuery, useLazyPromptListQuery } from '@/api/prompts.js';
-import { SOURCE_PROJECT_ID, URL_PARAMS_KEY_TAGS } from '@/common/constants';
+import { SOURCE_PROJECT_ID, URL_PARAMS_KEY_TAGS, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import Toast from '@/components/Toast.jsx';
 import * as React from 'react';
@@ -68,7 +68,7 @@ const PromptList = () => {
   const renderCard = React.useCallback(
     (cardData) => {
       return (
-        <PromptCard data={cardData} viewMode='public'/>
+        <PromptCard data={cardData} viewMode={ViewMode.Public}/>
       );
     },
     [],

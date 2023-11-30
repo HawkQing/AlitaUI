@@ -1,5 +1,5 @@
 import { useLazyLoadMorePromptsQuery, useLazyPromptListQuery } from '@/api/prompts.js';
-import { SOURCE_PROJECT_ID, URL_PARAMS_KEY_TAGS } from '@/common/constants';
+import { SOURCE_PROJECT_ID, URL_PARAMS_KEY_TAGS, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import Toast from '@/components/Toast.jsx';
 import * as React from 'react';
@@ -35,11 +35,11 @@ const MyCardList = ({ type, viewMode }) => {
   const { filteredList, tagList } = useSelector((state) => state.prompts);
 
   React.useEffect(() => {
-    if (viewMode !== 'owner' || privateProjectId) {
+    if (viewMode !== ViewMode.Owner || privateProjectId) {
       const tags = getTagsFromUrl();
       setSelectedTags(tags);
       loadPrompts({
-        projectId: viewMode !== 'owner' ? SOURCE_PROJECT_ID : privateProjectId,
+        projectId: viewMode !== ViewMode.Owner ? SOURCE_PROJECT_ID : privateProjectId,
         params: {
           limit: LOAD_PROMPT_LIMIT,
           offset: 0,
@@ -57,7 +57,7 @@ const MyCardList = ({ type, viewMode }) => {
     const newOffset = offset + LOAD_PROMPT_LIMIT;
     setOffset(newOffset);
     loadMore({
-      projectId: viewMode !== 'owner' ? SOURCE_PROJECT_ID : privateProjectId,
+      projectId: viewMode !== ViewMode.Owner ? SOURCE_PROJECT_ID : privateProjectId,
       params: {
         limit: LOAD_PROMPT_LIMIT,
         offset: newOffset,
@@ -98,7 +98,7 @@ const MyCardList = ({ type, viewMode }) => {
         rightPanelContent={
           <>
             <Categories tagList={tagList} selectedTags={selectedTags} />
-            {viewMode === 'owner' && <LastVisitors />}
+            {viewMode === ViewMode.Owner && <LastVisitors />}
           </>
         }
         renderCard={renderCard}

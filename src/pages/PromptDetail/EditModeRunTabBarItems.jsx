@@ -1,4 +1,4 @@
-import { LATEST_VERSION_NAME, SOURCE_PROJECT_ID } from '@/common/constants.js';
+import { LATEST_VERSION_NAME, SOURCE_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import AlertDialog from '@/components/AlertDialog';
 import Button from '@/components/Button';
 import { StyledCircleProgress } from '@/components/ChatBox/StyledComponents';
@@ -26,7 +26,7 @@ export default function EditModeRunTabBarItems() {
   const { state: locationState } = useLocation();
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const projectId = React.useMemo(() => {
-    return locationState?.from === '/my-library' && locationState?.viewMode === 'owner' ?
+    return locationState?.from === '/my-library' && locationState?.viewMode === ViewMode.Owner ?
       privateProjectId : SOURCE_PROJECT_ID;
   }, [locationState?.from, locationState?.viewMode, privateProjectId]);
 
