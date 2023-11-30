@@ -3,7 +3,7 @@ import {
   SOURCE_PROJECT_ID
 } from '@/common/constants.js';
 import SingleSelect from '@/components/SingleSelect';
-import { useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTheme } from '@emotion/react';
 import {
@@ -37,7 +37,7 @@ const getVersionStatusIcon = (status, theme) => {
   return <CircleIcon fill={color} />;
 }
 
-export default function VersionSelect({ currentVersionName = '', versions = [] }) {
+const VersionSelect = memo(function VersionSelect ({ currentVersionName = '', versions = [] }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const { pathname, state } = useLocation();
@@ -91,4 +91,6 @@ export default function VersionSelect({ currentVersionName = '', versions = [] }
       </>
       : null
   );
-}
+});
+
+export default VersionSelect;
