@@ -16,6 +16,7 @@ import { useSaveNewVersionMutation, useUpdateLatestVersionMutation } from '@/api
 import { stateDataToVersion } from '@/common/promptApiUtils.js';
 import Toast from '@/components/Toast';
 import { buildErrorMessage } from '@/common/utils';
+import RouteDefinitions from '@/routes';
 
 export default function EditModeRunTabBarItems() {
   const dispatch = useDispatch();
@@ -26,7 +27,7 @@ export default function EditModeRunTabBarItems() {
   const { state: locationState } = useLocation();
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const projectId = React.useMemo(() => {
-    return locationState?.from === '/my-library' && locationState?.viewMode === ViewMode.Owner ?
+    return locationState?.from === RouteDefinitions.MyLibrary && locationState?.viewMode === ViewMode.Owner ?
       privateProjectId : SOURCE_PROJECT_ID;
   }, [locationState?.from, locationState?.viewMode, privateProjectId]);
 

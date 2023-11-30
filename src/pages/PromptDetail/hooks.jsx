@@ -4,12 +4,13 @@ import { actions as promptSliceActions } from '@/reducers/prompts';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
+import RouteDefinitions from '@/routes';
 
 export const useProjectIdForEditPrompt = () => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const { state: { from, viewMode } } = useLocation();
   const projectId = useMemo(() => {
-    return from === '/my-library' && viewMode === ViewMode.Owner ?
+    return from === RouteDefinitions.MyLibrary && viewMode === ViewMode.Owner ?
       privateProjectId : SOURCE_PROJECT_ID;
   }, [from, privateProjectId, viewMode]);
 
@@ -20,7 +21,7 @@ export const useProjectIdForCreatePrompt = () => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const { state: locationState } = useLocation();
   const { from } = locationState;
-  const projectId = useMemo(() => from === '/my-library' ? privateProjectId : SOURCE_PROJECT_ID, [from, privateProjectId]);
+  const projectId = useMemo(() => from === RouteDefinitions.MyLibrary ? privateProjectId : SOURCE_PROJECT_ID, [from, privateProjectId]);
   return projectId;
 }
 

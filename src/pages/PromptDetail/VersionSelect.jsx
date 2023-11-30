@@ -12,6 +12,7 @@ import {
   VersionSelectContainer,
 } from './Common';
 import CircleIcon from '@/components/Icons/CircleIcon';
+import RouteDefinitions from '@/routes';
 
 const getVersionStatusIcon = (status, theme) => {
   let color = '';
@@ -75,7 +76,7 @@ const VersionSelect = memo(function VersionSelect ({ currentVersionName = '', ve
 
 
   return (
-    pathname !== '/prompt/create' ?
+    pathname !== RouteDefinitions.CreatePrompt ?
       <>
         <VersionContainer>
           <SelectLabel variant="body2">Version</SelectLabel>
