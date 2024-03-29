@@ -174,7 +174,7 @@ const AIAnswer = React.forwardRef((props, ref) => {
           duration='2s'
         />}
         <div ref={ref} />
-        {references?.length > 0 && <BasicAccordion style={{ marginTop: '15px' }} items={[
+        {references?.length > 0 && <BasicAccordion style={{ marginTop:  answer ? '15px' : '37px' }} items={[
           { title: 'References', content: <ReferenceList references={references} /> }
         ]} />}
       </Answer>
