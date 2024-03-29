@@ -73,11 +73,9 @@ const CustomInput = ({ containerSX = {}, value, onValueChange, error, helperText
 
   const onChangeSchema = useCallback(
     (event) => {
-      const parsedData = parseContent(event.target.value);
-      const schemaString = parsedData ? JSON.stringify(parsedData, null, 2) : event.target.value
-      onValueChange(schemaString)
+      onValueChange(event.target.value)
     },
-    [onValueChange, parseContent],
+    [onValueChange],
   )
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', ...containerSX }}>
