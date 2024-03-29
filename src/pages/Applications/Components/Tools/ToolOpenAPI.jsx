@@ -5,6 +5,9 @@ import ToolFormBackButton from "./ToolFormBackButton";
 import { ToolTypes } from "./consts";
 import OpenAPISchemaInput from './OpenAPISchemaInput';
 import OpenAPIActions from './OpenAPIActions';
+import { AuthenticationTypes, AuthTypes } from '@/common/constants';
+
+const helperText = (field) => `${field} field is required`;
 
 export default function ToolOpenAPI({
   editToolDetail = {},
@@ -14,19 +17,42 @@ export default function ToolOpenAPI({
   const {
     name = '',
     schema = '',
-    authentication = {},
+    authentication,
     actions = [],
   } = editToolDetail;
+  const { authentication_type, oauth_settings, api_key_settings } = authentication;
 
   const [isDirty, setIsDirty] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
 
   const error = useMemo(() => {
-    const helperText = 'Field is required';
-    return {
-      name: !name?.trim() ? helperText : undefined,
+    const result = {
+      name: !name?.trim() ? helperText(name) : undefined,
+    };
+    if (authentication_type === AuthenticationTypes.APIKey.value) {
+      result['api_key'] = !api_key_settings.api_key ? helperText('API key') : undefined
+      if (api_key_settings.auth_type === AuthTypes.Custom.value) {
+        result['custom_header'] = !api_key_settings.custom_header ? helperText('Custom header') : undefined
+      }
     }
-  }, [name])
+    if (authentication_type === AuthenticationTypes.OAuth.value) {
+      result['client_id'] = !oauth_settings.client_id ? helperText('client_id') : undefined
+      result['client_secret'] = !oauth_settings.client_secret ? helperText('client_secret') : undefined
+      result['authorization_url'] = !oauth_settings.authorization_url ? helperText('authorization_url') : undefined
+      result['token_url'] = !oauth_settings.token_url ? helperText('token_url') : undefined
+      result['scope'] = !oauth_settings.scope ? helperText('scope') : undefined
+    }
+    return result
+  }, [
+    api_key_settings.api_key,
+    api_key_settings.auth_type,
+    api_key_settings.custom_header,
+    oauth_settings.client_id,
+    oauth_settings.client_secret,
+    oauth_settings.authorization_url,
+    oauth_settings.token_url,
+    oauth_settings.scope,
+    authentication_type, name])
 
   const handleChange = useCallback((field) => (value) => {
     setEditToolDetail({
@@ -58,7 +84,7 @@ export default function ToolOpenAPI({
       <ToolFormBackButton
         isDirty={isDirty}
         validate={validate}
-        toolType={ToolTypes.open_api.label.toLowerCase()}
+        toolType={ToolTypes.open_api.label}
         handleGoBack={handleGoBack}
       />
       <FormInput
@@ -82,6 +108,15 @@ export default function ToolOpenAPI({
       <AuthenticationSelect
         onValueChange={handleChange('authentication')}
         value={authentication}
+        error={
+          isValidating && (
+            error.api_key ||
+            error.custom_header ||
+            error.client_id ||
+            error.client_secret ||
+            error.authorization_url ||
+            error.token_url ||
+            error.scope)}
       />
     </>
   )

@@ -29,6 +29,7 @@ export default function OAuthFrom({
   onValueChange = () => { },
   value,
   sx = {},
+  error,
 }) {
   const refOnValueChange = useRef(onValueChange);
   const formik = useFormik({
@@ -36,6 +37,31 @@ export default function OAuthFrom({
     validationSchema,
     onSubmit: () => { },
   });
+  const formikRef = useRef(formik);
+  useEffect(() => {
+    formikRef.current = formik
+  }, [formik])
+
+  useEffect(() => {
+    if (error) {
+      if (!formikRef.current.values.client_id ) {
+        formikRef.current.setFieldTouched('client_id', true, true);
+      }
+      if (!formikRef.current.values.client_secret ) {
+        formikRef.current.setFieldTouched('client_secret', true, true);
+      }
+      if (!formikRef.current.values.authorization_url ) {
+        formikRef.current.setFieldTouched('authorization_url', true, true);
+      }
+      if (!formikRef.current.values.token_url ) {
+        formikRef.current.setFieldTouched('token_url', true, true);
+      }
+      if (!formikRef.current.values.scope ) {
+        formikRef.current.setFieldTouched('scope', true, true);
+      }
+    }
+  }, [error])
+
   const tokenExchangeMethodOptions = useMemo(() => Object.values(OAuthTokenExchangeMethods), []);
 
   useEffect(() => {

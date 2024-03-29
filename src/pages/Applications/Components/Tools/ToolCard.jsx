@@ -40,6 +40,7 @@ const ActionRow = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'row',
   padding: '0 36px 0 28px',
+  boxSizing: 'border-box',
 }));
 
 const ToolIconContainer = styled(Box)(({ theme }) => ({
@@ -131,12 +132,12 @@ export default function ToolCard({
           {
             tool.actions.map(action => {
               return <ActionRow key={action.name}>
-                <Box sx={{ width: '23px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Box sx={{ width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Typography variant='bodyMedium'>
                     -
                   </Typography>
                 </Box>
-                <Box sx={{ marginLeft: '10px', height: '46px' }}>
+                <Box sx={{ width: 'calc(100% - 34px)', marginLeft: '10px', height: '46px'}}>
                   <Typography
                     color='text.secondary'
                     sx={{ height: '24px' }}
@@ -144,7 +145,18 @@ export default function ToolCard({
                     component='div'>
                     {action.name}
                   </Typography>
-                  <Typography sx={{ height: '22px' }} variant='bodySmall' component='div'>
+                  <Typography
+                    sx={{
+                      height: '22px',
+                      width: '100%',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+
+                    }}
+                    variant='bodySmall'
+                    component='div'
+                  >
                     {action.description}
                   </Typography>
                 </Box>

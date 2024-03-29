@@ -1,36 +1,19 @@
 import { useMemo, useCallback, useRef, useEffect } from "react";
 import SingleSelect from '@/components/SingleSelect';
 import { Box, Typography } from '@mui/material';
-import { APIKeyTypes, AuthenticationTypes, AuthTypes, OAuthTokenExchangeMethods } from '@/common/constants';
+import { AuthenticationTypes } from '@/common/constants';
 import OAuthFrom from './OAuthFrom';
 import APIKeyFrom from './APIKeyFrom';
-
-const initialOAuthSetting = {
-  client_id: '',
-  client_secret: '',
-  authorization_url: '',
-  token_url: '',
-  scope: '',
-  token_exchange_method: OAuthTokenExchangeMethods.Default.value,
-}
-
-const initialAPIKeySetting = {
-  api_key: '',
-  api_key_type: APIKeyTypes.Password.value,
-  auth_type: AuthTypes.Basic.value,
-  custom_header: '',
-}
 
 export default function AuthenticationSelect({
   onValueChange = () => { },
   value,
   required,
   error,
-  helperText,
   sx = {},
 }) {
   const endRef = useRef()
-  const { authentication_type, oauth_settings = initialOAuthSetting, api_key_settings = initialAPIKeySetting } = value
+  const { authentication_type, oauth_settings, api_key_settings } = value
   const authenticationOptions = useMemo(() => Object.values(AuthenticationTypes), []);
   const onChangeAuthType = useCallback(
     (selectedAuthenticationType) => {
@@ -85,16 +68,18 @@ export default function AuthenticationSelect({
         customSelectedFontSize={'0.875rem'}
         sx={{ marginTop: '8px' }}
         required={required}
-        error={error}
-        helperText={helperText}
       />
       {
         authentication_type === AuthenticationTypes.OAuth.value &&
-        <OAuthFrom value={oauth_settings} onValueChange={onChangeOAuthSettings} />
+        <OAuthFrom value={oauth_settings} onValueChange={onChangeOAuthSettings} error={error} />
       }
       {
         authentication_type === AuthenticationTypes.APIKey.value &&
-        <APIKeyFrom value={api_key_settings} onValueChange={onChangeAPIKeySettings} />
+        <APIKeyFrom
+          value={api_key_settings}
+          onValueChange={onChangeAPIKeySettings}
+          error={error}
+        />
       }
       <div ref={endRef} />
     </Box>
