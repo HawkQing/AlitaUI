@@ -31,8 +31,8 @@ export const initialState = {
   filter: confluenceFilterTypes.space_key.value,
   filter_value: '',
   include_attachments: false,
-  pages_limit_per_request: '50',
-  max_total_pages: '1000',
+  pages_limit_per_request: '10',
+  max_total_pages: '100',
   content_format: confluenceContentFormats.view.value,
 }
 
@@ -49,8 +49,8 @@ const SourceConfluence = ({ mode }) => {
     filter = confluenceFilterTypes.space_key.value,
     filter_value = '',
     include_attachments = false,
-    pages_limit_per_request = '50',
-    max_total_pages = '1000',
+    pages_limit_per_request = '10',
+    max_total_pages = '100',
     content_format = confluenceContentFormats.view.value,
   } = options;
   const handleChange = useCallback((field, value) => {
