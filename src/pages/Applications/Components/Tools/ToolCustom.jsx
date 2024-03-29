@@ -30,11 +30,16 @@ export default function ToolCustom({
 
   const error = useMemo(() => {
     const helperText = ' is required';
-    return {
-      name: (typeof name !== 'string' || !name?.trim()) ? 'name' + helperText : undefined,
-      description: (typeof description !== 'string' || !description?.trim()) ? 'description' + helperText : undefined,
-    }
-  }, [description, name])
+    const result = {};
+    try {
+      JSON.parse(schema);
+      result['name'] = (typeof name !== 'string' || !name?.trim()) ? 'name' + helperText : undefined
+      result['description'] = (typeof description !== 'string' || !description?.trim()) ? 'description' + helperText : undefined
+    } catch(_) {
+      result['format'] = 'Invalid json'
+    } 
+    return result;
+  }, [description, name, schema])
 
   const handleChange = useCallback((value) => {
     const json = parseSchema(value)
@@ -70,10 +75,10 @@ export default function ToolCustom({
       <CustomInput
         value={schema}
         onValueChange={handleChange}
-        error={isValidating && (error.name || error.description)}
-        helperText={isValidating && (error.name || error.description)}
+        error={isValidating && (error.name || error.description || error.format)}
+        helperText={isValidating && (error.name || error.description || error.format)}
       />
-      <NormalRoundButton sx={{ marginTop: isValidating && (error.name || error.description) ? '34px' : '24px' }} onClick={onTest} variant='contained' color='secondary'>
+      <NormalRoundButton sx={{ marginTop: isValidating && (error.name || error.description || error.format) ? '34px' : '24px' }} onClick={onTest} variant='contained' color='secondary'>
         Test
       </NormalRoundButton>
     </>
