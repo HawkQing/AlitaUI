@@ -3,10 +3,13 @@ import { useTheme } from '@emotion/react'
 import { Box, Typography, FormControl } from '@mui/material'
 import { useState, useCallback } from 'react';
 import FormHelperText from '@mui/material/FormHelperText';
+import { getFileFormat } from '@/common/utils';
+import useToast from '@/components/useToast';
 
 const CustomInput = ({ containerSX = {}, value, onValueChange, error, helperText }) => {
   const theme = useTheme();
   const [isDragOver, setIsDragOver] = useState(false)
+  const { ToastComponent: Toast, toastError } = useToast();
 
   const onDragOver = useCallback(
     (event) => {
@@ -43,13 +46,21 @@ const CustomInput = ({ containerSX = {}, value, onValueChange, error, helperText
     const reader = new FileReader();
     const file = isForDragDrop ? event.dataTransfer.files[0] : event.target.files[0];
 
+    if (isForDragDrop) {
+      const fileName = file?.name;
+      const fileFormat = getFileFormat(fileName);
+      if (fileFormat.toLowerCase() !== 'json') {
+        toastError('Invalid json file format!');
+      }
+    }
+
     reader.onload = async (e) => {
       const parsedData = parseContent(e.target.result);
       const schemaString = parsedData ? JSON.stringify(parsedData, null, 2) : ''
       onValueChange(schemaString)
     };
     reader.readAsText(file);
-  }, [onValueChange, parseContent]);
+  }, [onValueChange, parseContent, toastError]);
 
   const onClickChooseFile = useCallback(() => {
     const fileInput = document.createElement('input');
@@ -76,7 +87,7 @@ const CustomInput = ({ containerSX = {}, value, onValueChange, error, helperText
         </Typography>
       </Box>
       <FormControl
-        error={error}
+        error={!!error}
         sx={{
           width: '100%',
           height: '400px',
@@ -121,6 +132,7 @@ const CustomInput = ({ containerSX = {}, value, onValueChange, error, helperText
         />
         {error && <FormHelperText>{helperText}</FormHelperText>}
       </FormControl>
+      <Toast />
     </Box>
   )
 }
