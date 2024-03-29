@@ -91,7 +91,7 @@ export default function ToolOpenAPI({
         label='Name'
         value={name}
         onChange={handleInputChange('name')}
-        error={isValidating && error.name}
+        error={isValidating && !!error.name}
         helperText={isValidating && error.name}
       />
       <OpenAPISchemaInput
