@@ -8,6 +8,7 @@ import FileCodeIcon from '@/components/Icons/FileCodeIcon';
 import { useCallback, useState } from 'react'
 import { filterProps } from '@/common/utils';
 import JsonIcon from '@/components/Icons/JsonIcon';
+import CommandIcon from "@/components/Icons/CommandIcon";
 
 const CardContainer = styled(Box)(() => ({
   borderRadius: '8px',
@@ -57,6 +58,8 @@ const ToolIcon = ({ type }) => {
   switch (type) {
     case ToolTypes.datasource.value:
       return <DatabaseIcon sx={{ fontSize: '1.13rem' }} />
+    case ToolTypes.prompt.value:
+      return <CommandIcon sx={{ fontSize: '1.13rem' }} />
     case ToolTypes.open_api.value:
       return <FileCodeIcon sx={{ fontSize: '1.13rem' }} />
     case ToolTypes.custom.value:

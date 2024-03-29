@@ -19,6 +19,17 @@ import {
 } from '../Common';
 import { replaceVersionInPath } from '../useDeleteVersion';
 
+export const buildVersionOption = enableVersionListAvatar => ({ name, id, status, created_at, author = {} }) => {
+  const displayName = author.name;
+  const avatar = author.avatar;
+  return {
+    label: name,
+    value: id,
+    date: timeFormatter(created_at, TIME_FORMAT.DDMMYYYY),
+    icon: enableVersionListAvatar ? <VersionAuthorAvatar name={displayName} avatar={avatar} /> : <StatusDot status={status} />,
+  }
+}
+
 const VersionSelect = memo(function VersionSelect({ currentVersionName = '', versions = [], enableVersionListAvatar = false }) {
   const navigate = useNavigate();
   const { pathname, state, search } = useLocation();
@@ -29,16 +40,7 @@ const VersionSelect = memo(function VersionSelect({ currentVersionName = '', ver
   const projectId = useProjectId();
   const currentVersion = useMemo(() => versions.find(item => item.name === currentVersionName)?.id, [currentVersionName, versions]);
   const versionSelectOptions = useMemo(() => {
-    return versions.map(({ name, id, status, created_at, author = {} }) => {
-      const displayName = author.name;
-      const avatar = author.avatar;
-      return {
-        label: name,
-        value: id,
-        date: timeFormatter(created_at, TIME_FORMAT.DDMMYYYY),
-        icon: enableVersionListAvatar ? <VersionAuthorAvatar name={displayName} avatar={avatar} /> : <StatusDot status={status} />,
-      }
-    });
+    return versions.map(buildVersionOption(enableVersionListAvatar));
   }, [enableVersionListAvatar, versions]);
 
   const onSelectVersion = useCallback(

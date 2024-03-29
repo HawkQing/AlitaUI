@@ -1,6 +1,5 @@
 import { useCallback, useState, useMemo } from "react";
 import ToolFormBackButton from "./ToolFormBackButton";
-import { ToolTypes } from "./consts";
 import CustomInput from './CustomInput';
 import NormalRoundButton from '@/components/NormalRoundButton';
 
@@ -67,9 +66,9 @@ export default function ToolCustom({
   return (
     <>
       <ToolFormBackButton
+        label='New custom tool'
         isDirty={isDirty}
         validate={validate}
-        toolType={ToolTypes.custom.label.toLowerCase()}
         handleGoBack={handleGoBack}
       />
       <CustomInput

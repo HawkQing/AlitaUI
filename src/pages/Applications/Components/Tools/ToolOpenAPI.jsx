@@ -2,7 +2,6 @@ import FormInput from "@/pages/DataSources/Components/Sources/FormInput";
 import { useCallback, useState, useMemo } from "react";
 import AuthenticationSelect from "./AuthenticationSelect";
 import ToolFormBackButton from "./ToolFormBackButton";
-import { ToolTypes } from "./consts";
 import OpenAPISchemaInput from './OpenAPISchemaInput';
 import OpenAPIActions from './OpenAPIActions';
 import { AuthenticationTypes, AuthTypes } from '@/common/constants';
@@ -82,9 +81,9 @@ export default function ToolOpenAPI({
   return (
     <>
       <ToolFormBackButton
+        label='New Open API tool'
         isDirty={isDirty}
         validate={validate}
-        toolType={ToolTypes.open_api.label}
         handleGoBack={handleGoBack}
       />
       <FormInput

@@ -26,9 +26,9 @@ const BackLink = styled(Box)(({ theme }) => ({
 }));
 
 export default function ToolFormBackButton({
+  label,
   isAdding,
   isDirty,
-  toolType,
   validate = () => { },
   handleGoBack = () => { },
 }) {
@@ -62,7 +62,7 @@ export default function ToolFormBackButton({
       <BackLink onClick={handleBack}>
         <ArrowBackOutlinedIcon sx={{ fontSize: '1rem' }} />
         <Typography variant='labelMedium' component='div' color='text.secondary'>
-          {`New ${toolType} tool`}
+          {label}
         </Typography>
       </BackLink>
 

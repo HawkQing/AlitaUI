@@ -408,6 +408,7 @@ export const {
   useTagListQuery,
   useLazyTagListQuery,
   useAskAlitaMutation,
+  useGetVersionDetailQuery,
   useLazyGetVersionDetailQuery,
   useDeletePromptMutation,
   useDeleteVersionMutation,

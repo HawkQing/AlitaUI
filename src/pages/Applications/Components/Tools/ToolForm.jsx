@@ -5,6 +5,7 @@ import { ToolTypes } from "./consts";
 import { useFormikContext } from "formik";
 import ToolOpenAPI from './ToolOpenAPI';
 import ToolCustom from './ToolCustom';
+import ToolPrompt from "./ToolPrompt";
 
 export default function ToolForm({
   editToolDetail,
@@ -29,6 +30,11 @@ export default function ToolForm({
           handleGoBack={handleGoBack} />}
       {toolType === ToolTypes.open_api.value &&
         <ToolOpenAPI
+          editToolDetail={editToolDetail}
+          setEditToolDetail={setEditToolDetail}
+          handleGoBack={handleGoBack} />}
+      {toolType === ToolTypes.prompt.value &&
+        <ToolPrompt
           editToolDetail={editToolDetail}
           setEditToolDetail={setEditToolDetail}
           handleGoBack={handleGoBack} />}

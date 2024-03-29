@@ -6,6 +6,7 @@ import { ToolTypes } from "./consts";
 import DatabaseIcon from "@/components/Icons/DatabaseIcon";
 import FileCodeIcon from '@/components/Icons/FileCodeIcon';
 import JsonIcon from '@/components/Icons/JsonIcon';
+import CommandIcon from "@/components/Icons/CommandIcon";
 
 export default function ToolMenu({
   onAddTool,
@@ -22,6 +23,11 @@ export default function ToolMenu({
         label: ToolTypes.open_api.label,
         icon: <FileCodeIcon sx={{ fontSize: '1.13rem' }} />,
         onClick: onAddTool(ToolTypes.open_api.value),
+      }, 
+      {
+        label: ToolTypes.prompt.label,
+        icon: <CommandIcon sx={{ fontSize: '1.13rem' }} />,
+        onClick: onAddTool(ToolTypes.prompt.value),
       },
       {
         label: ToolTypes.custom.label,

@@ -1,12 +1,10 @@
-import MultipleSelect from "@/components/MultipleSelect";
 import FormInput from "@/pages/DataSources/Components/Sources/FormInput";
-import { useCallback, useMemo, useState } from "react";
-import DatasourceSelect from "./DatasourceSelect";
-import ToolFormBackButton from "./ToolFormBackButton";
-import { ActionOptions, ToolTypes } from "./consts";
 import { useFormikContext } from "formik";
+import { useCallback, useMemo, useState } from "react";
+import PromptSelect from "./PromptSelect";
+import ToolFormBackButton from "./ToolFormBackButton";
 
-export default function ToolDatasource({
+export default function ToolPrompt({
   editToolDetail = {},
   setEditToolDetail = () => { },
   handleGoBack
@@ -15,8 +13,9 @@ export default function ToolDatasource({
     index,
     name = '',
     description = '',
-    actions = [],
-    datasource = '',
+    prompt = '',
+    version = undefined,
+    variables = [],
   } = editToolDetail;
   const { values } = useFormikContext();
   const isAdding = useMemo(() => index === (values?.tools || []).length, [index, values?.tools]);
@@ -26,10 +25,10 @@ export default function ToolDatasource({
     return {
       name: !name?.trim() ? helperText : undefined,
       description: !description?.trim() ? helperText : undefined,
-      datasource: !datasource.value ? helperText : undefined,
-      actions: actions?.length < 1 ? helperText : undefined,
+      prompt: !prompt.value ? helperText : undefined,
+      version: !version ? helperText : undefined,
     }
-  }, [actions?.length, datasource.value, description, name])
+  }, [name, description, prompt.value, version])
 
   const [isDirty, setIsDirty] = useState(false);
 
@@ -45,6 +44,53 @@ export default function ToolDatasource({
     handleChange(field)(event.target.value)
   }, [handleChange]);
 
+  const handlePromptChange = useCallback((value) => {
+    setEditToolDetail({
+      ...editToolDetail,
+      prompt: value,
+      version: null,
+      variables: []
+    })
+    setIsDirty(true);
+  }, [editToolDetail, setEditToolDetail]);
+
+  const handleVersionChange = useCallback((value) => {
+    setEditToolDetail({
+      ...editToolDetail,
+      version: value,
+      variables: []
+    })
+    setIsDirty(true);
+  }, [editToolDetail, setEditToolDetail]);
+
+  const onChangeVariables = useCallback((newValues) => {
+    setEditToolDetail({
+      ...editToolDetail,
+      variables: newValues.map(item => ({
+        key: item.key || item.name,
+        value: item.value
+      }))
+    })
+    setIsDirty(true);
+  }, [editToolDetail, setEditToolDetail]);
+
+  const onChangeVariable = useCallback((label, newValue) => {
+    const updateIndex = Object.keys(variables).find(key => key === label);
+    setEditToolDetail({
+      ...editToolDetail,
+      variables: variables.map((item, i) => {
+        if (i === updateIndex) {
+          return {
+            ...item,
+            value: newValue
+          }
+        }
+        return item
+      })
+    })
+    setIsDirty(true);
+  }, [editToolDetail, setEditToolDetail, variables])
+
   const validate = useCallback(() => {
     setIsValidating(true);
     return Object.values(error).some(item => !!item)
@@ -53,11 +99,10 @@ export default function ToolDatasource({
   return (
     <>
       <ToolFormBackButton
-        label='New datasource tool'
+        label='New prompt tool'
         isAdding={isAdding}
         isDirty={isDirty}
         validate={validate}
-        toolType={ToolTypes.datasource.label.toLowerCase()}
         handleGoBack={handleGoBack}
       />
       <FormInput
@@ -82,40 +127,16 @@ export default function ToolDatasource({
         error={isValidating && error.description}
         helperText={isValidating && error.description}
       />
-      <DatasourceSelect
+      <PromptSelect
         required
-        onValueChange={handleChange('datasource')}
-        value={datasource}
-        error={isValidating && error.datasource}
-        helperText={isValidating && error.datasource}
-      />
-      <MultipleSelect
-        showBorder
-        required
-        multiple
-        label='Actions'
-        emptyPlaceHolder=''
-        onValueChange={handleChange('actions')}
-        value={actions}
-        options={ActionOptions}
-        customSelectedFontSize={'0.875rem'}
-        error={isValidating && error.actions}
-        helperText={isValidating && error.actions}
-        sx={{
-          marginTop: '8px !important',
-          '& .MuiInputLabel-shrink': {
-            fontSize: '16px',
-            lineHeight: '21px',
-            fontWeight: 400,
-          },
-        }}
-        labelSX={{ left: '12px' }}
-        selectSX={{
-          paddingBottom: '8px !important',
-          '& .MuiSelect-icon': {
-            top: 'calc(50% - 18px);',
-          },
-        }}
+        onValueChange={handlePromptChange}
+        value={prompt}
+        onVersionChange={handleVersionChange}
+        version={version}
+        variables={variables}
+        onChangeVariable={onChangeVariable}
+        onChangeVariables={onChangeVariables}
+        error={isValidating && error}
       />
     </>
   )

@@ -67,6 +67,14 @@ export const ToolInitialValues = {
     },
     actions: [],
   },
+  [ToolTypes.prompt.value]: {
+    type: ToolTypes.prompt.value,
+    name: '',
+    description: '',
+    prompt: '',
+    version: '',
+    variables: [],
+  },
   [ToolTypes.custom.value]: {
     type: ToolTypes.custom.value,
     name: '',
