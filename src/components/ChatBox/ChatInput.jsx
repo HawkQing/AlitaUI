@@ -69,8 +69,10 @@ const ChatInput = forwardRef(function ChatInput(props, ref) {
     if (question.trim() && !disabledSend) {
       onSend(question)
       if (clearInputAfterSubmit) {
-        setInputContent('');
-        setQuestion('');
+        setTimeout(() => {
+          setInputContent('');
+          setQuestion('');
+        }, 0);
         setShowExpandIcon(false);
       }
     }
