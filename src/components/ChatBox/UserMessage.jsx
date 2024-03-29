@@ -72,6 +72,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               whiteSpace: 'normal',
               overflowWrap: 'break-word', 
               wordWrap: 'break-word',
+              wordBreak: 'break-word'
             }} variant='bodyMedium'>
               {string}
             </Typography>
