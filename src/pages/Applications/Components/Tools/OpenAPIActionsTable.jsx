@@ -67,6 +67,13 @@ const OpenAPIActionsTable = ({ actions }) => {
 
   const [orderBy, setOrderBy] = useState('')
   const [order, setOrder] = useState(SortOrderOptions.ASC);
+  const [showMore, setShowMore] = useState(false)
+  const onClickShowMore = useCallback(
+    () => {
+      setShowMore(prev => !prev)
+    },
+    [],
+  )
 
   const sortedActions = useMemo(() => {
     if (orderBy) {
@@ -117,7 +124,7 @@ const OpenAPIActionsTable = ({ actions }) => {
       <Table stickyHeader aria-label="personal actions table">
         <TableHead>
           <TableRow>
-            <StyledTableHeadCell sx={{padding: '6px 4px !important'}} align="left">
+            <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
               <TableSortLabel
                 active={true}
                 direction={orderBy === 'name' ? order : SortOrderOptions.DESC}
@@ -128,7 +135,7 @@ const OpenAPIActionsTable = ({ actions }) => {
                 <Typography variant='labelSmall'>Name</Typography>
               </TableSortLabel>
             </StyledTableHeadCell>
-            <StyledTableHeadCell sx={{padding: '6px 4px !important'}} align="left">
+            <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
               <TableSortLabel
                 active={true}
                 direction={orderBy === 'description' ? order : SortOrderOptions.DESC}
@@ -139,7 +146,7 @@ const OpenAPIActionsTable = ({ actions }) => {
                 <Typography variant='labelSmall'>Description</Typography>
               </TableSortLabel>
             </StyledTableHeadCell>
-            <StyledTableHeadCell sx={{padding: '6px 4px !important'}} align="left">
+            <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
               <TableSortLabel
                 active={true}
                 direction={orderBy === 'method' ? order : SortOrderOptions.DESC}
@@ -150,7 +157,7 @@ const OpenAPIActionsTable = ({ actions }) => {
                 <Typography variant='labelSmall'>Method</Typography>
               </TableSortLabel>
             </StyledTableHeadCell>
-            <StyledTableHeadCell sx={{padding: '6px 4px !important'}} align="left">
+            <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
               <TableSortLabel
                 active={true}
                 direction={orderBy === 'path' ? order : SortOrderOptions.DESC}
@@ -165,13 +172,23 @@ const OpenAPIActionsTable = ({ actions }) => {
         </TableHead>
         <TableBody>
           {
-            sortedActions.map((action) => {
+            (sortedActions.length < 5 || showMore ? sortedActions : sortedActions.slice(0, 5)).map((action) => {
               return (
                 <TokenRow key={action.name} action={action} />
               );
             })
           }
         </TableBody>
+        {
+          sortedActions.length > 5 &&
+          <Box sx={{marginTop: '10px', cursor: 'pointer'}} onClick={onClickShowMore}>
+            <Typography variant='bodySmall' color='text.button.showMore'>
+              {
+                showMore ? 'Show less' : 'Show more'
+              }
+            </Typography>
+          </Box>
+        }
       </Table>
     </TableContainer>
   )

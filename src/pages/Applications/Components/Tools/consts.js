@@ -1,3 +1,5 @@
+import { OAuthTokenExchangeMethods, APIKeyTypes, AuthTypes } from '@/common/constants';
+
 export const ToolTypes = {
   datasource: {
     label: 'Datasource',
@@ -30,6 +32,22 @@ export const ActionTypes = {
 
 export const ActionOptions = Object.values(ActionTypes);
 
+const initialOAuthSetting = {
+  client_id: '',
+  client_secret: '',
+  authorization_url: '',
+  token_url: '',
+  scope: '',
+  token_exchange_method: OAuthTokenExchangeMethods.Default.value,
+}
+
+const initialAPIKeySetting = {
+  api_key: '',
+  api_key_type: APIKeyTypes.Password.value,
+  auth_type: AuthTypes.Basic.value,
+  custom_header: '',
+}
+
 export const ToolInitialValues = {
   [ToolTypes.datasource.value]: {
     type: ToolTypes.datasource.value,
@@ -42,7 +60,11 @@ export const ToolInitialValues = {
     type: ToolTypes.open_api.value,
     name: '',
     schema: '',
-    authentication: {},
+    authentication: {
+      authentication_type: '', 
+      oauth_settings: initialOAuthSetting, 
+      api_key_settings: initialAPIKeySetting,
+    },
     actions: [],
   },
   [ToolTypes.custom.value]: {

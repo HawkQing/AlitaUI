@@ -13,7 +13,7 @@ const validationSchema = yup.object({
   api_key: yup
     .string('Enter/Select API Key')
     .required('API key is required'),
-    custom_header: yup
+  custom_header: yup
     .string('Enter custom header')
     .required('Custom header is required'),
 });
@@ -23,17 +23,23 @@ export default function APIKeyFrom({
   onValueChange = () => { },
   value,
   sx = {},
+  error,
 }) {
   const refOnValueChange = useRef(onValueChange);
   const customHeaderRef = useRef()
   const selectedProjectId = useSelectedProjectId();
-  const { data } = useSecretsListQuery(selectedProjectId, { skip: !selectedProjectId})
-  const secretsOption = useMemo(() => data?.map((item) => ({label: item.name, value: item.name}) ) || [], [data])
+  const { data } = useSecretsListQuery(selectedProjectId, { skip: !selectedProjectId })
+  const secretsOption = useMemo(() => data?.map((item) => ({ label: item.name, value: item.name })) || [], [data])
   const formik = useFormik({
     initialValues: value,
     validationSchema,
     onSubmit: () => { },
   });
+  const formikRef = useRef(formik);
+  useEffect(() => {
+    formikRef.current = formik
+  }, [formik])
+  
   const authTypeOptions = useMemo(() => Object.values(AuthTypes), []);
 
   useEffect(() => {
@@ -51,7 +57,18 @@ export default function APIKeyFrom({
       customHeaderRef.current?.scrollIntoView();
     }
   }, [formik.values.auth_type])
-  
+
+  useEffect(() => {
+    if (error) {
+      if (!formikRef.current.values.api_key ) {
+        formikRef.current.setFieldTouched('api_key', true, true);
+      }
+      if (formikRef.current.values.auth_type === AuthTypes.Custom.value && !formikRef.current.values.custom_header ) {
+        formikRef.current.setFieldTouched('custom_header', true, true);
+      }
+    }
+  }, [error])
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', ...sx }} >
       <Box sx={{
@@ -133,7 +150,7 @@ export default function APIKeyFrom({
         error={formik.touched.custom_header && Boolean(formik.errors.custom_header)}
         helperText={formik.touched.custom_header && formik.errors.custom_header}
       />}
-      <div ref={customHeaderRef}/>
+      <div ref={customHeaderRef} />
     </Box>
   )
 }
