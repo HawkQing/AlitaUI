@@ -77,7 +77,8 @@ export const ToolInitialValues = {
   },
   [ToolTypes.custom.value]: {
     type: ToolTypes.custom.value,
-    name: '',
-    schema: '',
+    name: 'Custom tool',
+    json: '',
+    functions: [],
   }
 }

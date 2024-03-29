@@ -3,10 +3,10 @@ import ToolFormBackButton from "./ToolFormBackButton";
 import CustomInput from './CustomInput';
 import NormalRoundButton from '@/components/NormalRoundButton';
 
-const parseSchema = (schema) => {
+const parseContent = (content) => {
   let json = {};
   try {
-    json = JSON.parse(schema);
+    json = JSON.parse(content);
   } catch (_) {
     //
   }
@@ -19,34 +19,45 @@ export default function ToolCustom({
   handleGoBack
 }) {
   const {
-    schema = '',
-    name,
-    description
+    json = '',
   } = editToolDetail;
 
   const [isDirty, setIsDirty] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
 
   const error = useMemo(() => {
-    const helperText = ' is required';
     const result = {};
     try {
-      JSON.parse(schema);
-      result['name'] = (typeof name !== 'string' || !name?.trim()) ? 'name' + helperText : undefined
-      result['description'] = (typeof description !== 'string' || !description?.trim()) ? 'description' + helperText : undefined
+      const jsonObject = JSON.parse(json);
+      if (Array.isArray(jsonObject)) {
+        jsonObject.forEach((functionCall) => {
+          if (!functionCall.name || !functionCall.description || !functionCall.parameters) {
+            throw 'Wrong format'
+          }
+        })
+      } else {
+        if (!jsonObject.name || !jsonObject.description || !jsonObject.parameters) {
+          throw 'Wrong format'
+        }
+      }
     } catch(_) {
-      result['format'] = 'Invalid json'
+      result['format'] = 'Invalid json, name, description and parameters are required for every function'
     } 
     return result;
-  }, [description, name, schema])
+  }, [json])
 
   const handleChange = useCallback((value) => {
-    const json = parseSchema(value)
+    let parsedFunctions = []
+    const result = parseContent(value)
+    if (!Array.isArray(result)) {
+      parsedFunctions.push(result);
+    } else {
+      parsedFunctions = result
+    }
     setEditToolDetail({
       ...editToolDetail,
-      schema: value,
-      name: json.name || '',
-      description: json.description || ''
+      json: value,
+      functions: parsedFunctions,
     })
     setIsDirty(true);
   }, [editToolDetail, setEditToolDetail]);
@@ -72,12 +83,12 @@ export default function ToolCustom({
         handleGoBack={handleGoBack}
       />
       <CustomInput
-        value={schema}
+        value={json}
         onValueChange={handleChange}
-        error={isValidating && (error.name || error.description || error.format)}
-        helperText={isValidating && (error.name || error.description || error.format)}
+        error={isValidating && error.format}
+        helperText={isValidating && error.format}
       />
-      <NormalRoundButton sx={{ marginTop: isValidating && (error.name || error.description || error.format) ? '34px' : '24px' }} onClick={onTest} variant='contained' color='secondary'>
+      <NormalRoundButton sx={{ marginTop: isValidating && error.format ? '34px' : '24px' }} onClick={onTest} variant='contained' color='secondary'>
         Test
       </NormalRoundButton>
     </>
