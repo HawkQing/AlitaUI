@@ -120,77 +120,79 @@ const OpenAPIActionsTable = ({ actions }) => {
   );
 
   return (
-    <TableContainer component={Paper}>
-      <Table stickyHeader aria-label="personal actions table">
-        <TableHead>
-          <TableRow>
-            <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
-              <TableSortLabel
-                active={true}
-                direction={orderBy === 'name' ? order : SortOrderOptions.DESC}
-                onClick={onClickSortLabel('name')}
-                IconComponent={orderBy === 'name' ? SortUpwardIcon : SortDisabledIcon}
-                style={{ flexDirection: 'row-reverse' }}
-              >
-                <Typography variant='labelSmall'>Name</Typography>
-              </TableSortLabel>
-            </StyledTableHeadCell>
-            <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
-              <TableSortLabel
-                active={true}
-                direction={orderBy === 'description' ? order : SortOrderOptions.DESC}
-                onClick={onClickSortLabel('description')}
-                IconComponent={orderBy === 'description' ? SortUpwardIcon : SortDisabledIcon}
-                style={{ flexDirection: 'row-reverse' }}
-              >
-                <Typography variant='labelSmall'>Description</Typography>
-              </TableSortLabel>
-            </StyledTableHeadCell>
-            <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
-              <TableSortLabel
-                active={true}
-                direction={orderBy === 'method' ? order : SortOrderOptions.DESC}
-                onClick={onClickSortLabel('method')}
-                IconComponent={orderBy === 'method' ? SortUpwardIcon : SortDisabledIcon}
-                style={{ flexDirection: 'row-reverse' }}
-              >
-                <Typography variant='labelSmall'>Method</Typography>
-              </TableSortLabel>
-            </StyledTableHeadCell>
-            <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
-              <TableSortLabel
-                active={true}
-                direction={orderBy === 'path' ? order : SortOrderOptions.DESC}
-                onClick={onClickSortLabel('path')}
-                IconComponent={orderBy === 'path' ? SortUpwardIcon : SortDisabledIcon}
-                style={{ flexDirection: 'row-reverse' }}
-              >
-                <Typography variant='labelSmall'>Path</Typography>
-              </TableSortLabel>
-            </StyledTableHeadCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {
-            (sortedActions.length < 5 || showMore ? sortedActions : sortedActions.slice(0, 5)).map((action) => {
-              return (
-                <TokenRow key={action.name} action={action} />
-              );
-            })
-          }
-        </TableBody>
-        {
-          sortedActions.length > 5 &&
-          <Box sx={{marginTop: '10px', cursor: 'pointer'}} onClick={onClickShowMore}>
-            <Typography variant='bodySmall' color='text.button.showMore'>
-              {
-                showMore ? 'Show less' : 'Show more'
-              }
-            </Typography>
-          </Box>
-        }
-      </Table>
-    </TableContainer>
+    <>
+      <TableContainer component={Paper}>
+        <Table stickyHeader aria-label="personal actions table">
+          <TableHead>
+            <TableRow>
+              <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
+                <TableSortLabel
+                  active={true}
+                  direction={orderBy === 'name' ? order : SortOrderOptions.DESC}
+                  onClick={onClickSortLabel('name')}
+                  IconComponent={orderBy === 'name' ? SortUpwardIcon : SortDisabledIcon}
+                  style={{ flexDirection: 'row-reverse' }}
+                >
+                  <Typography variant='labelSmall'>Name</Typography>
+                </TableSortLabel>
+              </StyledTableHeadCell>
+              <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
+                <TableSortLabel
+                  active={true}
+                  direction={orderBy === 'description' ? order : SortOrderOptions.DESC}
+                  onClick={onClickSortLabel('description')}
+                  IconComponent={orderBy === 'description' ? SortUpwardIcon : SortDisabledIcon}
+                  style={{ flexDirection: 'row-reverse' }}
+                >
+                  <Typography variant='labelSmall'>Description</Typography>
+                </TableSortLabel>
+              </StyledTableHeadCell>
+              <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
+                <TableSortLabel
+                  active={true}
+                  direction={orderBy === 'method' ? order : SortOrderOptions.DESC}
+                  onClick={onClickSortLabel('method')}
+                  IconComponent={orderBy === 'method' ? SortUpwardIcon : SortDisabledIcon}
+                  style={{ flexDirection: 'row-reverse' }}
+                >
+                  <Typography variant='labelSmall'>Method</Typography>
+                </TableSortLabel>
+              </StyledTableHeadCell>
+              <StyledTableHeadCell sx={{ padding: '6px 4px !important' }} align="left">
+                <TableSortLabel
+                  active={true}
+                  direction={orderBy === 'path' ? order : SortOrderOptions.DESC}
+                  onClick={onClickSortLabel('path')}
+                  IconComponent={orderBy === 'path' ? SortUpwardIcon : SortDisabledIcon}
+                  style={{ flexDirection: 'row-reverse' }}
+                >
+                  <Typography variant='labelSmall'>Path</Typography>
+                </TableSortLabel>
+              </StyledTableHeadCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {
+              (sortedActions.length < 5 || showMore ? sortedActions : sortedActions.slice(0, 5)).map((action) => {
+                return (
+                  <TokenRow key={action.name} action={action} />
+                );
+              })
+            }
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {
+        sortedActions.length > 5 &&
+        <Box sx={{ marginTop: '10px', cursor: 'pointer' }} onClick={onClickShowMore}>
+          <Typography variant='bodySmall' color='text.button.showMore'>
+            {
+              showMore ? 'Show less' : 'Show more'
+            }
+          </Typography>
+        </Box>
+      }
+    </>
   )
 }
 
