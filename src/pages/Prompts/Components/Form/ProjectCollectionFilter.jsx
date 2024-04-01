@@ -8,7 +8,7 @@ import CloseEyeIcon from '@/components/Icons/CloseEyeIcon';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import { CustomTabs, StyledTab } from '@/components/StyledTabs';
 
-const ProjectCollectionFilter = ({ tab, onChangeTab, selectedProject, onChangeProject }) => {
+const ProjectCollectionFilter = ({ tab, onChangeTab, selectedProject, onChangeProject, disabled }) => {
   const theme = useTheme();
   return (
     <Box sx={{
@@ -31,6 +31,7 @@ const ProjectCollectionFilter = ({ tab, onChangeTab, selectedProject, onChangePr
         <StyledTab icon={<OpenEyeIcon />} iconPosition="start" label="Public" />
       </CustomTabs>
       <ProjectSelect
+        disabled={disabled}
         label={'Project'}
         customSelectedColor={`${theme.palette.text.secondary} !important`}
         showMode={ProjectSelectShowMode.CompactMode}

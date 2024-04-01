@@ -16,7 +16,7 @@ import {
   Box,
 } from '@mui/material';
 import * as React from 'react';
-import { useSelectedProject } from '../../hooks';
+import { useSelectedProject, useFromMyLibrary } from '../../hooks';
 import { useTheme } from '@emotion/react';
 import { CollectionStatus } from '@/common/constants';
 import CreateCollectionForm from './Form/CreateCollectionForm';
@@ -75,6 +75,7 @@ const AddToCollectionDialog = ({
   fieldForAlreadyAdded = '',
 }) => {
   const theme = useTheme();
+  const isFromMyLibrary = useFromMyLibrary();
   const closeDialog = React.useCallback(() => {
     setOpen(false);
   }, [setOpen]);
@@ -228,6 +229,7 @@ const AddToCollectionDialog = ({
         onChangeTab={handleTabChange}
         selectedProject={selectedProject}
         onChangeProject={setSelectedProject}
+        disabled={isFromMyLibrary}
       />
       <CreateCollectionMenuItem disabled={isCreating} onCreateCollection={onCreateCollection} />
       {
