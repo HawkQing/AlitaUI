@@ -1,6 +1,7 @@
 import { DEV, VITE_BASE_URI } from "@/common/constants";
 
 const RouteDefinitions = {
+  Chat: '/chat',
   Prompts: '/prompts',
   PromptsWithTab: '/prompts/:tab',
   ViewPrompt: '/prompts/:tab/:promptId',
@@ -55,6 +56,7 @@ const RouteDefinitions = {
 }
 
 export const PathSessionMap = {
+  [RouteDefinitions.Chat]: 'Chat',
   [RouteDefinitions.UserPublic]: 'Prompts',
   [RouteDefinitions.Collections]: 'Collections',
   [RouteDefinitions.MyLibrary]: 'My libraries',

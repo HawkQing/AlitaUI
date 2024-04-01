@@ -121,6 +121,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     conversationStarters = [],
     isFullScreenChat,
     setIsFullScreenChat,
+    messageListSX,
   } = props
   const dispatch = useDispatch();
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
@@ -667,7 +668,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           </Box>
         </ActionContainer>}
         <ChatBodyContainer>
-          <MessageList>
+          <MessageList sx={messageListSX}>
             {
               mode === ChatBoxMode.Chat ?
                 (chatHistory?.length > 0 ? chatHistory.map((message, index) => {

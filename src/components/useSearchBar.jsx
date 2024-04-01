@@ -3,24 +3,26 @@ import { useMatch } from 'react-router-dom';
 import RouteDefinitions from '@/routes';
 
 const useSearchBar = () => {
+  const isFromChat = useMatch({ path: RouteDefinitions.Chat });
   const isPublicPromptsPage = useMatch({ path: RouteDefinitions.PromptsWithTab });
-  const isPublicCollectionsPage =  useMatch({ path: RouteDefinitions.CollectionsWithTab });
+  const isPublicCollectionsPage = useMatch({ path: RouteDefinitions.CollectionsWithTab });
   const isMyLibraryPage = useMatch({ path: RouteDefinitions.MyLibraryWithTab });
   const isUserPublicPage = useMatch({ path: RouteDefinitions.UserPublicWithTab });
 
   const showSearchBar = useMemo(() => {
-    return isPublicPromptsPage ||
+    return isFromChat ||
+      isPublicPromptsPage ||
       isPublicCollectionsPage ||
       isMyLibraryPage ||
       isUserPublicPage;
-  }, [isPublicPromptsPage, isPublicCollectionsPage, isMyLibraryPage, isUserPublicPage]);
-  return { 
+  }, [isFromChat, isPublicPromptsPage, isPublicCollectionsPage, isMyLibraryPage, isUserPublicPage]);
+  return {
     showSearchBar,
     isPublicPromptsPage,
     isPublicCollectionsPage,
     isMyLibraryPage,
     isUserPublicPage,
-   }
+  }
 }
 
 

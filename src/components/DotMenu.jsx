@@ -44,6 +44,7 @@ export default function DotMenu({ id, menuIcon, menuIconSX, children }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = useMemo(() => Boolean(anchorEl), [anchorEl]);
   const handleClick = useCallback((event) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   }, []);
   const handleClose = useCallback(() => {
