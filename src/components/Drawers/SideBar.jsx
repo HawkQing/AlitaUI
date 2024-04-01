@@ -1,5 +1,5 @@
 
-import { MyLibraryTabs, PERMISSION_GROUPS, PromptsTabs, SearchParams, VITE_SHOW_APPLICATION, ViewMode } from '@/common/constants';
+import { MyLibraryTabs, PERMISSION_GROUPS, PromptsTabs, SearchParams, VITE_SHOW_APPLICATION, VITE_SHOW_CHAT, ViewMode } from '@/common/constants';
 import {
   DrawerMenuItem,
   SectionHeader,
@@ -34,6 +34,7 @@ import GearIcon from '../Icons/GearIcon';
 import ModeratorIcon from '../Icons/ModeratorIcon';
 import UserIcon from '../Icons/UserIcon';
 import ApplicationsIcon from '../Icons/ApplicationsIcon';
+import ChatIcon from '@mui/icons-material/Chat';
 
 const SideBarBody = ({ onKeyDown, onClose }) => {
   const { pathname } = useLocation();
@@ -68,6 +69,13 @@ const SideBarBody = ({ onKeyDown, onClose }) => {
 
 
   const menuData = useMemo(() => [
+    {
+      menuTitle: 'Chat',
+      menuIcon: <ChatIcon fontSize="1rem" />,
+      onClick: navigateToPage(`${RouteDefinitions.Chat}`, 'Chat'),
+      selected: pathname.startsWith(RouteDefinitions.Chat),
+      display: VITE_SHOW_CHAT ? undefined : 'none'
+    },
     {
       menuTitle: 'Prompts',
       menuIcon: <CommandIcon fontSize="1rem" />,

@@ -10,6 +10,7 @@ import {
   PromptsTabs,
   SettingsPersonalProjectTabs,
   MISSING_ENVS,
+  VITE_SHOW_CHAT,
 } from "@/common/constants";
 import FeedbackDialog from "@/components/FeedbackDialog.jsx";
 import Applications from '@/pages/Applications/Applications';
@@ -49,6 +50,7 @@ import Prompts from "./pages/Prompts/Prompts.jsx";
 import RouteDefinitions, { getBasename } from './routes';
 import { useSelectedProjectId } from "./pages/hooks";
 import EnvMissingPage from "./pages/EnvMissingPage";
+import Chat from './pages/Chat/Chat';
 
 
 gaInit()
@@ -130,6 +132,8 @@ const ProtectedRoutes = () => {
   }, [location.search, location.state]);
 
   const routes = useMemo(() => [
+    /* chat */
+    { path: RouteDefinitions.Chat, element: <Chat /> },
     /* data sources*/
     { path: RouteDefinitions.DataSources, element: getIndexElement(DatasourcesTabs[0]) },
     { path: RouteDefinitions.DataSourcesWithTab, element: <Datesources /> },
@@ -220,7 +224,7 @@ const ProtectedRoutes = () => {
   ], [getIndexElement]);
 
   return <Routes>
-    <Route index element={<Navigate to={`${RouteDefinitions.Prompts}/${PromptsTabs[0]}`} replace />} />
+    <Route index element={VITE_SHOW_CHAT ? <Navigate to={`${RouteDefinitions.Chat}/${PromptsTabs[0]}`} replace /> : <Navigate to={`${RouteDefinitions.Prompts}/${PromptsTabs[0]}`} replace />} />
     {
       routes.map(({ path, element, requiredPermissions }) => (
         <Route

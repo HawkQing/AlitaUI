@@ -42,6 +42,9 @@ export const VITE_PUBLIC_PROJECT_ID = alita_ui_config.hasOwnProperty('vite_publi
 export const VITE_SHOW_APPLICATION = alita_ui_config.hasOwnProperty('vite_show_application') ?
   alita_ui_config.VITE_SHOW_APPLICATION : import.meta.env.VITE_SHOW_APPLICATION;
 
+export const VITE_SHOW_CHAT = alita_ui_config.hasOwnProperty('vite_show_chat') ?
+  alita_ui_config.VITE_SHOW_CHAT : import.meta.env.VITE_SHOW_CHAT;
+
 export const MISSING_ENVS = [
   { key: 'VITE_SERVER_URL', value: VITE_SERVER_URL },
   { key: 'VITE_BASE_URI', value: VITE_BASE_URI },
