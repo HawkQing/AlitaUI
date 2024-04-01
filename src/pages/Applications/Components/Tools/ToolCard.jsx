@@ -102,7 +102,7 @@ export default function ToolCard({
             <ArrowRightIcon sx={{ fontSize: '1rem' }} />
           </Box>
           {
-            (tool.type === ToolTypes.datasource.value || tool.type === ToolTypes.custom.value) &&
+            tool.type === ToolTypes.datasource.value &&
             <Typography
               component='div'
               variant='labelSmall'
@@ -116,6 +116,14 @@ export default function ToolCard({
             <Box sx={{ cursor: 'pointer' }} onClick={onClickShowActions}>
               <Typography variant='bodySmall'>
                 {showActions ? 'Hide Actions' : 'Show Actions'}
+              </Typography>
+            </Box>
+          }
+          {
+            tool.type === ToolTypes.custom.value && tool.functions &&
+            <Box sx={{ cursor: 'pointer' }} onClick={onClickShowActions}>
+              <Typography variant='bodySmall'>
+                {showActions ? 'Hide Functions' : 'Show Functions'}
               </Typography>
             </Box>
           }
@@ -133,20 +141,20 @@ export default function ToolCard({
         showActions &&
         <ActionsContainer>
           {
-            tool.actions.map(action => {
-              return <ActionRow key={action.name}>
+            (tool.type === ToolTypes.open_api.value ? tool.actions : tool.functions ).map((item, idx) => {
+              return <ActionRow key={item.name + idx}>
                 <Box sx={{ width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Typography variant='bodyMedium'>
                     -
                   </Typography>
                 </Box>
-                <Box sx={{ width: 'calc(100% - 34px)', marginLeft: '10px', height: '46px'}}>
+                <Box sx={{ width: 'calc(100% - 34px)', marginLeft: '10px', height: '46px' }}>
                   <Typography
                     color='text.secondary'
                     sx={{ height: '24px' }}
                     variant='bodyMedium'
                     component='div'>
-                    {action.name}
+                    {item.name}
                   </Typography>
                   <Typography
                     sx={{
@@ -160,7 +168,7 @@ export default function ToolCard({
                     variant='bodySmall'
                     component='div'
                   >
-                    {action.description}
+                    {item.description}
                   </Typography>
                 </Box>
               </ActionRow>
