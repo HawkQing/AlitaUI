@@ -216,10 +216,14 @@ export const datasetStatus = {
   },
   error: {
     value: 'error',
-    hint: ' occured during dataset creation. Functionality related to the embedded content may be impacted.'
+    hint: 'Error occurred during dataset creation. Functionality related to the embedded content may be impacted.'
   },
   ready: {
     value: 'ready',
     hint: 'Ready'
   },
+  quota_exceeded: {
+    value: 'quota_exceeded',
+    hint: 'Storage quota exceeded. Free some space before trying to reindex'
+  }
 }

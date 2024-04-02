@@ -14,7 +14,7 @@ const ReindexIcon = ({
     aria-label="reindex"
     onClick={doReIndex}
   >
-    <RefreshOutlinedIcon color='secondary' sx={{ fontSize: '1.13rem' }} />
+    <RefreshOutlinedIcon color='secondary' fontSize={'small'} />
   </IconButton>
 }
 
@@ -25,7 +25,7 @@ const DowloadLogsIcon = ({
     aria-label="download-logs"
     onClick={downloadLogs}
   >
-    <SimCardDownloadOutlinedIcon color='secondary' sx={{ fontSize: '1.13rem' }} />
+    <SimCardDownloadOutlinedIcon color='secondary' fontSize={'small'} />
   </IconButton>
 }
 
@@ -40,47 +40,67 @@ export default function StatusIcon({
     return (status === datasetStatus.error.value ? error : '') + datasetStatus[status]?.hint
   }, [error, status]);
 
-  const statusIcon = useMemo(() => {
-    if ([datasetStatus.preparing.value, datasetStatus.pending.value, datasetStatus.running.value].includes(status)) {
-      return <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '8px',
-          color: theme.palette.text.info
-        }}>
-        <CircularProgress color={'inherit'} size={16} />
-        <Typography color={'inherit'} variant='labelSmall'>Files extracting...</Typography>
-      </Box>
-    } else if (status === datasetStatus.stopped.value) {
-      return <DoDisturbOnOutlinedIcon color='warning' sx={{ fontSize: '1rem' }} />
-    } else if (status === datasetStatus.error.value) {
-      return <ErrorOutlineOutlinedIcon color='error' sx={{ fontSize: '1rem' }} />
+  const statusContent = useMemo(() => {
+    
+    switch (status) {
+      case datasetStatus.preparing.value:
+      case datasetStatus.pending.value:
+      case datasetStatus.running.value:
+      // case datasetStatus.quota_exceeded.value:
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: '8px',
+              color: theme.palette.text.info
+            }}>
+            <CircularProgress color={'inherit'} size={16} />
+            <Typography color={'inherit'} variant='labelSmall'>{title}</Typography>
+          </Box>
+        )
+      case datasetStatus.stopped.value:
+        return (
+          <>
+            <Tooltip title={title} placement='top'>
+              <IconButton disableRipple>
+                <DoDisturbOnOutlinedIcon color='warning' fontSize={'small'} />
+              </IconButton>
+            </Tooltip>
+            <ReindexIcon doReIndex={doReIndex} fontSize={'small'}/>
+          </>
+        )
+      case datasetStatus.quota_exceeded.value:
+        return (
+          <>
+            <Tooltip title={title} placement='top'>
+              <IconButton disableRipple>
+                <ErrorOutlineOutlinedIcon color='error' fontSize={'small'}/>
+              </IconButton>
+            </Tooltip>
+            <DowloadLogsIcon downloadLogs={downloadLogs} fontSize={'small'}/>
+          </>
+        )
+      default:
+        return (
+          <>
+            <Tooltip title={title} placement='top'>
+              <IconButton disableRipple>
+                <ErrorOutlineOutlinedIcon color='error' fontSize={'small'}/>
+              </IconButton>
+            </Tooltip>
+            <DowloadLogsIcon downloadLogs={downloadLogs} fontSize={'small'}/>
+            <ReindexIcon doReIndex={doReIndex} fontSize={'small'}/>
+          </>
+        )
     }
-  }, [status, theme.palette.text.info]);
+  }, [status, theme.palette.text.info, title, downloadLogs, doReIndex]);
 
-  const actionIcons = useMemo(() => {
-    if (status === datasetStatus.error.value) {
-      return <>
-        <DowloadLogsIcon downloadLogs={downloadLogs} />
-        <ReindexIcon doReIndex={doReIndex} />
-      </>
-    } else if (status === datasetStatus.stopped.value) {
-      return <ReindexIcon doReIndex={doReIndex} />
-    }
-  }, [status, downloadLogs, doReIndex]);
 
   return (
     <Box display='flex' alignItems={'center'}>
-      {!!statusIcon && <Tooltip title={title} placement='top'>
-        <IconButton
-          aria-label={title}
-        >
-          {statusIcon}
-        </IconButton>
-      </Tooltip>}
-      {actionIcons}
+      {statusContent}
     </Box>
   )
 }

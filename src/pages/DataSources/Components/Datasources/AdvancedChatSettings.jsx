@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import SingleGroupSelect from '@/components/SingleGroupSelect';
 import { Box, Typography } from '@mui/material';
 import Slider from '@/components/Slider';
@@ -117,14 +118,14 @@ const AdvancedChatSettings = ({
           onChange={onChangeTopK}
         />
       </Box>
-      <Box sx={{ width: '100%', height: '56px' }}>
-        <Slider
-          label='Cut-off score (0 – 1)'
-          value={cut_off_score ?? DEFAULT_CUT_OFF_SCORE}
-          step={0.1}
-          range={[0, 1]}
-          onChange={onChangeCutoffScore} />
-      </Box>
+      {/*<Box sx={{ width: '100%', height: '56px' }}>*/}
+      {/*  <Slider*/}
+      {/*    label='Cut-off score (0 – 1)'*/}
+      {/*    value={cut_off_score ?? DEFAULT_CUT_OFF_SCORE}*/}
+      {/*    step={0.1}*/}
+      {/*    range={[0, 1]}*/}
+      {/*    onChange={onChangeCutoffScore} />*/}
+      {/*</Box>*/}
       <Box sx={{ width: '100%', height: '56px' }}>
         <SingleGroupSelect
           label={'Chat model'}

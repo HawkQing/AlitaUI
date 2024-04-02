@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind */
 import { useDatasetCreateMutation, useDatasetUpdateMutation } from "@/api/datasources.js";
-import {ComponentMode, sioEvents, VITE_DEV_SERVER} from "@/common/constants";
+import {ComponentMode, sioEvents} from "@/common/constants";
 import AlertDialogV2 from "@/components/AlertDialogV2";
 import Button from '@/components/Button';
 import CheckLabel from "@/components/CheckLabel";
@@ -262,7 +262,7 @@ export const ViewEditDataset = ({ data, datasourceVersionId, datasourceVersionUU
     }
 
     const filename = data?.task_id + '.log';
-    const url = VITE_DEV_SERVER + '/api/v1/artifacts/artifact/default/' + projectId + '/dataset-logs/index_' + filename
+    const url =  '/api/v1/artifacts/artifact/default/' + projectId + '/dataset-logs/index_' + filename
     downloadFile({
       url,
       filename,
