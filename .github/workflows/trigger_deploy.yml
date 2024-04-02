@@ -28,5 +28,5 @@ jobs:
                "commit_sha": "${{ github.sha }}",
                "commit_ref": "${{ github.ref }}"
              }' \
-             'https://eye.projectalita.ai/main/api/v1/alita_ui/ui_ci/administration'
+             'https://eye.projectalita.ai/main/api/v1/promptlib_shared/alita_ui_ci/administration'
           
