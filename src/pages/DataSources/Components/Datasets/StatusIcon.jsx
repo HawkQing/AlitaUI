@@ -43,10 +43,11 @@ export default function StatusIcon({
   const statusContent = useMemo(() => {
     
     switch (status) {
+      case datasetStatus.ready.value:
+        return 
       case datasetStatus.preparing.value:
       case datasetStatus.pending.value:
       case datasetStatus.running.value:
-      // case datasetStatus.quota_exceeded.value:
         return (
           <Box
             sx={{
