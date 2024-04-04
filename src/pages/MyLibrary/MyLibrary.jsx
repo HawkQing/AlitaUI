@@ -8,7 +8,6 @@ import {
   SearchParams,
   SortFields,
   SortOrderOptions,
-  VITE_SHOW_APPLICATION,
   ViewMode,
 } from '@/common/constants';
 import CommandIcon from '@/components/Icons/CommandIcon';
@@ -21,7 +20,7 @@ import useTags from '@/components/useTags';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 import styled from '@emotion/styled';
 import { Box, useTheme } from '@mui/material';
-import { useCallback, useMemo } from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuthorIdFromUrl, useProjectId, useViewMode } from '../hooks';
@@ -43,6 +42,13 @@ const SelectContainer = styled(Box)(() => (`
   align-items: flex-end;
 `));
 
+const displayPermissions = {
+  prompts: ['models.prompt_lib.prompts.list'],
+  collections: ['models.prompt_lib.collections.list'],
+  datasources: ['models.datasources.datasources.list'],
+  applications: ['models.applications.applications.list'], 
+}
+
 export default function MyLibrary({ publicView = false }) {
   const theme = useTheme();
   const { query } = useSelector(state => state.search);
@@ -55,6 +61,7 @@ export default function MyLibrary({ publicView = false }) {
   const { state } = location;
   const { tagList } = useSelector((storeState) => storeState.prompts);
   const { selectedTagIds } = useTags(tagList);
+  const { permissions = [] } = useSelector(s => s.user)
 
   const viewMode = useViewMode();
   const sortBy = useMemo(() => searchParams.get(SearchParams.SortBy) || SortFields.CreatedAt, [searchParams]);
@@ -66,6 +73,17 @@ export default function MyLibrary({ publicView = false }) {
     }
     return [PromptStatus.All];
   }, [searchParams, publicView]);
+  
+  const [displayedTabs, setDisplayedTabs] = useState(
+    MyLibraryTabs.reduce((acc, i) => ({...acc, [i]: false}), {})
+  )
+  useEffect(() => {
+    const permissionsSet = new Set(permissions)
+    setDisplayedTabs(MyLibraryTabs.reduce((acc, i) => {
+      const hasPermission = displayPermissions[i] ? displayPermissions[i].some(p => permissionsSet.has(p)) : true
+      return {...acc, [i]: hasPermission}
+    }, {}))
+  }, [permissions]);
 
   const { data: promptsData } = useTotalPromptsQuery({
     projectId,
@@ -76,7 +94,9 @@ export default function MyLibrary({ publicView = false }) {
       query,
       statuses: getQueryStatuses(statuses),
     }
-  }, { skip: !projectId || viewMode === ViewMode.Public });
+  }, { 
+    skip: !projectId || viewMode === ViewMode.Public || !displayedTabs.prompts
+  });
 
   const { data: publicPromptsData } = useTotalPublicPromptsQuery({
     projectId,
@@ -88,7 +108,9 @@ export default function MyLibrary({ publicView = false }) {
       query,
       statuses: getQueryStatuses(statuses),
     }
-  }, { skip: viewMode !== ViewMode.Public });
+  }, { 
+    skip: viewMode !== ViewMode.Public 
+  });
 
   const {
     data: collectionData,
@@ -101,7 +123,7 @@ export default function MyLibrary({ publicView = false }) {
       statuses: getQueryStatuses(statuses),
     }
   }, {
-    skip: !projectId
+    skip: !projectId || !displayedTabs.collections
   });
 
   const {
@@ -115,7 +137,7 @@ export default function MyLibrary({ publicView = false }) {
       statuses: getQueryStatuses(statuses),
     }
   }, {
-    skip: !projectId
+    skip: !projectId || !displayedTabs.datasources
   });
 
   const {
@@ -129,7 +151,7 @@ export default function MyLibrary({ publicView = false }) {
       statuses: getQueryStatuses(statuses),
     }
   }, {
-    skip: !projectId || !VITE_SHOW_APPLICATION
+    skip: !projectId || !displayedTabs.applications
   });
 
   const promptTotal = viewMode === ViewMode.Owner ? promptsData?.total : publicPromptsData?.total;
@@ -137,61 +159,64 @@ export default function MyLibrary({ publicView = false }) {
   const dataSourcesTotal = datasourcesData?.total
   const applicationTotal = applicationsData?.total
   const allTotal = promptTotal + collectionTotal + (dataSourcesTotal || 0) + (applicationTotal || 0);
-  const tabs = useMemo(() => [{
-    label: MyLibraryTabs[0],
-    count: allTotal,
-    content: <AllStuffList
-      viewMode={viewMode}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      statuses={statuses}
-    />
-  },
-  {
-    label: MyLibraryTabs[1],
-    icon: <CommandIcon fontSize="1rem" />,
-    count: promptTotal,
-    content: <PromptsList
-      viewMode={viewMode}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      statuses={statuses}
-    />
-  },
-  {
-    label: MyLibraryTabs[2],
-    icon: <DatabaseIcon />,
-    count: dataSourcesTotal,
-    content: <DataSourcesList
-      viewMode={viewMode}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      statuses={statuses}
-    />,
-  },
-  {
-    label: MyLibraryTabs[3],
-    icon: <ApplicationsIcon />,
-    count: applicationTotal,
-    content: <ApplicationsList
-      viewMode={viewMode}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      statuses={statuses}
-    />,
-    display: VITE_SHOW_APPLICATION ? undefined : 'none'
-  },
-  {
-    label: MyLibraryTabs[4],
-    icon: <FolderIcon selected />,
-    count: collectionTotal,
-    content: <CollectionsList
-      viewMode={viewMode}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      statuses={statuses}
-    />
-  }], [
+  const tabs = useMemo(() => {
+    const allTabs = [{
+      label: MyLibraryTabs[0],
+      count: allTotal,
+      content: <AllStuffList
+        viewMode={viewMode}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        statuses={statuses}
+      />
+    },
+      {
+        label: MyLibraryTabs[1],
+        icon: <CommandIcon fontSize="1rem" />,
+        count: promptTotal,
+        content: <PromptsList
+          viewMode={viewMode}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          statuses={statuses}
+        />
+      },
+      {
+        label: MyLibraryTabs[2],
+        icon: <DatabaseIcon />,
+        count: dataSourcesTotal,
+        content: <DataSourcesList
+          viewMode={viewMode}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          statuses={statuses}
+        />,
+      },
+      {
+        label: MyLibraryTabs[3],
+        icon: <ApplicationsIcon />,
+        count: applicationTotal,
+        content: <ApplicationsList
+          viewMode={viewMode}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          statuses={statuses}
+        />,
+      },
+      {
+        label: MyLibraryTabs[4],
+        icon: <FolderIcon selected />,
+        count: collectionTotal,
+        content: <CollectionsList
+          viewMode={viewMode}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          statuses={statuses}
+        />
+      }]
+    return allTabs.filter(i => displayedTabs[i.label])
+  }, [
+    displayedTabs,
     allTotal,
     collectionTotal,
     promptTotal,

@@ -1,4 +1,4 @@
-import {MyLibraryTabs, SearchParams, VITE_SHOW_APPLICATION, ViewMode} from '@/common/constants';
+import {MyLibraryTabs, SearchParams, ViewMode} from '@/common/constants';
 import {useFromMyLibrary, useSelectedProjectId} from '@/pages/hooks';
 import RouteDefinitions, {PathSessionMap} from '@/routes';
 import {useTheme} from '@emotion/react';
@@ -14,7 +14,7 @@ import {useImportPromptMutation} from '@/api/prompts';
 import Toast from '@/components/Toast';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import {buildErrorMessage} from '@/common/utils';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import TooltipForDisablePersonalSpace, {useDisablePersonalSpace} from './TooltipForDisablePersonalSpace';
 import {actions} from '@/slices/prompts';
 import ModelSelectDialog from './ModelSelectDialog';
@@ -27,7 +27,13 @@ const optionsMap = {
   'Collection': 'Collection',
 };
 
-const options = VITE_SHOW_APPLICATION ? Object.keys(optionsMap) : Object.keys(optionsMap).filter(i => i !== 'Application');
+const displayPermissions = {
+  Prompt: ['models.prompt_lib.prompts.create'],
+  Datasource: ['models.datasources.datasources.create'],
+  Application: ['models.applications.applications.create'],
+  Collection: ['models.prompt_lib.collections.create'],
+}
+
 const commandPathMap = {
   'Prompt': RouteDefinitions.CreatePrompt,
   'Datasource': RouteDefinitions.CreateDatasource,
@@ -241,6 +247,12 @@ export default function HeaderSplitButton({ onClickCommand }) {
   const [openSelectModel, setOpenSelectModel] = useState(false);
   const [importBody, setImportBody] = useState({});
   const { modelOptions } = useModelOptions();
+  const { permissions = [] } = useSelector(s => s.user)
+
+  const options = useMemo(() => {
+    const permissionsSet = new Set(permissions)
+    return Object.keys(optionsMap).filter(i => displayPermissions[i].some(p => permissionsSet.has(p)))
+  }, [permissions])
 
   const onCloseSelectModel = useCallback(
     () => {

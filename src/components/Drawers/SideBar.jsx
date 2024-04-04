@@ -1,5 +1,5 @@
 
-import { MyLibraryTabs, PERMISSION_GROUPS, PromptsTabs, SearchParams, VITE_SHOW_APPLICATION, VITE_SHOW_CHAT, ViewMode } from '@/common/constants';
+import { MyLibraryTabs, PERMISSION_GROUPS, PromptsTabs, SearchParams, ViewMode } from '@/common/constants';
 import {
   DrawerMenuItem,
   SectionHeader,
@@ -42,7 +42,7 @@ const SideBarBody = ({ onKeyDown, onClose }) => {
   const navigate = useNavigate();
   const showModerationMenu = PERMISSION_GROUPS.moderation.some(p => publicPermissions.includes(p));
   const { isBlockNav, setIsResetApiState, resetApiState } = useNavBlocker();
-
+  
   const navigateToPage = useCallback(
     (pagePath, breadCrumb) => () => {
       if (pagePath !== pathname) {
@@ -68,40 +68,42 @@ const SideBarBody = ({ onKeyDown, onClose }) => {
   );
 
 
-  const menuData = useMemo(() => [
-    {
-      menuTitle: 'Chat',
-      menuIcon: <ChatIcon fontSize="1rem" />,
-      onClick: navigateToPage(`${RouteDefinitions.Chat}`, 'Chat'),
-      selected: pathname.startsWith(RouteDefinitions.Chat),
-      display: VITE_SHOW_CHAT ? undefined : 'none'
-    },
-    {
-      menuTitle: 'Prompts',
-      menuIcon: <CommandIcon fontSize="1rem" />,
-      onClick: navigateToPage(`${RouteDefinitions.Prompts}/${PromptsTabs[0]}`, 'Prompts'),
-      selected: pathname.startsWith(RouteDefinitions.Prompts) || pathname.startsWith(RouteDefinitions.UserPublic)
-    },
-    {
-      menuTitle: 'Datasources',
-      menuIcon: <DatabaseIcon />,
-      onClick: navigateToPage(RouteDefinitions.DataSources, 'DataSources'),
-      selected: pathname.startsWith(RouteDefinitions.DataSources),
-    },
-    {
-      menuTitle: 'Applications',
-      menuIcon: <ApplicationsIcon />,
-      onClick: navigateToPage(RouteDefinitions.Applications, 'Applications'),
-      selected: pathname.startsWith(RouteDefinitions.Applications),
-      display: VITE_SHOW_APPLICATION ? undefined : 'none',
-    },
-    {
-      menuTitle: 'Collections',
-      menuIcon: <FolderIcon selected />,
-      onClick: navigateToPage(`${RouteDefinitions.Collections}/${PromptsTabs[0]}`, 'Collections'),
-      selected: pathname.startsWith(RouteDefinitions.Collections)
-    },
-  ], [pathname, navigateToPage]);
+  const displayedMenuItems = useMemo(() => {
+    const permissionsSet = new Set(publicPermissions)
+    const allMenus = [
+      {
+        menuTitle: 'Chat',
+        menuIcon: <ChatIcon fontSize="1rem" />,
+        onClick: navigateToPage(`${RouteDefinitions.Chat}`, 'Chat'),
+        selected: pathname.startsWith(RouteDefinitions.Chat),
+      },
+      {
+        menuTitle: 'Prompts',
+        menuIcon: <CommandIcon fontSize="1rem" />,
+        onClick: navigateToPage(`${RouteDefinitions.Prompts}/${PromptsTabs[0]}`, 'Prompts'),
+        selected: pathname.startsWith(RouteDefinitions.Prompts) || pathname.startsWith(RouteDefinitions.UserPublic)
+      },
+      {
+        menuTitle: 'Datasources',
+        menuIcon: <DatabaseIcon />,
+        onClick: navigateToPage(RouteDefinitions.DataSources, 'DataSources'),
+        selected: pathname.startsWith(RouteDefinitions.DataSources),
+      },
+      {
+        menuTitle: 'Applications',
+        menuIcon: <ApplicationsIcon />,
+        onClick: navigateToPage(RouteDefinitions.Applications, 'Applications'),
+        selected: pathname.startsWith(RouteDefinitions.Applications),
+      },
+      {
+        menuTitle: 'Collections',
+        menuIcon: <FolderIcon selected />,
+        onClick: navigateToPage(`${RouteDefinitions.Collections}/${PromptsTabs[0]}`, 'Collections'),
+        selected: pathname.startsWith(RouteDefinitions.Collections)
+      },
+    ]
+    return allMenus.filter(i => PERMISSION_GROUPS[i.menuTitle.toLowerCase()] ? PERMISSION_GROUPS[i.menuTitle.toLowerCase()].some(p => permissionsSet.has(p)) : true)
+  }, [publicPermissions, pathname, navigateToPage])
 
 
   const buildMenuItems = useCallback(({ menuIcon, menuTitle, onClick, selected, display, isPersonalSpace }) => (
@@ -168,7 +170,7 @@ const SideBarBody = ({ onKeyDown, onClose }) => {
       </SectionHeader>
       <List>
         {
-          menuData.map(buildMenuItems)
+          displayedMenuItems.map(buildMenuItems)
         }
       </List>
       <Divider />

@@ -39,9 +39,6 @@ export const PROD = alita_ui_config.hasOwnProperty('prod') ?
 export const VITE_PUBLIC_PROJECT_ID = alita_ui_config.hasOwnProperty('vite_public_project_id') ?
   alita_ui_config.vite_public_project_id : import.meta.env.VITE_PUBLIC_PROJECT_ID;
 
-export const VITE_SHOW_APPLICATION = alita_ui_config.hasOwnProperty('vite_show_application') ?
-  alita_ui_config.VITE_SHOW_APPLICATION : import.meta.env.VITE_SHOW_APPLICATION;
-
 export const VITE_SHOW_CHAT = alita_ui_config.hasOwnProperty('vite_show_chat') ?
   alita_ui_config.VITE_SHOW_CHAT : import.meta.env.VITE_SHOW_CHAT;
 
@@ -501,6 +498,19 @@ export const TIME_FORMAT = {
 }
 
 export const PERMISSIONS = {
+  chat: {},
+  prompts: {
+    list: 'models.prompt_lib.public_prompts.list'
+  },
+  collections: {
+    list: 'models.prompt_lib.public_collections.list'
+  },
+  datasources: {
+    list: 'models.datasources.public_datasources.list'
+  },
+  applications: {
+    list: 'models.applications.public.list'
+  },
   moderation: {
     approve: 'models.prompt_lib.approve.post',
     reject: 'models.prompt_lib.reject.post'
@@ -508,7 +518,12 @@ export const PERMISSIONS = {
 }
 
 export const PERMISSION_GROUPS = {
-  moderation: [PERMISSIONS.moderation.approve, PERMISSIONS.moderation.reject]
+  // chat: [],
+  prompts: [PERMISSIONS.prompts.list],
+  collections: [PERMISSIONS.collections.list],
+  datasources: [PERMISSIONS.datasources.list],
+  applications: [PERMISSIONS.applications.list],
+  moderation: [PERMISSIONS.moderation.approve, PERMISSIONS.moderation.reject],
 }
 
 export const CollectionStatus = {
