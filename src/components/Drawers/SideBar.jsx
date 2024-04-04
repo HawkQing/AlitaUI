@@ -38,9 +38,9 @@ import ChatIcon from '@mui/icons-material/Chat';
 
 const SideBarBody = ({ onKeyDown, onClose }) => {
   const { pathname } = useLocation();
-  const { personal_project_id: privateProjectId, permissions = [] } = useSelector(state => state.user);
+  const { personal_project_id: privateProjectId, publicPermissions = [] } = useSelector(state => state.user);
   const navigate = useNavigate();
-  const showModerationMenu = PERMISSION_GROUPS.moderation.some(p => permissions.includes(p));
+  const showModerationMenu = PERMISSION_GROUPS.moderation.some(p => publicPermissions.includes(p));
   const { isBlockNav, setIsResetApiState, resetApiState } = useNavBlocker();
 
   const navigateToPage = useCallback(
