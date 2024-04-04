@@ -498,7 +498,9 @@ export const TIME_FORMAT = {
 }
 
 export const PERMISSIONS = {
-  chat: {},
+  chat: {
+    list: 'models.prompt_lib.chat.list'
+  },
   prompts: {
     list: 'models.prompt_lib.public_prompts.list'
   },
@@ -518,7 +520,7 @@ export const PERMISSIONS = {
 }
 
 export const PERMISSION_GROUPS = {
-  // chat: [],
+  chat: [PERMISSIONS.chat.list],
   prompts: [PERMISSIONS.prompts.list],
   collections: [PERMISSIONS.collections.list],
   datasources: [PERMISSIONS.datasources.list],
