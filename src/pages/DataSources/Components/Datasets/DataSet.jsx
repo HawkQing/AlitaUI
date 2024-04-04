@@ -209,7 +209,7 @@ export const ViewEditDataset = ({ data, datasourceVersionId, datasourceVersionUU
   const { ToastComponent: Toast, toastInfo, toastError, toastSuccess } = useToast();
   const onStreamingEvent = useCallback(
     (message) => {
-      if (message.status) {
+      if (message.status && message.id === data?.id) {
         setStatus(message.status);
         if (message.status === datasetStatus.error.value) {
           toastError(`Dataset ${message.name} update error`);
@@ -218,7 +218,7 @@ export const ViewEditDataset = ({ data, datasourceVersionId, datasourceVersionUU
         }
       }
     },
-    [toastError, toastSuccess],
+    [toastError, toastSuccess, data?.id],
   )
 
   const { emit } = useSocket(sioEvents.datasource_dataset_status, onStreamingEvent);
