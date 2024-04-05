@@ -3,26 +3,35 @@ import SocketContext from '@/context/SocketContext';
 
 export const useManualSocket = (event, responseHandler) => {
   const socket = useContext(SocketContext);
+  const reconnect = useCallback(() => {
+    // eslint-disable-next-line no-console
+    socket && socket.disconnected && console.log('reconnecting')
+    socket && socket.disconnected && socket.connect()
+  }, [socket])
 
   const subscribe = useCallback(
     () => {
+      reconnect()
       // eslint-disable-next-line no-console
-      socket && responseHandler && socket.on(event, responseHandler) && console.log('subscribing to', event)
+      socket && responseHandler && console.log('subscribing to', event)
+      socket && responseHandler && socket.on(event, responseHandler)
     },
-    [event, responseHandler, socket],
+    [event, responseHandler, socket, reconnect],
   )
 
   const unsubscribe = useCallback(
     () => {
       // eslint-disable-next-line no-console
-      socket && socket.off(event, responseHandler) && console.log('unsubscribing from', event);
+      socket && console.log('unsubscribing from', event);
+      socket && socket.off(event, responseHandler)
     },
     [event, responseHandler, socket],
   )
 
   const emit = useCallback((payload) => {
+    reconnect()
     socket?.emit(event, payload);
-  }, [socket, event]);
+  }, [socket, event, reconnect]);
 
   return {
     subscribe,

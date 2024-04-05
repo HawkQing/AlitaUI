@@ -24,14 +24,20 @@ const RootComponent = () => {
       path: VITE_SOCKET_PATH,
       // reconnectionAttempts: 10,
       reconnectionDelayMax: 2000,
-     });
-    setSocket(socketIo);
+     })
+    
+    socketIo.on('connect', () => {
+      // eslint-disable-next-line no-console
+      console.log('sio connected', socketIo)
+      setSocket(socketIo)
+    })
+    
 
-    socketIo.on("connect_error", (err) => {
+    socketIo?.on("connect_error", (err) => {
       // eslint-disable-next-line no-console
       console.log(`Connection error due to ${err}`);
     });
-    socketIo.on('disconnect', () => {
+    socketIo?.on('disconnect', () => {
       // eslint-disable-next-line no-console
       console.log('needs reconnecting', socketIo)
     })
