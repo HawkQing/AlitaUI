@@ -9,13 +9,13 @@ import useTags from '@/components/useTags';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import TrendingAuthors from '@/components/TrendingAuthors';
-import { usePageQuery } from '@/pages/hooks';
+import { usePageQuery, useSortQueryParamsFromUrl } from '@/pages/hooks';
 import { rightPanelStyle, tagsStyle } from '@/pages/MyLibrary/CommonStyles';
 
 const emptyListPlaceHolder = <div>No public prompts yet. <br />Publish yours now!</div>;
 const emptySearchedListPlaceHolder = <div>No prompts found yet. <br />Publish yours now!</div>;
 
-export default function Latest () {
+export default function Latest() {
   const {
     renderCard,
   } = useCardList(ViewMode.Public);
@@ -23,13 +23,14 @@ export default function Latest () {
 
   const { tagList } = useSelector((state) => state.prompts);
   const { selectedTagIds } = useTags(tagList);
+  const { sort_by, sort_order } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
 
   const { data, error, isError, isFetching } = usePublicPromptListQuery({
     page,
     params: {
       tags: selectedTagIds,
-      sort_by: 'created_at',
-      sort_order: 'desc',
+      sort_by,
+      sort_order,
       query,
     }
   });
@@ -53,7 +54,7 @@ export default function Latest () {
         rightPanelOffset={'82px'}
         rightPanelContent={
           <div style={rightPanelStyle}>
-            <Categories tagList={tagList} style={tagsStyle}/>
+            <Categories tagList={tagList} style={tagsStyle} />
             <TrendingAuthors />
           </div>
         }
@@ -62,7 +63,7 @@ export default function Latest () {
         loadMoreFunc={loadMorePrompts}
         cardType={ContentType.PromptsLatest}
         emptyListPlaceHolder={query ? emptySearchedListPlaceHolder : emptyListPlaceHolder}
-        />
+      />
       <Toast
         open={isError && !!page}
         severity={'error'}

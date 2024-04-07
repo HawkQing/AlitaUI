@@ -45,10 +45,9 @@ export default function DataTableHead({ columns, orderBy, order, setOrder, setOr
         [SearchParams.SortBy]: property,
         [SearchParams.SortOrder]: newSortOrder
       })
-    } else {
-      setOrder(newSortOrder);
-      setOrderBy(property);
     }
+    setOrder(newSortOrder);
+    setOrderBy(property);
   };
 
   const createSortHandler = (property) => (event) => {

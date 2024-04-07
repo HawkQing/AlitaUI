@@ -45,6 +45,16 @@ export const usePageQuery = (resetPage) => {
   return { query: localQuery, page, setPage, pageSize }
 }
 
+export const useSortQueryParamsFromUrl = ({defaultSortOrder, defaultSortBy}) => {
+  const [searchParams] = useSearchParams();
+  const sort_order = useMemo(() => searchParams.get(SearchParams.SortOrder) || defaultSortOrder, [defaultSortOrder, searchParams]);
+  const sort_by = useMemo(() => searchParams.get(SearchParams.SortBy) || defaultSortBy, [defaultSortBy, searchParams]);
+  return {
+    sort_order,
+    sort_by,
+  }
+}
+
 export const useAuthorNameFromUrl = () => {
   const [searchParams] = useSearchParams();
   const author = useMemo(() => searchParams.get(SearchParams.AuthorName), [searchParams]);

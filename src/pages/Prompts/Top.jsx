@@ -9,7 +9,7 @@ import useTags from '@/components/useTags';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import TrendingAuthors from '@/components/TrendingAuthors';
-import { usePageQuery } from '@/pages/hooks';
+import { usePageQuery, useSortQueryParamsFromUrl } from '@/pages/hooks';
 import { rightPanelStyle, tagsStyle } from '../MyLibrary/CommonStyles';
 
 const emptyListPlaceHolder = <div>No public prompts yet. <br />Publish yours now!</div>;
@@ -22,13 +22,13 @@ const Top = () => {
   const { query, page, setPage } = usePageQuery();
   const { tagList } = useSelector((state) => state.prompts);
   const { selectedTagIds, calculateTagsWidthOnCard } = useTags(tagList);
-
+  const { sort_by, sort_order } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
   const { data, error, isError, isLoading, isFetching } = usePublicPromptListQuery({
     page,
     params: {
       tags: selectedTagIds,
-      sort_by: 'created_at',
-      sort_order: 'desc',
+      sort_by,
+      sort_order,
       query,
     }
   });

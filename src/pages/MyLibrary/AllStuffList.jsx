@@ -139,7 +139,7 @@ const AllStuffList = ({
         mixedContent
         key={'AllStuffList'}
         cardList={realDataList}
-        total={total + collectionTotal}
+        total={total + collectionTotal + datasourcesTotal}
         isLoading={isPromptLoading || isPromptFirstFetching || isCollectionsLoading || isDatasourcesLoading}
         isError={isPromptError || isCollectionsError}
         rightPanelOffset={rightPanelOffset}
