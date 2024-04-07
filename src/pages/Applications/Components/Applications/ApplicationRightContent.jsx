@@ -114,8 +114,8 @@ export default function ApplicationRightContent({
 
   return (
     <>
-      <RightGridItem item xs={12} lg={lgGridColumns}>
-        <ContentContainer>
+      <RightGridItem item xs={12} lg={lgGridColumns} sx={{ paddingBottom: '10px' }}>
+        <ContentContainer sx={settings?.isFullScreenChat ? { height: 'calc(100vh - 165px)' } : undefined}>
           <RightContent
             variables={variables}
             onChangeVariable={onChangeVariable}
