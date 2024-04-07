@@ -7,7 +7,7 @@ import useCardList from '@/components/useCardList';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import TrendingAuthors from '@/components/TrendingAuthors';
-import { usePageQuery } from '@/pages/hooks';
+import { usePageQuery, useSortQueryParamsFromUrl } from '@/pages/hooks';
 import { rightPanelStyle, tagsStyle } from '@/pages/MyLibrary/CommonStyles';
 import useTags from '@/components/useTags';
 import useDatasourceDispatchQueryParams from './useDatasourceDispatchQueryParams';
@@ -24,6 +24,7 @@ export default function Latest() {
 
   const { tagList } = useSelector((state) => state.prompts);
   const { selectedTagIds } = useTags(tagList);
+  const { sort_by, sort_order } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
   const { error,
     data,
     isError,
@@ -33,8 +34,8 @@ export default function Latest() {
     params: {
       statuses: CollectionStatus.Published,
       tags: selectedTagIds,
-      sort_by: 'created_at',
-      sort_order: 'desc',
+      sort_by,
+      sort_order,
       query,
     }
   });

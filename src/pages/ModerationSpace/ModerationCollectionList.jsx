@@ -6,7 +6,7 @@ import useCardList from '@/components/useCardList';
 import { Box } from '@mui/material';
 import * as React from 'react';
 import { useLazyTagListQuery } from '@/api/prompts';
-import { useProjectId } from '@/pages/hooks';
+import { useProjectId, useSortQueryParamsFromUrl } from '@/pages/hooks';
 import { useCollectionListQuery } from '@/api/collections';
 
 export default function AllStuffList({ setTabCount }) {
@@ -15,6 +15,7 @@ export default function AllStuffList({ setTabCount }) {
   } = useCardList(ViewMode.Moderator);
 
   const [collectionPage, setCollectionPage] = React.useState(0);
+  const { sort_by, sort_order } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
   const { error: collectionError,
     data: collectionsData,
     isError: isCollectionsError,
@@ -25,8 +26,8 @@ export default function AllStuffList({ setTabCount }) {
     page: collectionPage,
     params: {
       tags: [],
-      sort_by: 'created_at',
-      sort_order: 'desc',
+      sort_by,
+      sort_order,
       statuses: CollectionStatus.OnModeration
     }
   });

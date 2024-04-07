@@ -6,8 +6,6 @@ import {
   MyPromptStatusOptions,
   PromptStatus,
   SearchParams,
-  SortFields,
-  SortOrderOptions,
   ViewMode,
 } from '@/common/constants';
 import CommandIcon from '@/components/Icons/CommandIcon';
@@ -23,7 +21,7 @@ import { Box, useTheme } from '@mui/material';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useAuthorIdFromUrl, useProjectId, useViewMode } from '../hooks';
+import { useAuthorIdFromUrl, useProjectId, useSortQueryParamsFromUrl, useViewMode } from '../hooks';
 import AllStuffList from './AllStuffList';
 import CollectionsList from './CollectionsList';
 import DataSourcesList from './DataSourcesList';
@@ -64,8 +62,7 @@ export default function MyLibrary({ publicView = false }) {
   const { permissions = [] } = useSelector(s => s.user)
 
   const viewMode = useViewMode();
-  const sortBy = useMemo(() => searchParams.get(SearchParams.SortBy) || SortFields.CreatedAt, [searchParams]);
-  const sortOrder = useMemo(() => searchParams.get(SearchParams.SortOrder) || SortOrderOptions.DESC, [searchParams]);
+  const { sort_by: sortBy, sort_order: sortOrder } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
   const statuses = useMemo(() => {
     const statusesString = publicView ? PromptStatus.Published : searchParams.get(SearchParams.Statuses)
     if (statusesString) {

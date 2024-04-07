@@ -7,20 +7,21 @@ import { Box } from '@mui/material';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import { useLazyTagListQuery, usePromptListQuery } from '@/api/prompts';
-import { useProjectId } from '@/pages/hooks';
+import { useProjectId, useSortQueryParamsFromUrl } from '@/pages/hooks';
 
 export default function AllStuffList({ setTabCount }) {
   const {
     renderCard,
   } = useCardList(ViewMode.Moderator);
   const [page, setPage] = React.useState(0);
+  const { sort_by, sort_order } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
   const { data, error, isError, isLoading, isFetching } = usePromptListQuery({
     projectId: PUBLIC_PROJECT_ID,
     page,
     params: {
       tags: [],
-      sort_by: 'created_at',
-      sort_order: 'desc',
+      sort_by,
+      sort_order,
       statuses: PromptStatus.OnModeration
     }
   });
