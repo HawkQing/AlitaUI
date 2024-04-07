@@ -239,14 +239,19 @@ export const RightContent = ({
           },
         ]}
       /> : null}
-      <Box sx={{
-        display: !showAdvancedSettings || showClearChatOnSettings ? 'flex' : 'none',
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: '24px',
-        width: '100%',
-        gap: '1rem',
-      }}>
+      <Box
+        // eslint-disable-next-line react/jsx-no-bind
+        sx={(theme) => ({
+          display: !showAdvancedSettings || showClearChatOnSettings ? 'flex' : 'none',
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: '24px',
+          [theme.breakpoints.down('lg')]: {
+            marginBottom: showAdvancedSettings ? '0px' : '24px',
+          },
+          width: '100%',
+          gap: '1rem',
+        })}>
         {
 
           !showAdvancedSettings ?
@@ -539,7 +544,7 @@ export default function RunTab({
         </ContentContainer>
       </LeftGridItem>
       <RightGridItem item xs={12} lg={lgGridColumns}>
-        <ContentContainer>
+        <ContentContainer sx={settings?.isFullScreenChat ? { height: 'calc(100vh - 165px)' } : undefined}>
           <RightContent
             variables={variables}
             onChangeVariable={onChangeVariable}
