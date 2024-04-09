@@ -30,12 +30,20 @@ const userSlice = createSlice({
       )
       .addMatcher(
         alitaApi.endpoints.publicPermissionList.matchFulfilled, (state, {payload}) => {
-          state.publicPermissions = payload
+          if (!payload || !payload.length) {
+            state.publicPermissions = ["empty.fake.permission.public"]
+          } else {
+            state.publicPermissions = payload
+          }
         }
       )
       .addMatcher(
         alitaApi.endpoints.permissionList.matchFulfilled, (state, {payload}) => {
-          state.permissions = payload
+          if (!payload || !payload.length) {
+            state.permissions = ["empty.fake.permission"]
+          } else {
+            state.permissions = payload
+          }
         }
       )
   },
