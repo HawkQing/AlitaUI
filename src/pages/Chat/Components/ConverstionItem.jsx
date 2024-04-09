@@ -6,7 +6,7 @@ import { useCallback, useMemo, useState } from 'react';
 import DotMenu from "@/components/DotMenu";
 import DeleteIcon from '../../../components/Icons/DeleteIcon';
 
-const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected = false }) => {
+const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected = false, collapsed }) => {
   const { participants, is_public, chat_history = [] } = conversation
   const [isHovering, setIsHovering] = useState(false);
   const theme = useTheme();
@@ -47,11 +47,12 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected 
     },
     [],
   )
-  
-  return (
+
+  return !collapsed ? (
     <Box
       sx={{
         borderBottom: `1px solid ${theme.palette.border.lines}`,
+        borderLeft: isSelected ? `3px solid ${theme.palette.primary.main}` : '0px solid',
         padding: '12px 16px',
         gap: '12px',
         display: 'flex',
@@ -111,6 +112,18 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected 
           {menuItems}
         </DotMenu>
       </Box>
+    </Box>
+  ) : (
+    <Box sx={{
+      width: '40px', 
+      height: '40px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: '8px',
+      background: theme.palette.background.secondary,
+    }}>
+      <StatusDot size='10px' status={is_public ? PromptStatus.Published : PromptStatus.Draft} />
     </Box>
   )
 }

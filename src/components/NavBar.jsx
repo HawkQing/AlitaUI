@@ -18,6 +18,7 @@ import {
   useNameFromUrl,
   useViewMode,
   useDeploymentConfigNameFromUrl,
+  useIsFromChat,
 } from '@/pages/hooks';
 import { actions } from '@/slices/search';
 import isPropValid from '@emotion/is-prop-valid';
@@ -46,6 +47,7 @@ import UserAvatar from './UserAvatar';
 import useSearchBar from './useSearchBar';
 import useTags from './useTags';
 import { filterProps } from '@/common/utils';
+import ProjectSelect from '@/pages/MyLibrary/ProjectSelect';
 
 
 const StyledAppBar = styled(AppBar,
@@ -447,6 +449,7 @@ const NavBar = () => {
   const [searchTags, setSearchTags] = useState(queryTags);
   const [openSideMenu, setOpenSideMenu] = useState(false);
   const { showSearchBar } = useSearchBar();
+  const isFromChat = useIsFromChat();
   const onClickIcon = useCallback(
     () => {
       setOpenSideMenu((prevState) => !prevState)
@@ -516,7 +519,25 @@ const NavBar = () => {
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <HeaderSplitButton />
           <NotificationButton display='none' />
-          <UserInfo />
+          {
+            isFromChat ?
+              <Box sx={{
+                height: '100%',
+                display: 'flex',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                marginRight: '16px'
+              }}>
+                <ProjectSelect
+                  customSelectedColor={`${theme.palette.text.secondary} !important`}
+                  sx={{
+                    alignItems: 'center'
+                  }}
+                />
+              </Box>
+              :
+              <UserInfo />
+          }
           <NavActions />
         </Box>
       </Toolbar>

@@ -1,19 +1,46 @@
 
 import { Grid } from '@mui/material';
 import Conversations from './Components/Conversations';
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState, useRef, useMemo } from 'react';
 import { ChatBoxMode, ROLES } from '@/common/constants';
-import ChatBox from '../../components/ChatBox/ChatBox';
+import ChatBox from './Components/ChatBox';
 import Participants from './Components/Participants';
+import { useIsCreatingConversation } from '../hooks';
+// import CreateConversationDialog from './Components/CreateConversationDialog';
+import { useSearchParams } from 'react-router-dom';
 
 const Chat = () => {
   const [selectedConversation, setSelectedConversation] = useState(null)
-  const settings = {
+  const isCreatingConversation = useIsCreatingConversation();
+  const [, setSearchParams] = useSearchParams();
+
+    const onStartNewConversation = useCallback(
+    () => {
+      const newSearchParams = new URLSearchParams({});
+      setSearchParams(newSearchParams, {
+        replace: true,
+      });
+    },
+    [setSearchParams],
+  )
+  const settings = useMemo(() => ({
     chatOnly: true,
     type: ChatBoxMode.Chat,
-    messageListSX: { height: 'calc(100vh - 200px)' }
-  };
-  const [collapsed, setCollapsed] = useState(false);
+    messageListSX: { height: 'calc(100vh - 200px)' },
+    isNewConversation: isCreatingConversation,
+    onStartNewConversation
+  }), [isCreatingConversation, onStartNewConversation]);
+  const [collapsedConversations, setCollapsedConversations] = useState(false);
+  const [collapsedParticipants, setCollapsedParticipants] = useState(false);
+  const chatBoxLgGridColumns = useMemo(() => {
+    if (collapsedConversations && collapsedParticipants) {
+      return 11;
+    } else if (collapsedConversations || collapsedParticipants) {
+      return 8.5
+    } else {
+      return 6
+    }
+  }, [collapsedConversations, collapsedParticipants])
   const boxRef = useRef();
 
   const conversations = [
@@ -82,41 +109,55 @@ const Chat = () => {
     [],
   )
 
-  const onCollapsed = useCallback(
+  const onParticipantsCollapsed = useCallback(
     () => {
-      setCollapsed(prev => !prev)
+      setCollapsedParticipants(prev => !prev)
     },
     [],
   )
-  
+
+  const onConversationCollapsed = useCallback(
+    () => {
+      setCollapsedConversations(prev => !prev)
+    },
+    [],
+  )
 
   return (
-    <Grid container sx={{ padding: '0.5rem 1.5rem' }} columnSpacing={'32px'}>
-      <Grid item xs={12} lg={3}>
-        <Conversations
-          selectedConversationId={selectedConversation?.id}
-          conversations={conversations}
-          onSelectConversation={onSelectConversation}
-        />
+    <>
+      <Grid container sx={{ padding: '0.5rem 1.5rem' }} columnSpacing={'32px'}>
+        <Grid item xs={12} lg={collapsedConversations ? 0.5 : 3}>
+          <Conversations
+            selectedConversationId={selectedConversation?.id}
+            conversations={conversations}
+            onSelectConversation={onSelectConversation}
+            collapsed={collapsedConversations}
+            onCollapsed={onConversationCollapsed}
+          />
+        </Grid>
+        <Grid item xs={12} lg={chatBoxLgGridColumns} sx={{
+          paddingTop: {
+            xs: '32px',
+            lg: '0px'
+          }
+        }}>
+          <ChatBox {...settings} ref={boxRef} />
+        </Grid>
+        <Grid item xs={12} lg={collapsedParticipants ? 0.5 : 3}>
+          <Participants
+            collapsed={collapsedParticipants}
+            onCollapsed={onParticipantsCollapsed}
+            selectedConversationId={selectedConversation?.id}
+            participants={conversations}
+            onSelectConversation={onSelectConversation} />
+        </Grid>
       </Grid>
-      <Grid item xs={12} lg={collapsed ? 8.5 : 6} sx={{
-        paddingTop: {
-          xs: '32px',
-          lg: '0px'
-        }
-      }}>
-        <ChatBox {...settings} ref={boxRef} />
-      </Grid>
-      <Grid item xs={12} lg={collapsed ? 0.5 : 3}>
-        <Participants
-          collapsed={collapsed}
-          onCollapsed={onCollapsed}
-          selectedConversationId={selectedConversation?.id}
-          participants={conversations}
-          onSelectConversation={onSelectConversation} />
-      </Grid>
-    </Grid>
-
+      {/* <CreateConversationDialog
+        open={!!isCreatingConversation}
+        onClose={onCloseCreation}
+        onCreateNewConversation={onCreateNewConversation}
+      /> */}
+    </>
   )
 }
 

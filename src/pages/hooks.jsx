@@ -84,6 +84,18 @@ export const useIsFromCollections = () => {
   return isFromCollections;
 }
 
+export const useIsFromChat = () => {
+  const { pathname } = useLocation();
+  const isFromChat = useMemo(() => pathname.startsWith(RouteDefinitions.Chat), [pathname]);
+  return isFromChat;
+}
+
+export const useIsCreatingConversation = () => {
+  const [searchParams] = useSearchParams();
+  const isCreating = useMemo(() => searchParams.get(SearchParams.CreateConversation), [searchParams]);
+  return isCreating;
+}
+
 export const useIsFromDatasources = () => {
   const { pathname } = useLocation();
   const isFromDatasources = useMemo(() => pathname.startsWith(RouteDefinitions.DataSources), [pathname]);

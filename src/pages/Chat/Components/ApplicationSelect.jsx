@@ -1,18 +1,18 @@
 import SingleSelectWithSearch from "@/components/SingleSelectWithSearch";
-import { useDatasourcesOptions } from "@/pages/MyLibrary/useDatasourcesOptions";
+import { useApplicationOptions } from "@/pages/MyLibrary/useApplicationOptions";
 import { useMemo, useState } from "react";
 
 
-export default function DatasourceSelect({
+export default function ApplicationSelect({
   onValueChange = () => { },
-  value = '',
+  value = {},
   required,
   error,
   helperText,
   shouldUseSelectedProject,
 }) {
   const [query, setQuery] = useState('');
-  const { data = {}, isFetching, onLoadMore } = useDatasourcesOptions({query, shouldUseSelectedProject});
+  const { data = {}, isFetching, onLoadMore } = useApplicationOptions({query, shouldUseSelectedProject});
   const dataSourceOptions = useMemo(() =>
     (data.rows || []).map(({ name, id, description }) =>
       ({ label: name, value: id, description })), [data]);
