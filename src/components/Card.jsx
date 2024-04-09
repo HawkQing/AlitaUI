@@ -1,6 +1,6 @@
 import isPropValid from '@emotion/is-prop-valid';
 import styled from '@emotion/styled';
-import { CardContent, Card as MuiCard, Typography, Box, Avatar } from '@mui/material';
+import { CardContent, Card as MuiCard, Typography, Box } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ContentType, ViewMode } from '@/common/constants';
@@ -21,8 +21,6 @@ import useCardNavigate from './useCardNavigate';
 import useCardResize from './useCardResize';
 import useTags from './useTags';
 import ApplicationsIcon from './Icons/ApplicationsIcon';
-import PhotoSizeSelectActualOutlinedIcon from '@mui/icons-material/PhotoSizeSelectActualOutlined';
-import { useTheme } from '@emotion/react';
 
 const MOCK_ISTOP = false;
 const MOCK_INFO = false;
@@ -365,7 +363,6 @@ export default function Card({
     author = {},
     status,
   } = data;
-  const theme = useTheme();
   const viewMode = useDataViewMode(pageViewMode, data);
   const initialCardDescriptionHeight = 2;
   const [lineClamp, setLineClamp] = useState(initialCardDescriptionHeight);
@@ -402,12 +399,6 @@ export default function Card({
               marginLeft: isApplicationCard(type) ? '16px' : '0px'
             }}
             onClick={doNavigate}>
-            {
-              isApplicationCard(type) &&
-              <Avatar sx={{ width: 32, height: 32, marginTop: '8px' }}>
-                <PhotoSizeSelectActualOutlinedIcon sx={{ color: theme.palette.icon.fill.default }} />
-              </Avatar>
-            }
             <StyledCardTopSection>
               <StyledCardTitle
                 ref={cardTitleRef}
