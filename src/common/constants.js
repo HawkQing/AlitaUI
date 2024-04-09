@@ -292,7 +292,8 @@ export const SearchParams = {
   PageSize: 'page_size',
   View: 'view',
   DeploymentName: 'deployment_name',
-  DeploymentConfigName: 'config_name'
+  DeploymentConfigName: 'config_name',
+  CreateConversation: 'create',
 };
 
 export const ViewOptions = {
@@ -520,7 +521,7 @@ export const PERMISSIONS = {
 }
 
 export const PERMISSION_GROUPS = {
-  chat: [PERMISSIONS.chat.list],
+  // chat: [PERMISSIONS.chat.list],
   prompts: [PERMISSIONS.prompts.list],
   collections: [PERMISSIONS.collections.list],
   datasources: [PERMISSIONS.datasources.list],

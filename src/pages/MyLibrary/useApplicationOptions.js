@@ -1,19 +1,19 @@
 
-import { useDatasourceListQuery } from '@/api/datasources';
 import { PAGE_SIZE, SortFields, SortOrderOptions } from '@/common/constants';
 import { useProjectId, useSelectedProjectId } from '@/pages/hooks';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { getQueryStatuses } from './useLoadPrompts';
+import { useApplicationListQuery } from '@/api/applications';
 
-export const useDatasourcesOptions = ({query, shouldUseSelectedProject}) => {
-  const [datasourcePage, setDatasourcePage] = useState(0);
+export const useApplicationOptions = ({query, shouldUseSelectedProject}) => {
+  const [page, setPage] = useState(0);
   const pageSize = PAGE_SIZE;
   const projectId = useProjectId();
   const selectedProjectId = useSelectedProjectId();
   const realProjectId = useMemo(() => shouldUseSelectedProject ? selectedProjectId : projectId, [projectId, selectedProjectId, shouldUseSelectedProject])
 
   useEffect(() => {
-    setDatasourcePage(0);
+    setPage(0);
   }, [query]);
 
   const {
@@ -22,9 +22,9 @@ export const useDatasourcesOptions = ({query, shouldUseSelectedProject}) => {
     isError,
     isLoading,
     isFetching,
-  } = useDatasourceListQuery({
+  } = useApplicationListQuery({
     projectId: realProjectId,
-    page: datasourcePage,
+    page,
     pageSize,
     params: {
       tags: [],
@@ -38,8 +38,8 @@ export const useDatasourcesOptions = ({query, shouldUseSelectedProject}) => {
   const onLoadMore = useCallback(() => {
     const existsMore = data?.rows?.length < data?.total;
     if (!existsMore || isFetching) return;
-    setDatasourcePage(datasourcePage + 1);
-  }, [data?.rows?.length, data?.total, isFetching, datasourcePage]);
+    setPage(page + 1);
+  }, [data?.rows?.length, data?.total, isFetching, page]);
 
   return {
     onLoadMore,

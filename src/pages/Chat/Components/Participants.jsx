@@ -7,11 +7,7 @@ import { useIsSmallWindow } from '@/pages/hooks';
 const Participants = ({ participants, onShowSettings, collapsed, onCollapsed }) => {
   const { isSmallWindow } = useIsSmallWindow();
   return (
-    <Box sx={{
-      marginTop: {
-        xs: '24px'
-      }
-    }} >
+    <Box >
       <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: (collapsed && !isSmallWindow) ? 'center' : 'space-between' }}>
         {
           (!collapsed || isSmallWindow) &&
@@ -22,7 +18,7 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed }) 
         {
           !isSmallWindow &&
           <Box sx={{ cursor: 'pointer' }} onClick={onCollapsed}>
-            {collapsed ? <DoubleLeftIcon /> : <DoubleRightIcon width={'16px'} />}
+            {collapsed ? <DoubleLeftIcon width={'16px'} /> : <DoubleRightIcon width={'16px'} />}
           </Box>
         }
       </Box>

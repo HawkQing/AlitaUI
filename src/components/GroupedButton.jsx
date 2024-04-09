@@ -51,6 +51,7 @@ const GroupedButton = ({
                 color: theme.palette.text.secondary
               }
             }}
+            disableRipple
             disabled={readOnly}
             onClick={onChange}
             value={item.value}
