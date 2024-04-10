@@ -241,11 +241,8 @@ export const apiSlice = alitaApi.enhanceEndpoints({
       invalidatesTags: (result, error, arg) => [{ type: TAG_TYPE_APPLICATION_DETAILS, id: arg.id }],
     }),
     applicationDetails: build.query({
-      query: ({ projectId, applicationId, versionName }) => {
-        let url = apiSlicePath + '/application/prompt_lib/' + projectId + '/' + applicationId
-        if (versionName) {
-          url += '/' + versionName ? `/${versionName}` : ''
-        }
+      query: ({ projectId, applicationId }) => {
+        const url = apiSlicePath + '/application/prompt_lib/' + projectId + '/' + applicationId
         return {
           url
         }
@@ -267,7 +264,34 @@ export const apiSlice = alitaApi.enhanceEndpoints({
         return endpointName + JSON.stringify(sortedObject);
       },
     }),
-
+    getApplicationVersionDetail: build.query({
+      query: ({ projectId, applicationId, versionId }) => {
+        return ({
+          url: apiSlicePath + '/version/prompt_lib/' + projectId + '/' + applicationId + '/' + versionId,
+          method: 'GET',
+        });
+      },
+    }),
+    saveApplicationNewVersion: build.mutation({
+      query: ({ projectId, applicationId, ...body }) => {
+        return ({
+          url: apiSlicePath + '/versions/prompt_lib/' + projectId + '/' + applicationId,
+          method: 'POST',
+          headers,
+          body,
+        });
+      },
+      invalidatesTags: []
+    }),
+    deleteApplicationVersion: build.mutation({
+      query: ({ projectId, applicationId, versionId }) => {
+        return ({
+          url: apiSlicePath + '/version/prompt_lib/' + projectId + '/' + applicationId + '/' + versionId,
+          method: 'DELETE',
+        });
+      },
+      invalidatesTags: []
+    }),
     predict: build.mutation({
       query: ({ projectId, versionId, ...body }) => {
         return ({
@@ -297,5 +321,8 @@ export const {
   useLikeApplicationMutation,
   useUnlikeApplicationMutation,
   useDeleteApplicationToolMutation,
+  useLazyGetApplicationVersionDetailQuery,
+  useSaveApplicationNewVersionMutation,
+  useDeleteApplicationVersionMutation,
 } = apiSlice
 

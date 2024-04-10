@@ -78,7 +78,7 @@ const EditApplication = () => {
   return (
     <>
       <Grid container sx={{ padding: '0.5rem 1.5rem', position: 'fixed', marginTop: '0.7rem' }}>
-        <Grid item xs={12}>
+        <Grid item xs={12}>       
           <StyledTabs
             tabs={[{
               label: 'Run',
@@ -90,8 +90,11 @@ const EditApplication = () => {
                   onSuccess={() => setIsEditing(false)}
                   onDiscard={onDiscard}
                   versionStatus={initialValues?.version_details?.status}
-                  applicationId={initialValues?.id}
+                  applicationId={applicationId}
                   isEditingTool={!!editToolDetail}
+                  versionIdFromDetail={initialValues?.version_details?.id}
+                  versions={initialValues?.versions}
+                  versionDetails={initialValues?.version_details}
                 /> : null,
               rightToolbar: isFetching ? null : <ApplicationDetailToolbar
                 name={initialValues?.name}

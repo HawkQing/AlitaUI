@@ -29,6 +29,8 @@ const ApplicationView = ({
                 tags={currentApplication?.version_details?.tags || []}
                 id={currentApplication?.id}
                 idLabel='Application ID:'
+                versionId={currentApplication?.version_details?.id}
+                versionIdLabel='Version ID:'
               />
             </div>,
         }

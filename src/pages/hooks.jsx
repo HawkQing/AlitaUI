@@ -372,3 +372,18 @@ export const useIsSmallWindow = () => {
 
   return { isSmallWindow };
 }
+
+export const replaceVersionInPath = (newVersionName, pathname, encodedCurrentVersionName, id) => {
+  const encodedVersion = encodeURIComponent(newVersionName);
+  const originalPathname = decodeURI(pathname);
+  const pathToReplace = `${id}/${encodedCurrentVersionName}`;
+  return encodedCurrentVersionName && originalPathname.includes(pathToReplace)
+    ?
+    originalPathname.replace(pathToReplace, `${id}/${encodedVersion}`)
+    :
+    newVersionName
+      ?
+      originalPathname + '/' + encodedVersion
+      :
+      originalPathname;
+}

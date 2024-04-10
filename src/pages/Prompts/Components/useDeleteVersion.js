@@ -1,26 +1,11 @@
 import { useDeleteVersionMutation } from '@/api/prompts';
 import { useEffect, useCallback, useMemo } from 'react';
 import { buildErrorMessage } from '@/common/utils';
-import { useProjectId } from '../../hooks';
+import { useProjectId, replaceVersionInPath } from '@/pages/hooks';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-export const replaceVersionInPath = (newVersionName, pathname, encodedCurrentVersionName, promptId) => {
-  const encodedVersion = encodeURIComponent(newVersionName);
-  const originalPathname = decodeURI(pathname);
-  const pathToReplace = `${promptId}/${encodedCurrentVersionName}`;
-  return encodedCurrentVersionName && originalPathname.includes(pathToReplace)
-    ?
-    originalPathname.replace(pathToReplace, `${promptId}/${encodedVersion}`)
-    :
-    newVersionName
-      ?
-      originalPathname + '/' + encodedVersion
-      :
-      originalPathname;
-}
-
-export const useReplaceVersionInPath = (versions, currentVersionId) => {
+const useReplaceVersionInPath = (versions, currentVersionId) => {
   const { pathname, search } = useLocation();
   const { promptId, version } = useParams();
   const newVersionName = useMemo(() => {
