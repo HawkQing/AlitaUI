@@ -13,7 +13,7 @@ const validationSchema = yup.object({
   client_secret: yup
     .string('Enter client secret')
     .required('Client secret is required'),
-  authorization_url: yup
+  auth_url: yup
     .string('Enter authorization url')
     .required('Authorization url is required'),
   token_url: yup
@@ -50,8 +50,8 @@ export default function OAuthFrom({
       if (!formikRef.current.values.client_secret ) {
         formikRef.current.setFieldTouched('client_secret', true, true);
       }
-      if (!formikRef.current.values.authorization_url ) {
-        formikRef.current.setFieldTouched('authorization_url', true, true);
+      if (!formikRef.current.values.auth_url ) {
+        formikRef.current.setFieldTouched('auth_url', true, true);
       }
       if (!formikRef.current.values.token_url ) {
         formikRef.current.setFieldTouched('token_url', true, true);
@@ -102,13 +102,13 @@ export default function OAuthFrom({
       <FormInput
         required
         label='Authorization URL'
-        id='authorization_url'
-        name='authorization_url'
-        value={formik.values.authorization_url}
+        id='auth_url'
+        name='auth_url'
+        value={formik.values.auth_url}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        error={formik.touched.authorization_url && Boolean(formik.errors.authorization_url)}
-        helperText={formik.touched.authorization_url && formik.errors.authorization_url}
+        error={formik.touched.auth_url && Boolean(formik.errors.auth_url)}
+        helperText={formik.touched.auth_url && formik.errors.auth_url}
       />
       <FormInput
         required
@@ -134,13 +134,13 @@ export default function OAuthFrom({
       />
       <SingleSelect
         showBorder
-        name='token_exchange_method'
-        id='token_exchange_method'
+        name='method'
+        id='method'
         label='Token exchange method'
         onChange={formik.handleChange}
-        value={formik.values.token_exchange_method}
-        error={formik.touched.token_exchange_method && Boolean(formik.errors.token_exchange_method)}
-        helperText={formik.touched.token_exchange_method && formik.errors.token_exchange_method}
+        value={formik.values.method}
+        error={formik.touched.method && Boolean(formik.errors.method)}
+        helperText={formik.touched.method && formik.errors.method}
         options={tokenExchangeMethodOptions}
         customSelectedFontSize={'0.875rem'}
         sx={{ marginTop: '8px' }}

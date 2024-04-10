@@ -430,11 +430,13 @@ export const updateObjectByPath = (object, path, value) => {
       if (index < pathParts.length - 1) {
         obj = obj[part];
       } else {
-        if ((typeof obj[part] === 'object' || !obj[part]) && typeof value === 'object') {
+        if ((typeof obj[part] === 'object' || !obj[part]) && typeof value === 'object' && !Array.isArray(value)) {
           obj[part] = {
             ...(obj[part] || {}),
             ...value,
           };
+        } else if (Array.isArray(value)) {
+          obj[part] = [...value]
         } else {
           obj[part] = value;
         }
@@ -443,11 +445,13 @@ export const updateObjectByPath = (object, path, value) => {
       obj[part] = {}
       obj = obj[part]
     } else {
-      if ((typeof obj[part] === 'object' || !obj[part]) && typeof value === 'object') {
+      if ((typeof obj[part] === 'object' || !obj[part]) && typeof value === 'object' && !Array.isArray(value)) {
         obj[part] = {
           ...(obj[part] || {}),
           ...value,
         };
+      } else if (Array.isArray(value)) {
+        obj[part] = [...value]
       } else {
         obj[part] = value;
       }
@@ -476,4 +480,26 @@ export const openAPIExtract = (openAPIJson) => {
   return []
 };
 
+const parseContent = (content) => {
+  let json = {};
+  try {
+    json = JSON.parse(content);
+  } catch (_) {
+    //
+  }
+  return json
+}
+
+export const parseCustomJsonTool = (customJsonStr) => {
+  let parsedFunctions = []
+  const result = parseContent(customJsonStr)
+  if (!Array.isArray(result)) {
+    parsedFunctions.push(result);
+  } else {
+    parsedFunctions = result
+  }
+  return parsedFunctions
+}
+
 export default renderStatusComponent;
+

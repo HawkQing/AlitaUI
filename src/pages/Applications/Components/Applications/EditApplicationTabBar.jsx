@@ -27,11 +27,12 @@ export default function EditApplicationTabBar({
   onDiscard,
   versionStatus,
   applicationId,
+  isEditingTool
 }) {
 
   const projectId = useSelectedProjectId();
-  const canPublish = useMemo(() => projectId == PUBLIC_PROJECT_ID && versionStatus === PromptStatus.Draft, [projectId, versionStatus])
-  const canUnpublish = useMemo(() => projectId == PUBLIC_PROJECT_ID && versionStatus === PromptStatus.Published, [projectId, versionStatus])
+  const canPublish = useMemo(() => projectId == PUBLIC_PROJECT_ID && versionStatus === PromptStatus.Draft && false, [projectId, versionStatus])
+  const canUnpublish = useMemo(() => projectId == PUBLIC_PROJECT_ID && versionStatus === PromptStatus.Published && false, [projectId, versionStatus])
 
   const { onSave, isSaveError, isSaveSuccess, saveError, isSaving, resetSave } = useSaveVersion({
     projectId,
@@ -118,7 +119,7 @@ export default function EditApplicationTabBar({
     <TabBarItems>
       {
         canPublish && <NormalRoundButton
-          disabled={isPublishingVersion || isPublishSuccess}
+          disabled={isPublishingVersion || isPublishSuccess || isEditingTool}
           variant='contained'
           color='secondary'
           onClick={onPublish}
@@ -130,7 +131,7 @@ export default function EditApplicationTabBar({
       {
         canUnpublish &&
         <NormalRoundButton
-          disabled={isUnpublishSuccess || isUnpublishingVersion}
+          disabled={isUnpublishSuccess || isUnpublishingVersion || isEditingTool}
           variant='contained'
           color='secondary'
           onClick={onUnpublish}
@@ -140,14 +141,14 @@ export default function EditApplicationTabBar({
         </NormalRoundButton>
       }
       <NormalRoundButton
-        disabled={isSaving || isSaveSuccess || !isFormDirty}
+        disabled={isSaving || isSaveSuccess || !isFormDirty || isEditingTool}
         variant="contained"
         color="secondary"
         onClick={onSave}>
         Save
         {isSaving && <StyledCircleProgress size={20} />}
       </NormalRoundButton>
-      <DiscardButton disabled={isSaving || !isFormDirty} onDiscard={onDiscard} />
+      <DiscardButton disabled={isSaving || !isFormDirty || isEditingTool} onDiscard={onDiscard} />
     </TabBarItems>
     <Toast />
   </>

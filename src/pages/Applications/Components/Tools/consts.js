@@ -1,4 +1,4 @@
-import { OAuthTokenExchangeMethods, APIKeyTypes, AuthTypes } from '@/common/constants';
+import { AuthenticationTypes } from '@/common/constants';
 
 export const ToolTypes = {
   datasource: {
@@ -7,7 +7,7 @@ export const ToolTypes = {
   },
   open_api: {
     label: 'Open API',
-    value: 'open_api'
+    value: 'openapi'
   },
   prompt: {
     label: 'Prompt',
@@ -32,53 +32,44 @@ export const ActionTypes = {
 
 export const ActionOptions = Object.values(ActionTypes);
 
-const initialOAuthSetting = {
-  client_id: '',
-  client_secret: '',
-  authorization_url: '',
-  token_url: '',
-  scope: '',
-  token_exchange_method: OAuthTokenExchangeMethods.Default.value,
-}
-
-const initialAPIKeySetting = {
-  api_key: '',
-  api_key_type: APIKeyTypes.Password.value,
-  auth_type: AuthTypes.Basic.value,
-  custom_header: '',
-}
-
 export const ToolInitialValues = {
   [ToolTypes.datasource.value]: {
     type: ToolTypes.datasource.value,
     name: '',
     description: '',
-    datasource: '',
-    actions: [],
+    settings: {
+      datasource_id: '',
+      actions: [],
+    },
   },
   [ToolTypes.open_api.value]: {
     type: ToolTypes.open_api.value,
     name: '',
-    schema: '',
-    authentication: {
-      authentication_type: '', 
-      oauth_settings: initialOAuthSetting, 
-      api_key_settings: initialAPIKeySetting,
+    settings: {
+      schema_settings: "",
+      actions: [],
+      authentication: {
+          type: AuthenticationTypes.None.value,
+          settings: {
+          }
+      }
     },
-    actions: [],
   },
   [ToolTypes.prompt.value]: {
     type: ToolTypes.prompt.value,
     name: '',
     description: '',
-    prompt: '',
-    version: '',
-    variables: [],
+    settings: {
+      prompt_id: '',
+      prompt_version_id: '',
+      variables: []
+    }
   },
   [ToolTypes.custom.value]: {
     type: ToolTypes.custom.value,
     name: 'Custom tool',
-    json: '',
-    functions: [],
+    settings: {
+      custom_json: '',
+    },
   }
 }

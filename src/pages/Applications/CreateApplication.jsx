@@ -48,7 +48,7 @@ export default function CreateApplication() {
             tabs={[{
               label: 'Run',
               icon: <RocketIcon />,
-              tabBarItems: <CreateApplicationTabBar />,
+              tabBarItems: <CreateApplicationTabBar isEditingTool={!!editToolDetail}/>,
               rightToolbar: <div />,
               content:
                 <TabContentDiv>

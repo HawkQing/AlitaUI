@@ -590,18 +590,18 @@ export const OAuthTokenExchangeMethods = {
   },
   Basic: {
     label: 'Basic authorization header',
-    value: 'basic',
+    value: 'Basic',
   }
 }
 
 export const AuthTypes = {
   Basic: {
     label: 'Basic',
-    value: 'basic',
+    value: 'Basic',
   },
   Bear: {
-    label: 'Bear',
-    value: 'bear',
+    label: 'Bearer',
+    value: 'Bearer',
   },
   Custom: {
     label: 'Custom',

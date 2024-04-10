@@ -6,27 +6,15 @@ import ToolCard from "./ToolCard";
 import ToolMenu from "./ToolMenu";
 import { ToolInitialValues } from "./consts";
 
-export default function ApplicationTools({ style, setEditToolDetail, containerSX }) {
-  const { setFieldValue, values } = useFormikContext();
-  const tools = useMemo(() => (values?.tools || []), [values?.tools])
+export default function ApplicationTools({ style, setEditToolDetail, containerSX, applicationId }) {
+  const { values } = useFormikContext();
+  const tools = useMemo(() => (values?.version_details?.tools || []), [values?.version_details?.tools])
   const onAddTool = useCallback((toolType) => () => {
     setEditToolDetail({
       ...ToolInitialValues[toolType],
       index: tools.length
     });
   }, [setEditToolDetail, tools.length])
-
-  const onDelete = useCallback(index => () => {
-    setFieldValue('tools',
-      tools.filter((_, i) => i !== index))
-  }, [setFieldValue, tools]);
-
-  const onEditTool = useCallback(index => () => {
-    setEditToolDetail({
-      ...tools[index],
-      index
-    })
-  }, [setEditToolDetail, tools]);
 
   return (
     <BasicAccordion
@@ -38,7 +26,7 @@ export default function ApplicationTools({ style, setEditToolDetail, containerSX
           content: (
             <Box sx={containerSX} display='flex' flexDirection='column' gap={2}>
               {tools.map((tool, index) => (
-                <ToolCard key={index} tool={tool} index={index} onEdit={onEditTool} onDelete={onDelete} />
+                <ToolCard key={index} tool={tool} index={index} setEditToolDetail={setEditToolDetail} applicationId={applicationId}/>
               ))}
               <ToolMenu onAddTool={onAddTool} />
             </Box>

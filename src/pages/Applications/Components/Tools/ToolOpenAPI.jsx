@@ -5,6 +5,8 @@ import ToolFormBackButton from "./ToolFormBackButton";
 import OpenAPISchemaInput from './OpenAPISchemaInput';
 import OpenAPIActions from './OpenAPIActions';
 import { AuthenticationTypes, AuthTypes } from '@/common/constants';
+import useChangeFormikTools from './useChangeFormikTools';
+import { updateObjectByPath } from '@/common/utils.jsx';
 
 const helperText = (field) => `${field} field is required`;
 
@@ -14,12 +16,20 @@ export default function ToolOpenAPI({
   handleGoBack
 }) {
   const {
+    index,
     name = '',
-    schema = '',
-    authentication,
-    actions = [],
+    settings = {
+      schema_settings: '',
+      authentication: {
+        type: '',
+        settings: {}
+      },
+      actions: []
+    },
   } = editToolDetail;
-  const { authentication_type, oauth_settings, api_key_settings } = authentication;
+  const { schema_settings: schema,  authentication = { type: '', settings: {} }, actions = [] } = settings;
+  const { isAdding, onChangeTools } = useChangeFormikTools({toolIndex: index})
+  const { type: authentication_type, settings: authentication_settings } = authentication;
 
   const [isDirty, setIsDirty] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -29,45 +39,54 @@ export default function ToolOpenAPI({
       name: !name?.trim() ? helperText(name) : undefined,
     };
     if (authentication_type === AuthenticationTypes.APIKey.value) {
-      result['api_key'] = !api_key_settings.api_key ? helperText('API key') : undefined
-      if (api_key_settings.auth_type === AuthTypes.Custom.value) {
-        result['custom_header'] = !api_key_settings.custom_header ? helperText('Custom header') : undefined
+      result['api_key'] = !authentication_settings.api_key ? helperText('API key') : undefined
+      if (authentication_settings.auth_type === AuthTypes.Custom.value) {
+        result['custom_header_name'] = !authentication_settings.custom_header_name ? helperText('Custom header') : undefined
       }
     }
     if (authentication_type === AuthenticationTypes.OAuth.value) {
-      result['client_id'] = !oauth_settings.client_id ? helperText('client_id') : undefined
-      result['client_secret'] = !oauth_settings.client_secret ? helperText('client_secret') : undefined
-      result['authorization_url'] = !oauth_settings.authorization_url ? helperText('authorization_url') : undefined
-      result['token_url'] = !oauth_settings.token_url ? helperText('token_url') : undefined
-      result['scope'] = !oauth_settings.scope ? helperText('scope') : undefined
+      result['client_id'] = !authentication_settings.client_id ? helperText('client_id') : undefined
+      result['client_secret'] = !authentication_settings.client_secret ? helperText('client_secret') : undefined
+      result['auth_url'] = !authentication_settings.auth_url ? helperText('auth_url') : undefined
+      result['token_url'] = !authentication_settings.token_url ? helperText('token_url') : undefined
+      result['scope'] = !authentication_settings.scope ? helperText('scope') : undefined
     }
     return result
   }, [
-    api_key_settings.api_key,
-    api_key_settings.auth_type,
-    api_key_settings.custom_header,
-    oauth_settings.client_id,
-    oauth_settings.client_secret,
-    oauth_settings.authorization_url,
-    oauth_settings.token_url,
-    oauth_settings.scope,
+    authentication_settings.api_key,
+    authentication_settings.auth_type,
+    authentication_settings.custom_header_name,
+    authentication_settings.client_id,
+    authentication_settings.client_secret,
+    authentication_settings.auth_url,
+    authentication_settings.token_url,
+    authentication_settings.scope,
     authentication_type, name])
-
+  
   const handleChange = useCallback((field) => (value) => {
-    setEditToolDetail({
+    const newTool = {
       ...editToolDetail,
       [field]: value
-    })
+    };
+    setEditToolDetail(newTool)
+    onChangeTools(newTool)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail]);
+  }, [editToolDetail, onChangeTools, setEditToolDetail]);
 
-  const handleBatchChange = useCallback((value) => {
-    setEditToolDetail({
-      ...editToolDetail,
-      ...value
-    })
+  const handleSchemaChange = useCallback((value) => {
+    const newToolWithSchema = updateObjectByPath(editToolDetail, 'settings.schema_settings', value.schema)
+    const newToolWithActions = updateObjectByPath(newToolWithSchema, 'settings.actions', value.actions)
+    setEditToolDetail(newToolWithActions)
+    onChangeTools(newToolWithActions)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail]);
+  }, [editToolDetail, onChangeTools, setEditToolDetail]);
+
+  const handleAuthenticationChange = useCallback((value) => {
+    const newTool = updateObjectByPath(editToolDetail, 'settings.authentication', value)
+    setEditToolDetail(newTool)
+    onChangeTools(newTool)
+    setIsDirty(true);
+  }, [editToolDetail, onChangeTools, setEditToolDetail]);
 
   const handleInputChange = useCallback((field) => (event) => {
     handleChange(field)(event.target.value)
@@ -81,6 +100,7 @@ export default function ToolOpenAPI({
   return (
     <>
       <ToolFormBackButton
+        isAdding={isAdding}
         label='New Open API tool'
         isDirty={isDirty}
         validate={validate}
@@ -98,22 +118,22 @@ export default function ToolOpenAPI({
         value={schema}
         // eslint-disable-next-line react/jsx-no-bind
         onValueChange={(schemaText, schemaActions) => {
-          handleBatchChange({
+          handleSchemaChange({
             schema: schemaText,
             actions: schemaActions
           })
         }} />
       <OpenAPIActions actions={actions} />
       <AuthenticationSelect
-        onValueChange={handleChange('authentication')}
+        onValueChange={handleAuthenticationChange}
         value={authentication}
         error={
           isValidating && (
             error.api_key ||
-            error.custom_header ||
+            error.custom_header_name ||
             error.client_id ||
             error.client_secret ||
-            error.authorization_url ||
+            error.auth_url ||
             error.token_url ||
             error.scope)}
       />

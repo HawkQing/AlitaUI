@@ -1,8 +1,9 @@
 import FormInput from "@/pages/DataSources/Components/Sources/FormInput";
-import { useFormikContext } from "formik";
 import { useCallback, useMemo, useState } from "react";
 import PromptSelect from "./PromptSelect";
 import ToolFormBackButton from "./ToolFormBackButton";
+import useChangeFormikTools from './useChangeFormikTools';
+import { updateObjectByPath } from '@/common/utils.jsx';
 
 export default function ToolPrompt({
   editToolDetail = {},
@@ -13,70 +14,81 @@ export default function ToolPrompt({
     index,
     name = '',
     description = '',
-    prompt = '',
-    version = undefined,
-    variables = [],
+    settings = {},
   } = editToolDetail;
-  const { values } = useFormikContext();
-  const isAdding = useMemo(() => index === (values?.tools || []).length, [index, values?.tools]);
+  const { prompt_id, prompt_version_id, variables } = settings
+  const { isAdding, onChangeTools } = useChangeFormikTools({ toolIndex: index })
   const [isValidating, setIsValidating] = useState(false);
   const error = useMemo(() => {
     const helperText = 'Field is required';
     return {
       name: !name?.trim() ? helperText : undefined,
       description: !description?.trim() ? helperText : undefined,
-      prompt: !prompt.value ? helperText : undefined,
-      version: !version ? helperText : undefined,
+      prompt: !prompt_id ? helperText : undefined,
+      version: !prompt_version_id ? helperText : undefined,
     }
-  }, [name, description, prompt.value, version])
+  }, [name, description, prompt_id, prompt_version_id])
 
   const [isDirty, setIsDirty] = useState(false);
 
   const handleChange = useCallback((field) => (value) => {
-    setEditToolDetail({
+    const newTool = {
       ...editToolDetail,
       [field]: value
-    })
+    }
+    setEditToolDetail(newTool)
+    onChangeTools(newTool)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail]);
+  }, [editToolDetail, onChangeTools, setEditToolDetail]);
 
   const handleInputChange = useCallback((field) => (event) => {
     handleChange(field)(event.target.value)
   }, [handleChange]);
 
   const handlePromptChange = useCallback((value) => {
-    setEditToolDetail({
-      ...editToolDetail,
-      prompt: value,
-      version: null,
-      variables: []
-    })
+    const newToolWithId = updateObjectByPath(editToolDetail, 'settings.prompt_id', value.value)
+    const newToolWithName = updateObjectByPath(newToolWithId, 'name', value.label)
+    const newToolWithDescription = updateObjectByPath(newToolWithName, 'description', value.description)
+    setEditToolDetail(newToolWithDescription)
+    onChangeTools(newToolWithDescription)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail]);
+  }, [editToolDetail, onChangeTools, setEditToolDetail]);
 
   const handleVersionChange = useCallback((value) => {
-    setEditToolDetail({
+    const newTool = {
       ...editToolDetail,
-      version: value,
-      variables: []
-    })
+      settings: {
+        prompt_id,
+        prompt_version_id: value,
+        variables: [],
+      }
+    }
+    setEditToolDetail(newTool)
+    onChangeTools(newTool)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail]);
+  }, [editToolDetail, onChangeTools, prompt_id, setEditToolDetail]);
 
   const onChangeVariables = useCallback((newValues) => {
-    setEditToolDetail({
+    const newTool = {
       ...editToolDetail,
-      variables: newValues.map(item => ({
-        key: item.key || item.name,
-        value: item.value
-      }))
-    })
+      settings: {
+        prompt_id,
+        prompt_version_id,
+        variables: newValues.map(item => ({
+          key: item.key || item.name,
+          value: item.value
+        }))
+      }
+
+    }
+    setEditToolDetail(newTool)
+    onChangeTools(newTool)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail]);
+  }, [editToolDetail, onChangeTools, prompt_id, prompt_version_id, setEditToolDetail]);
 
   const onChangeVariable = useCallback((label, newValue) => {
     const updateIndex = Object.keys(variables).find(key => key === label);
-    setEditToolDetail({
+    const newTool = {
       ...editToolDetail,
       variables: variables.map((item, i) => {
         if (i === updateIndex) {
@@ -87,9 +99,11 @@ export default function ToolPrompt({
         }
         return item
       })
-    })
+    }
+    setEditToolDetail(newTool)
+    onChangeTools(newTool)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail, variables])
+  }, [editToolDetail, onChangeTools, setEditToolDetail, variables])
 
   const validate = useCallback(() => {
     setIsValidating(true);
@@ -130,9 +144,9 @@ export default function ToolPrompt({
       <PromptSelect
         required
         onValueChange={handlePromptChange}
-        value={prompt}
+        value={prompt_id}
         onVersionChange={handleVersionChange}
-        version={version}
+        version={prompt_version_id}
         variables={variables}
         onChangeVariable={onChangeVariable}
         onChangeVariables={onChangeVariables}
