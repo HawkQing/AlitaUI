@@ -5,10 +5,17 @@ import styled from "@emotion/styled";
 import { Box, IconButton, Typography } from "@mui/material";
 import { ToolTypes } from "./consts";
 import FileCodeIcon from '@/components/Icons/FileCodeIcon';
-import { useCallback, useState } from 'react'
-import { filterProps } from '@/common/utils';
+import { useCallback, useState, useMemo, useEffect } from 'react'
+import { buildErrorMessage, filterProps, parseCustomJsonTool } from '@/common/utils';
 import JsonIcon from '@/components/Icons/JsonIcon';
 import CommandIcon from "@/components/Icons/CommandIcon";
+import { StyledCircleProgress } from '@/components/ChatBox/StyledComponents';
+import { useFormikContext } from 'formik';
+import { useDeleteApplicationToolMutation } from '@/api/applications';
+import { useSelectedProjectId } from '@/pages/hooks';
+import useToast from '@/components/useToast';
+import { alitaApi } from '@/api/alitaApi';
+import { useDispatch } from 'react-redux';
 
 const CardContainer = styled(Box)(() => ({
   borderRadius: '8px',
@@ -72,14 +79,60 @@ const ToolIcon = ({ type }) => {
 export default function ToolCard({
   tool,
   index,
-  onEdit,
-  onDelete,
+  setEditToolDetail,
+  applicationId,
 }) {
+  const { ToastComponent: Toast, toastError } = useToast();
+  const dispatch = useDispatch();
+  const projectId = useSelectedProjectId();
   const [showActions, setShowActions] = useState(false)
+  const { setFieldValue, values } = useFormikContext();
+  const tools = useMemo(() => (values?.version_details?.tools || []), [values?.version_details?.tools])
+  const [deleteTool, { isLoading, isError: isDeleteError, isSuccess: isDeleteSuccess, error: deleteError }] = useDeleteApplicationToolMutation();
+  const parsedFunctions = useMemo(() => {
+    if (tool.type === ToolTypes.custom.value) {
+      return parseCustomJsonTool(tool.settings.custom_json || '');
+    }
+    return [];
+  }, [tool.settings.custom_json, tool.type])
+
+  const onDelete = useCallback(async () => {
+    if (applicationId) {
+      await deleteTool({ projectId, toolId: tool?.id })
+    } else {
+      setFieldValue('version_details.tools',
+        tools.filter((_, i) => i !== index))
+    }
+  }, [applicationId, deleteTool, index, projectId, setFieldValue, tool?.id, tools]);
+
+  const onEditTool = useCallback(() => {
+    setEditToolDetail({
+      ...tools[index],
+      index
+    })
+  }, [index, setEditToolDetail, tools]);
+
   const onClickShowActions = useCallback((event) => {
     event.stopPropagation();
     setShowActions(prev => !prev)
   }, [])
+
+  useEffect(() => {
+    if (isDeleteError) {
+      toastError(buildErrorMessage(deleteError))
+    }
+  }, [deleteError, isDeleteError, toastError])
+
+  useEffect(() => {
+    if (isDeleteSuccess) {
+      dispatch(alitaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, (details) => {
+        details.version_details.tools = details.version_details.tools.filter(item => item.id !== tool.id);
+      }));
+      setFieldValue('version_details.tools',
+        tools.filter((_, i) => i !== index))
+    }
+  }, [applicationId, dispatch, index, isDeleteSuccess, projectId, setFieldValue, tool.id, tools])
+
   return (
     <CardContainer>
       <CardHeaderContainer showActions={showActions}>
@@ -87,7 +140,7 @@ export default function ToolCard({
           <ToolIcon type={tool.type} />
         </ToolIconContainer>
         <Box
-          onClick={onEdit(index)}
+          onClick={onEditTool}
           sx={{ display: 'flex', flexDirection: 'column', gap: '4px', cursor: 'pointer', width: 'calc(100% - 108px)' }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -102,7 +155,8 @@ export default function ToolCard({
             <ArrowRightIcon sx={{ fontSize: '1rem' }} />
           </Box>
           {
-            tool.type === ToolTypes.datasource.value &&
+            ((tool.type === ToolTypes.datasource.value && !tool.settings.actions?.length) ||
+              tool.type === ToolTypes.prompt.value) &&
             <Typography
               component='div'
               variant='labelSmall'
@@ -112,7 +166,8 @@ export default function ToolCard({
             </Typography>
           }
           {
-            tool.type === ToolTypes.open_api.value && tool.actions &&
+            ((tool.type === ToolTypes.open_api.value && tool.settings.actions) ||
+              (tool.type === ToolTypes.datasource.value && tool.settings.actions)) &&
             <Box sx={{ cursor: 'pointer' }} onClick={onClickShowActions}>
               <Typography variant='bodySmall'>
                 {showActions ? 'Hide Actions' : 'Show Actions'}
@@ -120,7 +175,7 @@ export default function ToolCard({
             </Box>
           }
           {
-            tool.type === ToolTypes.custom.value && tool.functions &&
+            !!parsedFunctions.length &&
             <Box sx={{ cursor: 'pointer' }} onClick={onClickShowActions}>
               <Typography variant='bodySmall'>
                 {showActions ? 'Hide Functions' : 'Show Functions'}
@@ -131,17 +186,18 @@ export default function ToolCard({
         <Box>
           <IconButton
             aria-label='delete tool'
-            onClick={onDelete(index)}
+            onClick={onDelete}
           >
             <DeleteIcon sx={{ fontSize: '1.13rem' }} />
+            {isLoading && <StyledCircleProgress size={20} />}
           </IconButton>
         </Box>
       </CardHeaderContainer>
       {
-        showActions &&
+        showActions && (tool.type === ToolTypes.open_api.value || tool.type === ToolTypes.custom.value) &&
         <ActionsContainer>
           {
-            (tool.type === ToolTypes.open_api.value ? tool.actions : tool.functions ).map((item, idx) => {
+            (tool.type === ToolTypes.open_api.value ? tool.settings.actions : parsedFunctions).map((item, idx) => {
               return <ActionRow key={item.name + idx}>
                 <Box sx={{ width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Typography variant='bodyMedium'>
@@ -176,6 +232,34 @@ export default function ToolCard({
           }
         </ActionsContainer>
       }
+      {
+        showActions && tool.type === ToolTypes.datasource.value &&
+        <ActionsContainer>
+          {
+            tool.settings.actions.map((item) => {
+              return (
+                <ActionRow sx={{ paddingTop: '4px' }} key={item}>
+                  <Box sx={{ width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <Typography variant='bodyMedium'>
+                      -
+                    </Typography>
+                  </Box>
+                  <Box sx={{ width: 'calc(100% - 34px)', marginLeft: '10px', height: '32px', display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      color='text.secondary'
+                      sx={{ height: '24px' }}
+                      variant='bodyMedium'
+                      component='div'>
+                      {item}
+                    </Typography>
+                  </Box>
+                </ActionRow>
+              )
+            })
+          }
+        </ActionsContainer>
+      }
+      <Toast />
     </CardContainer >
   )
 }

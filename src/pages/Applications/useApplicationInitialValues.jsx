@@ -17,8 +17,8 @@ const applicationCapabilities = [CapabilityTypes.chat_completion.value]
 
 const getModelSettings = (data = [], applicationData) => {
   const matchedData = getIntegrationData(data, applicationCapabilities)
-  const { model_settings } = applicationData?.version_details || {};
-  let integrationUid = model_settings?.model?.integration_uid;
+  const { llm_settings } = applicationData?.version_details || {};
+  let integrationUid = llm_settings?.integration_uid;
   let targetData = matchedData.find((item) => item?.uid === integrationUid);
 
   if (!targetData) {
@@ -28,20 +28,18 @@ const getModelSettings = (data = [], applicationData) => {
 
   if (targetData) {
     const newModelSettings = {
-      max_tokens: model_settings?.max_tokens ?? DEFAULT_MAX_TOKENS,
-      top_p: model_settings?.top_p ?? (targetData.settings?.top_p || DEFAULT_TOP_P),
-      top_k: model_settings?.top_k ?? (targetData.settings?.top_k || DEFAULT_TOP_K),
-      temperature: model_settings?.temperature ?? (targetData.settings?.temperature || DEFAULT_TEMPERATURE),
-      model: {
-        [PROMPT_PAYLOAD_KEY.integrationUid]: integrationUid,
-        [PROMPT_PAYLOAD_KEY.modelName]: model_settings?.model?.model_name,
-      }
+      max_tokens: llm_settings?.max_tokens ?? DEFAULT_MAX_TOKENS,
+      top_p: llm_settings?.top_p ?? (targetData.settings?.top_p || DEFAULT_TOP_P),
+      top_k: llm_settings?.top_k ?? (targetData.settings?.top_k || DEFAULT_TOP_K),
+      temperature: llm_settings?.temperature ?? (targetData.settings?.temperature || DEFAULT_TEMPERATURE),
+      [PROMPT_PAYLOAD_KEY.integrationUid]: integrationUid,
+      [PROMPT_PAYLOAD_KEY.modelName]: llm_settings?.model_name,
     }
 
     const models = targetData?.settings?.models || [];
-    if (models.length && !models.find(model => model === model_settings?.model?.model_name)) {
+    if (models.length && !models.find(model => model === llm_settings?.model_name)) {
       const matchedModel = models?.find(model => model.capabilities.chat_completion);
-      newModelSettings.model.model_name = matchedModel?.id
+      newModelSettings.model_name = matchedModel?.id
     }
     return newModelSettings
   }
@@ -50,12 +48,11 @@ const getModelSettings = (data = [], applicationData) => {
 
 export const useCreateApplicationInitialValues = () => {
   const selectedProjectId = useSelectedProjectId();
-  const { data: modelsData = [] } = useGetModelsQuery(selectedProjectId,
-    { skip: !selectedProjectId });
+  const { data: modelsData = [] } = useGetModelsQuery(selectedProjectId, { skip: !selectedProjectId });
   const modelOptions = useMemo(() => getIntegrationOptions(modelsData, applicationCapabilities), [modelsData]);
   const initialValues = useMemo(() => ({
-    name: '', 
-    description: '', 
+    name: '',
+    description: '',
     type: 'interface',
     versions: [
       {
@@ -63,15 +60,13 @@ export const useCreateApplicationInitialValues = () => {
         tags: []
       }
     ],
-    version_details: { 
-      application_settings: { 
-        conversation_starters: []
-      },
-      model_settings: getModelSettings(modelsData),
+    version_details: {
+      conversation_starters: [],
+      llm_settings: getModelSettings(modelsData),
       instructions: '',
       variables: [],
+      tools: [],
     },
-    tools: [],
   }), [modelsData])
   return {
     modelOptions,
@@ -84,7 +79,7 @@ export const useFormikFormRef = () => {
   const getFormValues = useCallback(() => formRef?.current?.values || {}, []);
   const resetFormValues = useCallback(() => formRef.current?.resetForm(), []);
   return {
-    formRef, 
+    formRef,
     getFormValues,
     resetFormValues
   }
@@ -100,23 +95,12 @@ const useApplicationInitialValues = () => {
   const { data: modelsData = [] } = useGetModelsQuery(currentProjectId,
     { skip: !currentProjectId || !applicationData?.id });
   const modelOptions = useMemo(() => getIntegrationOptions(modelsData, applicationCapabilities), [modelsData]);
-  const initialValues = useMemo(() => {
-    const newModelSettings = getModelSettings(modelsData, applicationData)
-    return {
-      ...applicationData,
-      version_details: {
-        ...applicationData?.version_details,
-        model_settings: {
-          ...applicationData?.version_details?.model_settings,
-          ...newModelSettings
-        }
-      }
-    }
-  }, [applicationData, modelsData])
+  const initialValues = useMemo(() => applicationData, [applicationData])
   return {
     isFetching,
     modelOptions,
     initialValues,
+    applicationId,
   }
 }
 

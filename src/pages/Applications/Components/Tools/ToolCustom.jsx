@@ -2,16 +2,7 @@ import { useCallback, useState, useMemo } from "react";
 import ToolFormBackButton from "./ToolFormBackButton";
 import CustomInput from './CustomInput';
 import NormalRoundButton from '@/components/NormalRoundButton';
-
-const parseContent = (content) => {
-  let json = {};
-  try {
-    json = JSON.parse(content);
-  } catch (_) {
-    //
-  }
-  return json
-}
+import useChangeFormikTools from './useChangeFormikTools';
 
 export default function ToolCustom({
   editToolDetail = {},
@@ -19,16 +10,19 @@ export default function ToolCustom({
   handleGoBack
 }) {
   const {
-    json = '',
+    settings: {
+      custom_json = ''
+    },
+    index,
   } = editToolDetail;
-
+  const { isAdding, onChangeTools } = useChangeFormikTools({toolIndex: index})
   const [isDirty, setIsDirty] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
 
   const error = useMemo(() => {
     const result = {};
     try {
-      const jsonObject = JSON.parse(json);
+      const jsonObject = JSON.parse(custom_json);
       if (Array.isArray(jsonObject)) {
         jsonObject.forEach((functionCall) => {
           if (!functionCall.name || !functionCall.description || !functionCall.parameters) {
@@ -44,23 +38,19 @@ export default function ToolCustom({
       result['format'] = 'Invalid json, name, description and parameters are required for every function'
     } 
     return result;
-  }, [json])
+  }, [custom_json])
 
   const handleChange = useCallback((value) => {
-    let parsedFunctions = []
-    const result = parseContent(value)
-    if (!Array.isArray(result)) {
-      parsedFunctions.push(result);
-    } else {
-      parsedFunctions = result
-    }
-    setEditToolDetail({
+    const newTool = {
       ...editToolDetail,
-      json: value,
-      functions: parsedFunctions,
-    })
+      settings: {
+        custom_json: value,
+      },
+    }
+    setEditToolDetail(newTool)
+    onChangeTools(newTool)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail]);
+  }, [editToolDetail, onChangeTools, setEditToolDetail]);
 
   const validate = useCallback(() => {
     setIsValidating(true);
@@ -78,12 +68,13 @@ export default function ToolCustom({
     <>
       <ToolFormBackButton
         label='New custom tool'
+        isAdding={isAdding}
         isDirty={isDirty}
         validate={validate}
         handleGoBack={handleGoBack}
       />
       <CustomInput
-        value={json}
+        value={custom_json}
         onValueChange={handleChange}
         error={isValidating && error.format}
         helperText={isValidating && error.format}

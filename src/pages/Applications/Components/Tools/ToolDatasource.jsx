@@ -4,7 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import DatasourceSelect from "./DatasourceSelect";
 import ToolFormBackButton from "./ToolFormBackButton";
 import { ActionOptions, ToolTypes } from "./consts";
-import { useFormikContext } from "formik";
+import useChangeFormikTools from './useChangeFormikTools';
+import { updateObjectByPath } from '@/common/utils.jsx';
 
 export default function ToolDatasource({
   editToolDetail = {},
@@ -15,31 +16,29 @@ export default function ToolDatasource({
     index,
     name = '',
     description = '',
-    actions = [],
-    datasource = '',
+    settings = {},
   } = editToolDetail;
-  const { values } = useFormikContext();
-  const isAdding = useMemo(() => index === (values?.tools || []).length, [index, values?.tools]);
+  const { actions, datasource_id } = settings;
+  const { isAdding, onChangeTools } = useChangeFormikTools({ toolIndex: index })
   const [isValidating, setIsValidating] = useState(false);
   const error = useMemo(() => {
     const helperText = 'Field is required';
     return {
       name: !name?.trim() ? helperText : undefined,
       description: !description?.trim() ? helperText : undefined,
-      datasource: !datasource.value ? helperText : undefined,
+      datasource: !datasource_id ? helperText : undefined,
       actions: actions?.length < 1 ? helperText : undefined,
     }
-  }, [actions?.length, datasource.value, description, name])
+  }, [actions?.length, datasource_id, description, name])
 
   const [isDirty, setIsDirty] = useState(false);
 
   const handleChange = useCallback((field) => (value) => {
-    setEditToolDetail({
-      ...editToolDetail,
-      [field]: value
-    })
+    const newTool = updateObjectByPath(editToolDetail, field, value)
+    setEditToolDetail(newTool)
+    onChangeTools(newTool)
     setIsDirty(true);
-  }, [editToolDetail, setEditToolDetail]);
+  }, [editToolDetail, onChangeTools, setEditToolDetail]);
 
   const handleInputChange = useCallback((field) => (event) => {
     handleChange(field)(event.target.value)
@@ -49,6 +48,18 @@ export default function ToolDatasource({
     setIsValidating(true);
     return Object.values(error).some(item => !!item)
   }, [error]);
+
+  const onChangeDatasource = useCallback(
+    (datasource) => {
+      const newToolWithId = updateObjectByPath(editToolDetail, 'settings.datasource_id', datasource.value)
+      const newToolWithName = updateObjectByPath(newToolWithId, 'name', datasource.label)
+      const newToolWithDescription = updateObjectByPath(newToolWithName, 'description', datasource.description)
+      setEditToolDetail(newToolWithDescription)
+      onChangeTools(newToolWithDescription)
+      setIsDirty(true);
+    },
+    [editToolDetail, onChangeTools, setEditToolDetail],
+  )
 
   return (
     <>
@@ -84,8 +95,8 @@ export default function ToolDatasource({
       />
       <DatasourceSelect
         required
-        onValueChange={handleChange('datasource')}
-        value={datasource}
+        onValueChange={onChangeDatasource}
+        value={datasource_id}
         error={isValidating && error.datasource}
         helperText={isValidating && error.datasource}
       />
@@ -95,7 +106,7 @@ export default function ToolDatasource({
         multiple
         label='Actions'
         emptyPlaceHolder=''
-        onValueChange={handleChange('actions')}
+        onValueChange={handleChange('settings.actions')}
         value={actions}
         options={ActionOptions}
         customSelectedFontSize={'0.875rem'}

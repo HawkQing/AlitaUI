@@ -13,23 +13,23 @@ export default function AuthenticationSelect({
   sx = {},
 }) {
   const endRef = useRef()
-  const { authentication_type, oauth_settings, api_key_settings } = value
+  const { type, settings } = value
   const authenticationOptions = useMemo(() => Object.values(AuthenticationTypes), []);
   const onChangeAuthType = useCallback(
     (selectedAuthenticationType) => {
       onValueChange({
-        ...value,
-        authentication_type: selectedAuthenticationType,
+        type: selectedAuthenticationType,
+        settings: {}
       });
     },
-    [onValueChange, value],
+    [onValueChange],
   )
 
   const onChangeOAuthSettings = useCallback(
     (newOAuthSettings) => {
       onValueChange({
         ...value,
-        oauth_settings: newOAuthSettings,
+        settings: newOAuthSettings,
       });
     },
     [onValueChange, value],
@@ -39,17 +39,17 @@ export default function AuthenticationSelect({
     (newAPIKeySettings) => {
       onValueChange({
         ...value,
-        api_key_settings: newAPIKeySettings,
+        settings: newAPIKeySettings,
       });
     },
     [onValueChange, value],
   )
 
   useEffect(() => {
-    if (authentication_type && authentication_type !== AuthenticationTypes.None.value) {
+    if (type && type !== AuthenticationTypes.None.value) {
       endRef.current?.scrollIntoView();
     }
-  }, [authentication_type])
+  }, [type])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', ...sx }}>
@@ -63,20 +63,20 @@ export default function AuthenticationSelect({
         name='authentication'
         label='Authentication'
         onValueChange={onChangeAuthType}
-        value={authentication_type}
+        value={type}
         options={authenticationOptions}
         customSelectedFontSize={'0.875rem'}
         sx={{ marginTop: '8px' }}
         required={required}
       />
       {
-        authentication_type === AuthenticationTypes.OAuth.value &&
-        <OAuthFrom value={oauth_settings} onValueChange={onChangeOAuthSettings} error={error} />
+        type === AuthenticationTypes.OAuth.value &&
+        <OAuthFrom value={settings} onValueChange={onChangeOAuthSettings} error={error} />
       }
       {
-        authentication_type === AuthenticationTypes.APIKey.value &&
+        type === AuthenticationTypes.APIKey.value &&
         <APIKeyFrom
-          value={api_key_settings}
+          value={settings}
           onValueChange={onChangeAPIKeySettings}
           error={error}
         />

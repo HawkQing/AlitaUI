@@ -15,9 +15,9 @@ const ConversationStarters = ({
   const { values: { version_details }, handleChange, setFieldValue } = useFormikContext();
   const theme = useTheme();
 
-  const valuesPath = 'version_details.application_settings.conversation_starters';
-  const values = useMemo(() => version_details?.application_settings?.conversation_starters || [],
-    [version_details?.application_settings?.conversation_starters])
+  const valuesPath = 'version_details.conversation_starters';
+  const values = useMemo(() => version_details?.conversation_starters || [],
+    [version_details?.conversation_starters])
   const onAdd = useCallback(() => {
     setFieldValue(valuesPath, [
       ...values,

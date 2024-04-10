@@ -16,9 +16,9 @@ const ApplicationContext = ({
   const updateVariableList = useCallback((value) => {
     const resolvedInputValue = contextResolver(value);
     setFieldValue('version_details.variables', resolvedInputValue.map(key => {
-      const prevValue = (version_details?.variables || []).find(v => v.key === key)
+      const prevValue = (version_details?.variables || []).find(v => v.name === key)
       return {
-        key: key,
+        name: key,
         value: prevValue?.value || '',
         id: prevValue?.id || undefined,
       }

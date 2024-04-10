@@ -17,7 +17,7 @@ export default function ToolForm({
     const { saveChanges = true } = option;
     const { index, ...toolDetail } = editToolDetail;
     if (saveChanges) {
-      setFieldValue(`tools[${index}]`, toolDetail)
+      setFieldValue(`version_details.tools[${index}]`, toolDetail)
     }
     setEditToolDetail(null);
   }, [editToolDetail, setEditToolDetail, setFieldValue]);

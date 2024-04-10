@@ -28,7 +28,7 @@ const ApplicationView = ({
                 showProjectSelect={showProjectSelect}
                 tags={currentApplication?.version_details?.tags || []}
                 id={currentApplication?.id}
-                idLabel='ID:'
+                idLabel='Application ID:'
               />
             </div>,
         }

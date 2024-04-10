@@ -3,11 +3,11 @@ import {
   useNavBlocker,
 } from '@/pages/hooks';
 import { useNavigate } from 'react-router-dom';
-import NormalRoundButton from '@/components/NormalRoundButton';
 import DiscardButton from './DiscardButton';
 import { useMemo, useCallback, useState, useEffect } from 'react';
 import useCreateApplication from './useCreateApplication';
 import { useFormikContext } from 'formik';
+import { SaveButton } from '@/pages/Prompts/Components/Common';
 
 const TabBarItems = styled('div')(() => ({
   display: 'flex',
@@ -15,7 +15,7 @@ const TabBarItems = styled('div')(() => ({
   flexDirection: 'reverse-row',
 }));
 
-export default function CreateApplicationTabBar() {
+export default function CreateApplicationTabBar({isEditingTool}) {
   const formik = useFormikContext();
   const [wantToCancel, setWantToCancel] = useState(false)
   const navigate = useNavigate();
@@ -27,8 +27,9 @@ export default function CreateApplicationTabBar() {
   const shouldDisableSave = useMemo(() => isLoading ||
     !formik.values.name ||
     !formik.values.description ||
-    !formik.dirty,
-    [formik.dirty, formik.values.description, formik.values.name, isLoading])
+    !formik.dirty ||
+    isEditingTool,
+    [formik.dirty, formik.values.description, formik.values.name, isLoading, isEditingTool])
 
   const blockOptions = useMemo(() => {
     return {
@@ -53,17 +54,16 @@ export default function CreateApplicationTabBar() {
 
   return <>
     <TabBarItems>
-      <NormalRoundButton
+      <SaveButton
         disabled={shouldDisableSave}
         variant="contained"
-        color="secondary"
         onClick={create}>
         Save
         {isLoading && <StyledCircleProgress size={20} />}
-      </NormalRoundButton>
+      </SaveButton>
       <DiscardButton
         title={'Cancel'}
-        disabled={isLoading || !formik.dirty}
+        disabled={isLoading || !formik.dirty || isEditingTool}
         onDiscard={onCancel}
       />
     </TabBarItems>

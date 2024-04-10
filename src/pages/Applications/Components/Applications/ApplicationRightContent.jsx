@@ -23,32 +23,31 @@ export default function ApplicationRightContent({
 }) {
   const { values: formValues, initialValues, setFieldValue } = useFormikContext();
   const setFormValue = useCallback((key, value) => {
-    setFieldValue('version_details.model_settings.' + key, value);
+    setFieldValue('version_details.llm_settings.' + key, value);
   }, [setFieldValue]);
 
   const {
     instructions: context = '',
     messages = [],
     variables = [],
-    model_settings = {},
+    llm_settings = {},
     type = ChatBoxMode.Chat,
   } = formValues?.version_details || {};
 
+  const mappedVariables = useMemo(() => variables.map(v => ({ key: v.name, value: v.value, id: v.id })), [variables])
+
   const {
-    model: modelObject = {},
+    model_name,
+    integration_uid,
     max_tokens = DEFAULT_MAX_TOKENS,
     temperature = DEFAULT_TEMPERATURE,
     top_p = DEFAULT_TOP_P,
     top_k,
-  } = model_settings;
-  const {
-    model_name,
-    integration_uid,
-  } = modelObject;
+  } = llm_settings;
 
-  const { conversation_starters: conversationStarters = [] } = 
-    useMemo(() => initialValues?.version_details?.application_settings || {}, 
-      [initialValues?.version_details?.application_settings]);
+  const { conversation_starters: conversationStarters = [] } =
+    useMemo(() => initialValues?.version_details || {},
+      [initialValues?.version_details]);
 
   const { isSmallWindow } = useIsSmallWindow();
 
@@ -61,8 +60,8 @@ export default function ApplicationRightContent({
   }, [setShowAdvancedSettings]);
 
   const onChangeVariable = useCallback((label, newValue) => {
-    const updateIndex = Object.keys(variables).find(key => key === label);
-    setFieldValue(`version_details.variables[${updateIndex}]`, newValue);
+    const updateIndex = variables.findIndex(variable => variable.name === label);
+    setFieldValue(`version_details.variables`, variables.map((v, index) => index === updateIndex ? ({ name: label, value: newValue }) : v));
   }, [setFieldValue, variables])
 
   const onChange = useCallback(
@@ -74,8 +73,8 @@ export default function ApplicationRightContent({
 
   const onChangeModel = useCallback(
     (integrationUid, model) => {
-      setFormValue('model.' + PROMPT_PAYLOAD_KEY.integrationUid, integrationUid);
-      setFormValue('model.model_name', model);
+      setFormValue(PROMPT_PAYLOAD_KEY.integrationUid, integrationUid);
+      setFormValue(PROMPT_PAYLOAD_KEY.modelName, model);
     },
     [setFormValue]
   );
@@ -91,7 +90,7 @@ export default function ApplicationRightContent({
     max_tokens,
     top_p,
     top_k,
-    variables,
+    variables: mappedVariables,
     type,
     conversationStarters,
     isFullScreenChat,
@@ -105,7 +104,7 @@ export default function ApplicationRightContent({
     max_tokens,
     top_p,
     top_k,
-    variables,
+    mappedVariables,
     type,
     conversationStarters,
     isFullScreenChat,
@@ -117,7 +116,7 @@ export default function ApplicationRightContent({
       <RightGridItem item xs={12} lg={lgGridColumns} sx={{ paddingBottom: '10px' }}>
         <ContentContainer sx={settings?.isFullScreenChat ? { height: 'calc(100vh - 165px)' } : undefined}>
           <RightContent
-            variables={variables}
+            variables={mappedVariables}
             onChangeVariable={onChangeVariable}
             onOpenAdvancedSettings={onOpenAdvancedSettings}
             showAdvancedSettings={showAdvancedSettings}

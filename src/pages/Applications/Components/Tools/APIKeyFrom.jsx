@@ -13,7 +13,7 @@ const validationSchema = yup.object({
   api_key: yup
     .string('Enter/Select API Key')
     .required('API key is required'),
-  custom_header: yup
+  custom_header_name: yup
     .string('Enter custom header')
     .required('Custom header is required'),
 });
@@ -21,7 +21,7 @@ const validationSchema = yup.object({
 
 export default function APIKeyFrom({
   onValueChange = () => { },
-  value,
+  value = {},
   sx = {},
   error,
 }) {
@@ -30,8 +30,23 @@ export default function APIKeyFrom({
   const selectedProjectId = useSelectedProjectId();
   const { data } = useSecretsListQuery(selectedProjectId, { skip: !selectedProjectId })
   const secretsOption = useMemo(() => data?.map((item) => ({ label: item.name, value: item.name })) || [], [data])
+  const initialValues = useMemo(() => {
+    const { api_key, auth_type, custom_header_name, api_key_type } = value
+    return {
+      api_key_type: api_key_type ||
+        (secretsOption.find(option => option.value === api_key)
+          ?
+          APIKeyTypes.Secret.value
+          :
+          APIKeyTypes.Password.value),
+      api_key,
+      auth_type,
+      custom_header_name,
+    }
+  }, [secretsOption, value])
+
   const formik = useFormik({
-    initialValues: value,
+    initialValues,
     validationSchema,
     onSubmit: () => { },
   });
@@ -39,7 +54,7 @@ export default function APIKeyFrom({
   useEffect(() => {
     formikRef.current = formik
   }, [formik])
-  
+
   const authTypeOptions = useMemo(() => Object.values(AuthTypes), []);
 
   useEffect(() => {
@@ -60,11 +75,11 @@ export default function APIKeyFrom({
 
   useEffect(() => {
     if (error) {
-      if (!formikRef.current.values.api_key ) {
+      if (!formikRef.current.values.api_key) {
         formikRef.current.setFieldTouched('api_key', true, true);
       }
-      if (formikRef.current.values.auth_type === AuthTypes.Custom.value && !formikRef.current.values.custom_header ) {
-        formikRef.current.setFieldTouched('custom_header', true, true);
+      if (formikRef.current.values.auth_type === AuthTypes.Custom.value && !formikRef.current.values.custom_header_name) {
+        formikRef.current.setFieldTouched('custom_header_name', true, true);
       }
     }
   }, [error])
@@ -142,13 +157,13 @@ export default function APIKeyFrom({
       {formik.values.auth_type === AuthTypes.Custom.value && <FormInput
         required
         label='Custom Header'
-        id='custom_header'
-        name='custom_header'
-        value={formik.values.custom_header}
+        id='custom_header_name'
+        name='custom_header_name'
+        value={formik.values.custom_header_name}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        error={formik.touched.custom_header && Boolean(formik.errors.custom_header)}
-        helperText={formik.touched.custom_header && formik.errors.custom_header}
+        error={formik.touched.custom_header_name && Boolean(formik.errors.custom_header_name)}
+        helperText={formik.touched.custom_header_name && formik.errors.custom_header_name}
       />}
       <div ref={customHeaderRef} />
     </Box>

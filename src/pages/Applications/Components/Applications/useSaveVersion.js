@@ -1,6 +1,5 @@
 import { useApplicationEditMutation } from '@/api/applications';
 import { useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import useChangeName from './useChangeName';
 
 const useSaveVersion = ({
@@ -8,24 +7,24 @@ const useSaveVersion = ({
   getFormValues,
 }) => {
   const handleChangeName = useChangeName();
-  const { id: author_id } = useSelector((state => state.user));
   const [saveFn, { isError: isSaveError, isSuccess: isSaveSuccess, error: saveError, isLoading: isSaving, reset: resetSave }] = useApplicationEditMutation();
 
   const onSave = useCallback(
     async () => {
-      const { version_details, ...values } = getFormValues();
+      const {id, version_details, name, description } = getFormValues();
       await saveFn({
-        ...values,
+        name,
+        description,
+        id,
         projectId,
         version:
         {
           ...version_details,
-          author_id,
         }
       });
-      handleChangeName(values?.name)
+      handleChangeName(name)
     },
-    [getFormValues, saveFn, projectId, author_id, handleChangeName],
+    [getFormValues, saveFn, projectId, handleChangeName],
   )
 
 

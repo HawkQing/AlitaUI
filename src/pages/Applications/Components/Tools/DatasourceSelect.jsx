@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 export default function DatasourceSelect({
   onValueChange = () => { },
-  value = {},
+  value = '',
   required,
   error,
   helperText

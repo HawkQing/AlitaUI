@@ -175,7 +175,7 @@ export const apiSlice = alitaApi.enhanceEndpoints({
       invalidatesTags: [TAG_TYPE_TOTAL_APPLICATIONS, TAG_TYPE_APPLICATIONS]
     }),
     applicationEdit: build.mutation({
-      query: ({ projectId, ...body }) => {
+      query: ({ projectId, id, ...body }) => {
         // TODO: use FormData to support image upload
         // const form = new FormData()
 
@@ -193,7 +193,7 @@ export const apiSlice = alitaApi.enhanceEndpoints({
         //   formData: true
         // });
         return ({
-          url: apiSlicePath + '/application/prompt_lib/' + projectId + '/' + body.id,
+          url: apiSlicePath + '/application/prompt_lib/' + projectId + '/' + id,
           method: 'PUT',
           headers,
           body,
@@ -208,6 +208,15 @@ export const apiSlice = alitaApi.enhanceEndpoints({
       query: ({ projectId, applicationId }) => {
         return ({
           url: apiSlicePath + '/application/prompt_lib/' + projectId + '/' + applicationId,
+          method: 'DELETE',
+        });
+      },
+      invalidatesTags: [TAG_TYPE_TOTAL_APPLICATIONS, TAG_TYPE_APPLICATIONS],
+    }),
+    deleteApplicationTool: build.mutation({
+      query: ({ projectId, toolId }) => {
+        return ({
+          url: apiSlicePath + '/tool/prompt_lib/' + projectId + '/' + toolId,
           method: 'DELETE',
         });
       },
@@ -247,6 +256,16 @@ export const apiSlice = alitaApi.enhanceEndpoints({
         }
         return [TAG_TYPE_APPLICATION_DETAILS, ({ type: TAG_TYPE_APPLICATION_DETAILS, id: result?.id })]
       },
+      // Only keep one cacheEntry marked by the query's endpointName
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const sortedObject = {};
+        Object.keys(queryArgs)
+          .sort()
+          .forEach(function (prop) {
+            sortedObject[prop] = queryArgs[prop];
+          });
+        return endpointName + JSON.stringify(sortedObject);
+      },
     }),
 
     predict: build.mutation({
@@ -277,5 +296,6 @@ export const {
   useUnpublishApplicationMutation,
   useLikeApplicationMutation,
   useUnlikeApplicationMutation,
+  useDeleteApplicationToolMutation,
 } = apiSlice
 

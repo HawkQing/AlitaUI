@@ -97,6 +97,7 @@ export default function SingleSelectWithSearch({
   const searchInputRef = useRef(null);
   const open = useMemo(() => Boolean(anchorEl), [anchorEl]);
   const popperId = useMemo(() => open ? 'search-bar-popper' : undefined, [open]);
+  const selectedOption = useMemo(() => options.find(option => option.value === value), [options, value])
 
   const handleFocus = useCallback(() => {
     if (panelRef) {
@@ -190,8 +191,8 @@ export default function SingleSelectWithSearch({
 
             <Box display='flex' alignItems='center' justifyContent='space-between'>
               <Typography variant='bodyMedium' component='div' sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
-                color={value?.label ? theme.palette.text.secondary : theme.palette.text.disabled}>
-                {value?.label || 'Select'}
+                color={selectedOption?.label ? theme.palette.text.secondary : theme.palette.text.disabled}>
+                {selectedOption?.label || 'Select'}
               </Typography>
               <SvgIcon viewBox="0 0 16 16" sx={{
                 fontSize: '1rem',
@@ -201,7 +202,7 @@ export default function SingleSelectWithSearch({
               </SvgIcon>
             </Box>
           </Box>
-          { error && helperText && <FormControl error={error}>
+          {error && helperText && <FormControl error={error}>
             <FormHelperText>{error ? helperText : undefined}</FormHelperText>
           </FormControl>}
 
@@ -246,7 +247,12 @@ export default function SingleSelectWithSearch({
                 options.map((option) => {
                   return (
                     <StyledMenuItem key={option.value} value={option.value} onClick={onSelectItem(option)}>
-                      <Box display='flex' flexDirection='column' gap='4px' overflowX='hidden'>
+                      <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                        overflowX: 'hidden'
+                      }} >
                         <Typography variant='labelMedium' color='text.secondary' sx={{ overflowX: 'hidden', textOverflow: 'ellipsis' }}>
                           {option.label}
                         </Typography>
@@ -254,7 +260,7 @@ export default function SingleSelectWithSearch({
                           {option.description}
                         </Typography>
                       </Box>
-                      {option.value === value?.value && (
+                      {option.value === selectedOption?.value && (
                         <StyledMenuItemIcon>
                           <CheckedIcon />
                         </StyledMenuItemIcon>

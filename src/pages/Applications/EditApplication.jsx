@@ -30,6 +30,7 @@ const EditApplication = () => {
     initialValues,
     isFetching,
     modelOptions,
+    applicationId,
   } = useApplicationInitialValues();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -42,7 +43,7 @@ const EditApplication = () => {
   ])
 
   const {
-    formRef, 
+    formRef,
     getFormValues,
     resetFormValues
   } = useFormikFormRef();
@@ -90,6 +91,7 @@ const EditApplication = () => {
                   onDiscard={onDiscard}
                   versionStatus={initialValues?.version_details?.status}
                   applicationId={initialValues?.id}
+                  isEditingTool={!!editToolDetail}
                 /> : null,
               rightToolbar: isFetching ? null : <ApplicationDetailToolbar
                 name={initialValues?.name}
@@ -115,7 +117,7 @@ const EditApplication = () => {
                             {editToolDetail ?
                               <ToolForm
                                 editToolDetail={editToolDetail}
-                                setEditToolDetail={setEditToolDetail} 
+                                setEditToolDetail={setEditToolDetail}
                               />
                               :
                               <>
@@ -130,7 +132,10 @@ const EditApplication = () => {
                                     <ApplicationEditForm />
                                 }
                                 <ApplicationContext style={{ marginTop: '16px' }} />
-                                <ApplicationTools style={{ marginTop: '16px' }} setEditToolDetail={setEditToolDetail} />
+                                <ApplicationTools
+                                  style={{ marginTop: '16px' }}
+                                  setEditToolDetail={setEditToolDetail}
+                                  applicationId={applicationId} />
                                 <ConversationStarters style={{ marginTop: '16px' }} />
                               </>
                             }

@@ -21,13 +21,28 @@ const useCreateApplication = (formik) => {
         versions: [
           {
             name: 'latest',
-            tags: formik.values.version_details.tags
+            tags: formik.values.version_details.tags,
+            instructions: formik.values.version_details.instructions,
+            variables: formik.values.version_details.variables,
+            tools: formik.values.version_details.tools,
+            llm_settings: formik.values.version_details.llm_settings,
+            conversation_starters: formik.values.version_details.conversation_starters,
           }
         ]
       })
     },
-    [createRequest, projectId, formik.values.name, formik.values.description, formik.values.version_details.tags],
-  );
+    [
+      createRequest,
+      projectId,
+      formik.values.name,
+      formik.values.description,
+      formik.values.version_details.tags,
+      formik.values.version_details.instructions,
+      formik.values.version_details.variables,
+      formik.values.version_details.tools,
+      formik.values.version_details.llm_settings,
+      formik.values.version_details.conversation_starters
+    ]);
 
   useEffect(() => {
     if (error) {
@@ -54,8 +69,9 @@ const useCreateApplication = (formik) => {
   useEffect(() => {
     if (data) {
       const { id } = data
+      formik.resetForm(data);
       const pathname = `${RouteDefinitions.MyLibrary}${RouteDefinitions.Applications}/${id}`;
-      const search = `name=${encodeURIComponent(name)}&${SearchParams.ViewMode}=${ViewMode.Owner}`;
+      const search = `name=${encodeURIComponent(data.name)}&${SearchParams.ViewMode}=${ViewMode.Owner}`;
       data && navigate({
         pathname,
         search,
@@ -71,7 +87,7 @@ const useCreateApplication = (formik) => {
           },
         })
     }
-  }, [data, formik.values.name, navigate]);
+  }, [data, formik, formik.values.name, navigate]);
 
   return {
     isLoading,
