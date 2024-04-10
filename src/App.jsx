@@ -239,6 +239,7 @@ const ProtectedRoutes = () => {
             </ProtectedRoute>
           }>
           {path.endsWith('/:promptId') && <Route path=':version' element={<></>} />}
+          {path.endsWith('/:applicationId') && <Route path=':version' element={<></>} />}
         </Route>
       ))
     }

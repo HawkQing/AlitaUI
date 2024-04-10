@@ -13,6 +13,11 @@ import useToast from '@/components/useToast';
 import { buildErrorMessage } from '@/common/utils';
 import useSaveVersion from './useSaveVersion';
 import useUnpublishVersion from './useUnpublishVersion';
+import VersionSelect from './VersionSelect';
+import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import SaveNewVersionButton from './SaveNewVersionButton';
+import DeleteVersionButton from './DeleteVersionButton';
 
 const TabBarItems = styled('div')(() => ({
   display: 'flex',
@@ -27,13 +32,18 @@ export default function EditApplicationTabBar({
   onDiscard,
   versionStatus,
   applicationId,
-  isEditingTool
+  isEditingTool,
+  versions,
+  versionIdFromDetail,
+  versionDetails,
 }) {
-
   const projectId = useSelectedProjectId();
+  const { personal_project_id } = useSelector(state => state.user);
   const canPublish = useMemo(() => projectId == PUBLIC_PROJECT_ID && versionStatus === PromptStatus.Draft && false, [projectId, versionStatus])
   const canUnpublish = useMemo(() => projectId == PUBLIC_PROJECT_ID && versionStatus === PromptStatus.Published && false, [projectId, versionStatus])
-
+  const { versionId } = useParams();
+  const currentVersionId = useMemo(() => versionId || versionIdFromDetail, [versionId, versionIdFromDetail]);
+  const latestVersionId = useMemo(() => (versions?.find(version => version.name === 'latest'))?.id, [versions]);
   const { onSave, isSaveError, isSaveSuccess, saveError, isSaving, resetSave } = useSaveVersion({
     projectId,
     getFormValues,
@@ -117,6 +127,7 @@ export default function EditApplicationTabBar({
 
   return <>
     <TabBarItems>
+      <VersionSelect currentVersionId={currentVersionId} versions={versions} enableVersionListAvatar={projectId != personal_project_id} />
       {
         canPublish && <NormalRoundButton
           disabled={isPublishingVersion || isPublishSuccess || isEditingTool}
@@ -140,15 +151,27 @@ export default function EditApplicationTabBar({
           {isUnpublishingVersion && <StyledCircleProgress size={20} />}
         </NormalRoundButton>
       }
-      <NormalRoundButton
-        disabled={isSaving || isSaveSuccess || !isFormDirty || isEditingTool}
-        variant="contained"
-        color="secondary"
-        onClick={onSave}>
-        Save
-        {isSaving && <StyledCircleProgress size={20} />}
-      </NormalRoundButton>
+      {
+        currentVersionId === latestVersionId && <NormalRoundButton
+          disabled={isSaving || isSaveSuccess || !isFormDirty || isEditingTool}
+          variant="contained"
+          color="secondary"
+          onClick={onSave}>
+          Save
+          {isSaving && <StyledCircleProgress size={20} />}
+        </NormalRoundButton>
+      }
       <DiscardButton disabled={isSaving || !isFormDirty || isEditingTool} onDiscard={onDiscard} />
+      <SaveNewVersionButton
+        applicationId={applicationId}
+        versions={versions}
+        versionDetails={versionDetails}
+        getFormValues={getFormValues}
+      />
+      {
+        currentVersionId !== latestVersionId &&
+        <DeleteVersionButton versionIdFromDetail={versionIdFromDetail} versions={versions} applicationId={applicationId} />
+      }
     </TabBarItems>
     <Toast />
   </>

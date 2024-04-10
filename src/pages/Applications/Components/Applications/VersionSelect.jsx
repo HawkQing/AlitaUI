@@ -1,4 +1,3 @@
-import { useLazyGetVersionDetailQuery } from '@/api/prompts';
 import { TIME_FORMAT } from '@/common/constants';
 import { timeFormatter } from '@/common/utils';
 import SingleSelect from '@/components/SingleSelect';
@@ -8,16 +7,19 @@ import RouteDefinitions from '@/routes';
 import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
+  replaceVersionInPath,
   useNameFromUrl,
   useProjectId,
-  useViewModeFromUrl,
-  replaceVersionInPath,
-} from '../../../hooks';
+  useViewModeFromUrl
+} from '@/pages/hooks';
 import {
   SelectLabel,
   VersionContainer,
   VersionSelectContainer,
-} from '../Common';
+} from '@/pages/Prompts/Components/Common';
+import { useLazyGetApplicationVersionDetailQuery } from '@/api/applications';
+import { alitaApi } from '../../../../api/alitaApi';
+import { useDispatch } from 'react-redux';
 
 export const buildVersionOption = enableVersionListAvatar => ({ name, id, status, created_at, author = {} }) => {
   const displayName = author.name;
@@ -30,22 +32,23 @@ export const buildVersionOption = enableVersionListAvatar => ({ name, id, status
   }
 }
 
-const VersionSelect = memo(function VersionSelect({ currentVersionName = '', versions = [], enableVersionListAvatar = false }) {
+const VersionSelect = memo(function VersionSelect({ currentVersionId = '', versions = [], enableVersionListAvatar = false }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { pathname, state, search } = useLocation();
-  const { promptId, version } = useParams();
+  const { applicationId, version } = useParams();
   const promptName = useNameFromUrl();
-  const [getVersionDetail] = useLazyGetVersionDetailQuery();
+  const [getVersionDetail] = useLazyGetApplicationVersionDetailQuery();
   const viewMode = useViewModeFromUrl();
   const projectId = useProjectId();
-  const currentVersion = useMemo(() => versions.find(item => item.name === currentVersionName)?.id, [currentVersionName, versions]);
+  const currentVersion = useMemo(() => versions.find(item => item.id === currentVersionId)?.id, [currentVersionId, versions]);
   const versionSelectOptions = useMemo(() => {
     return versions.map(buildVersionOption(enableVersionListAvatar));
   }, [enableVersionListAvatar, versions]);
 
   const onSelectVersion = useCallback(
     (newVersion) => {
-      const newPath = replaceVersionInPath(versions.find(item => item.id === newVersion)?.name, pathname, version, promptId);
+      const newPath = replaceVersionInPath(versions.find(item => item.id === newVersion)?.id, pathname, version, applicationId);
       const routeStack = [...(state?.routeStack || [])];
       if (routeStack.length) {
         routeStack[routeStack.length - 1] = {
@@ -70,17 +73,23 @@ const VersionSelect = memo(function VersionSelect({ currentVersionName = '', ver
         }
       );
     },
-    [versions, pathname, version, promptId, search, state?.routeStack, navigate, promptName, viewMode],
+    [versions, pathname, version, applicationId, search, state?.routeStack, navigate, promptName, viewMode],
   );
 
   useEffect(() => {
+    const getDetail = async (versionId) => {
+      const result = await getVersionDetail({ projectId, applicationId, versionId });
+      dispatch(alitaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, (details) => {
+        details.version_details = result.data;
+      }));
+    }
     if (version) {
-      const versionId = versions.find(item => item.name === decodeURIComponent(version || ''))?.id;
+      const versionId = versions.find(item => item.id == version)?.id;
       if (versionId) {
-        getVersionDetail({ projectId, promptId, version: versionId });
+        getDetail(versionId);
       }
     }
-  }, [getVersionDetail, projectId, promptId, version, versions]);
+  }, [getVersionDetail, projectId, applicationId, version, versions, dispatch]);
 
   return (
     pathname !== RouteDefinitions.CreatePrompt ?
