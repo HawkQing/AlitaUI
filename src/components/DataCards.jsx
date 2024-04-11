@@ -94,6 +94,10 @@ export default function DataCards ({
 
   const gridStyle = React.useCallback((theme) => ({
     background: theme.palette.background.secondary,
+    '&:hover': {
+      backgroundColor: theme.palette.background.default,
+      border: `1px solid ${theme.palette.border.lines}`,
+    },
     margin: isFullWidthPage ? '0 1rem 1rem 0' : '0 1rem 1rem 0',
     minWidth: MIN_CARD_WIDTH,
     width: {

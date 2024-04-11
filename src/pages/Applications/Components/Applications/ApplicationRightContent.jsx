@@ -95,6 +95,7 @@ export default function ApplicationRightContent({
     conversationStarters,
     isFullScreenChat,
     setIsFullScreenChat,
+    isApplicationChat: true,
   }), [
     integration_uid,
     model_name,
