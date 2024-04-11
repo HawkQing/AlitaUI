@@ -122,17 +122,20 @@ const CreatePersonalToken = () => {
                 />
               </Box>
               <Box sx={{ width: '86px', paddingTop: '15px' }}>
-                <StyledInput
-                  variant='standard'
-                  fullWidth
-                  id='expiration'
-                  name='expiration'
-                  label=''
-                  type="number"
-                  value={formik.values.expiration}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
+                {
+                  formik.values.measure !== EXPIRATION_MEASURES[0] &&
+                  <StyledInput
+                    variant='standard'
+                    fullWidth
+                    id='expiration'
+                    name='expiration'
+                    label=''
+                    type="number"
+                    value={formik.values.expiration}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                }
               </Box>
             </Box>
           </form>
@@ -153,8 +156,8 @@ const CreatePersonalToken = () => {
         open={openTokenDialog}
         token={data?.token || ''}
         name={data?.name}
-        onClose={() => { 
-          setOpenTokenDialog(false); 
+        onClose={() => {
+          setOpenTokenDialog(false);
           onCancel();
         }}
       />

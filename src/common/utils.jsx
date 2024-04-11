@@ -348,15 +348,20 @@ export const sortByCreatedAt = (a, b) => {
 
 const DAY_IN_MILLISECONDS = 24 * 3600 * 1000;
 export const calculateExpiryInDays = (expiration) => {
-  const currentTime = new Date().getTime();
-  const expiryTime = new Date(expiration).getTime();
-  const duration = expiryTime - currentTime;
-  if (duration > DAY_IN_MILLISECONDS) {
-    return Math.round(duration / DAY_IN_MILLISECONDS);
-  } else if (duration > 0) {
-    return 1;
+  if (expiration !== null) {
+
+    const currentTime = new Date().getTime();
+    const expiryTime = new Date(expiration).getTime();
+    const duration = expiryTime - currentTime;
+    if (duration > DAY_IN_MILLISECONDS) {
+      return Math.round(duration / DAY_IN_MILLISECONDS);
+    } else if (duration > 0) {
+      return 1;
+    }
+    return 0;
+  } else {
+    return -1;
   }
-  return 0;
 }
 
 const copyToClipboard = text => {
