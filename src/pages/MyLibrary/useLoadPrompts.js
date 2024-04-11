@@ -8,8 +8,8 @@ import { useCallback } from 'react';
 
 export const getQueryStatuses = (statuses) => statuses?.length && !statuses?.includes(PromptStatus.All) ? statuses.join(',') : undefined;
 
-export const useLoadPrompts = (viewMode, selectedTagIds, sortBy, sortOrder, statuses) => {
-  const { query, page, setPage, pageSize } = usePageQuery();
+export const useLoadPrompts = (viewMode, sortBy, sortOrder, statuses) => {
+  const { query, page, setPage, pageSize, selectedTagIds, tagList } = usePageQuery();
   const authorId = useAuthorIdFromUrl();
   const projectId = useProjectId();  
   const { 
@@ -59,6 +59,7 @@ export const useLoadPrompts = (viewMode, selectedTagIds, sortBy, sortOrder, stat
 
   return {
     loadMore: onLoadMorePrompts,
+    tagList,
     data: viewMode === ViewMode.Owner ? privatePromptData : publicPromptData,
     isPromptError: viewMode === ViewMode.Owner ? isPrivatePromptError : isPublicPromptError,
     isMorePromptError: viewMode === ViewMode.Owner ? (!!page && isPrivatePromptError) : (!!page && isPublicPromptError),

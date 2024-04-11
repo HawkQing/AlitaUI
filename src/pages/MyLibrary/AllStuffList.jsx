@@ -4,13 +4,13 @@ import { buildErrorMessage, sortByCreatedAt } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Toast from '@/components/Toast.jsx';
 import useCardList from '@/components/useCardList';
-import useTags from '@/components/useTags';
 import { useAuthorIdFromUrl, usePageQuery, useProjectId, useViewMode } from '@/pages/hooks';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import RightPanel from './RightPanel';
 import { getQueryStatuses, useLoadPrompts } from './useLoadPrompts';
 import { useLoadDatasources } from './useLoadDatasources';
+import { useLoadApplications } from './useLoadApplications';
 
 const EmptyListPlaceHolder = ({ query, viewMode, name }) => {
   if (!query) {
@@ -30,14 +30,11 @@ const AllStuffList = ({
   sortOrder,
   statuses,
 }) => {
-  const { query, page, setPage, pageSize } = usePageQuery();
+  const { query, page, setPage, pageSize, tagList, selectedTagIds } = usePageQuery();
   const viewMode = useViewMode();
   const {
     renderCard,
   } = useCardList(viewMode);
-
-  const { tagList } = useSelector((state) => state.prompts);
-  const { selectedTagIds } = useTags(tagList);
 
   const {
     loadMore,
@@ -48,7 +45,7 @@ const AllStuffList = ({
     isPromptFetching,
     isPromptLoading,
     promptError,
-  } = useLoadPrompts(viewMode, selectedTagIds, sortBy, sortOrder, statuses);
+  } = useLoadPrompts(viewMode, sortBy, sortOrder, statuses);
 
   const { total = 0 } = data || {};
   const authorId = useAuthorIdFromUrl();
@@ -89,31 +86,49 @@ const AllStuffList = ({
   }, [collectionTotal, collections.length, page, setPage]);
 
   const {
-    onLoadMorePublicDatasources,
+    onLoadMoreDatasources,
     data: datasourcesData,
     isDatasourcesError,
     isDatasourcesFetching,
     isDatasourcesLoading,
     datasourcesError,
-  } = useLoadDatasources(viewMode, selectedTagIds, sortBy, sortOrder, statuses);
+  } = useLoadDatasources(viewMode, sortBy, sortOrder, statuses);
   const { rows: datasources = [], total: datasourcesTotal = 0 } = datasourcesData || {};
 
   const loadMoreDatasources = React.useCallback(() => {
     if (datasourcesTotal <= datasources.length) {
       return;
     } 
-    onLoadMorePublicDatasources();
-  }, [datasourcesTotal, datasources.length, onLoadMorePublicDatasources]);
+    onLoadMoreDatasources();
+  }, [datasourcesTotal, datasources.length, onLoadMoreDatasources]);
+
+  const {
+    onLoadMoreApplications,
+    data: applicationData,
+    isApplicationsError,
+    isApplicationsFetching,
+    isApplicationsLoading,
+    applicationsError,
+  } = useLoadApplications(viewMode, sortBy, sortOrder, statuses);
+  const { rows: applications = [], total: applicationsTotal = 0 } = applicationData || {};
+
+  const loadMoreApplications = React.useCallback(() => {
+    if (applicationsTotal <= applications.length) {
+      return;
+    } 
+    onLoadMoreApplications();
+  }, [applicationsTotal, applications.length, onLoadMoreApplications]);
 
   const onLoadMore = React.useCallback(
     () => {
-      if (!isPromptFetching && !isCollectionFetching && !isDatasourcesFetching) {
+      if (!isPromptFetching && !isCollectionFetching && !isDatasourcesFetching || !isApplicationsFetching) {
         loadMorePrompts();
         loadMoreCollections();
         loadMoreDatasources();
+        loadMoreApplications();
       }
     },
-    [isCollectionFetching, isDatasourcesFetching, isPromptFetching, loadMoreCollections, loadMoreDatasources, loadMorePrompts],
+    [isCollectionFetching, isDatasourcesFetching, isPromptFetching, isApplicationsFetching, loadMoreCollections, loadMoreDatasources, loadMorePrompts, loadMoreApplications],
   );
 
   const realDataList = React.useMemo(() => {
@@ -125,13 +140,17 @@ const AllStuffList = ({
       ...collection,
       cardType: viewMode === ViewMode.Owner ? ContentType.MyLibraryCollections : ContentType.UserPublicCollections,
     }));
-    const datasourceList = datasources.map((collection) => ({
-      ...collection,
+    const datasourceList = datasources.map((datasource) => ({
+      ...datasource,
       cardType: viewMode === ViewMode.Owner ? ContentType.MyLibraryDatasources : ContentType.UserPublicDatasources,
     }));
-    const finalList = [...prompts, ...collectionList, ...datasourceList].sort(sortByCreatedAt);
+    const applicationList = applications.map((application) => ({
+      ...application,
+      cardType: viewMode === ViewMode.Owner ? ContentType.MyLibraryApplications : ContentType.UserPublicApplications,
+    }));
+    const finalList = [...prompts, ...collectionList, ...datasourceList, ...applicationList].sort(sortByCreatedAt);
     return finalList;
-  }, [collections, datasources, filteredList, viewMode]);
+  }, [applications, collections, datasources, filteredList, viewMode]);
 
   return (
     <>
@@ -140,7 +159,7 @@ const AllStuffList = ({
         key={'AllStuffList'}
         cardList={realDataList}
         total={total + collectionTotal + datasourcesTotal}
-        isLoading={isPromptLoading || isPromptFirstFetching || isCollectionsLoading || isDatasourcesLoading}
+        isLoading={isPromptLoading || isPromptFirstFetching || isCollectionsLoading || isDatasourcesLoading || isApplicationsLoading}
         isError={isPromptError || isCollectionsError}
         rightPanelOffset={rightPanelOffset}
         rightPanelContent={<RightPanel tagList={tagList} />}
@@ -151,9 +170,9 @@ const AllStuffList = ({
         emptyListPlaceHolder={<EmptyListPlaceHolder query={query} viewMode={viewMode} name={name} />}
       />
       <Toast
-        open={isMorePromptError || isPromptError || isCollectionsError || isDatasourcesError}
+        open={isMorePromptError || isPromptError || isCollectionsError || isDatasourcesError || isApplicationsError}
         severity={'error'}
-        message={buildErrorMessage(promptError || collectionError || datasourcesError)}
+        message={buildErrorMessage(promptError || collectionError || datasourcesError || applicationsError)}
       />
     </>
   );

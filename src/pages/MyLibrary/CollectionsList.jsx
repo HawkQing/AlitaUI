@@ -4,7 +4,6 @@ import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Toast from '@/components/Toast.jsx';
 import useCardList from '@/components/useCardList';
-import useTags from '@/components/useTags';
 import { useAuthorIdFromUrl, usePageQuery, useProjectId, useViewMode } from '@/pages/hooks';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
@@ -27,14 +26,12 @@ const CollectionsList = ({
   rightPanelOffset,
   statuses,
 }) => {
-  const { query, page, setPage, pageSize } = usePageQuery();
+  const { query, page, setPage, pageSize, tagList, selectedTagIds } = usePageQuery();
   const viewMode = useViewMode();
   const {
     renderCard,
   } = useCardList(viewMode);
   const authorId = useAuthorIdFromUrl();
-  const { tagList } = useSelector((state) => state.prompts);
-  const { selectedTagIds } = useTags(tagList);
   const collectionProjectId = useProjectId();
   const { name } = useSelector((state) => state.trendingAuthor.authorDetails);
   const { error,

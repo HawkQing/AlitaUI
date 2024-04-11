@@ -18,11 +18,14 @@ import { promptApi } from '@/api/prompts';
 import { actions as promptSliceActions } from '@/slices/prompts';
 import { actions as searchActions } from '@/slices/search';
 import { actions as settingsActions } from '@/slices/settings';
+import useTags from '@/components/useTags';
 
 export const usePageQuery = (resetPage) => {
   const [page, setPage] = useState(0);
   const pageSize = useSelector(state => state.settings.pageSize);
   const { query } = useSelector(state => state.search);
+  const { tagList } = useSelector((state) => state.prompts);
+  const { selectedTagIds, calculateTagsWidthOnCard } = useTags(tagList);
   const [localQuery, setLocalQuery] = useState(query);
 
   useEffect(() => {
@@ -42,7 +45,15 @@ export const usePageQuery = (resetPage) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageSize, setPage]);
 
-  return { query: localQuery, page, setPage, pageSize }
+  useEffect(() => {
+    setPage(0);
+    if (resetPage) {
+      resetPage();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTagIds, setPage]);
+
+  return { query: localQuery, page, setPage, pageSize, tagList, selectedTagIds, calculateTagsWidthOnCard }
 }
 
 export const useSortQueryParamsFromUrl = ({defaultSortOrder, defaultSortBy}) => {
@@ -77,6 +88,12 @@ export const useIsFromDatasources = () => {
   const { pathname } = useLocation();
   const isFromDatasources = useMemo(() => pathname.startsWith(RouteDefinitions.DataSources), [pathname]);
   return isFromDatasources;
+}
+
+export const useIsFromApplications = () => {
+  const { pathname } = useLocation();
+  const isFromApplications = useMemo(() => pathname.startsWith(RouteDefinitions.Applications), [pathname]);
+  return isFromApplications;
 }
 
 export const useIsFromUserPublic = () => {

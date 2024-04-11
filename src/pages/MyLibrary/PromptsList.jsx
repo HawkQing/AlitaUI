@@ -3,7 +3,6 @@ import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Toast from '@/components/Toast.jsx';
 import useCardList from '@/components/useCardList';
-import useTags from '@/components/useTags';
 import { useViewMode } from '@/pages/hooks';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
@@ -34,9 +33,6 @@ const PromptsList = ({
     renderCard,
   } = useCardList(viewMode);
 
-  const { tagList } = useSelector((state) => state.prompts);
-  const { selectedTagIds } = useTags(tagList);
-
   const {
     loadMore,
     data,
@@ -46,7 +42,8 @@ const PromptsList = ({
     isPromptFetching,
     isPromptLoading,
     promptError,
-  } = useLoadPrompts(viewMode, selectedTagIds, sortBy, sortOrder, statuses);
+    tagList,
+  } = useLoadPrompts(viewMode, sortBy, sortOrder, statuses);
   const { total } = data || {};
   const { filteredList } = useSelector((state) => state.prompts);
   const { name } = useSelector((state) => state.trendingAuthor.authorDetails);

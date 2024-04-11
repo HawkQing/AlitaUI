@@ -3,7 +3,6 @@ import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Toast from '@/components/Toast.jsx';
 import useCardList from '@/components/useCardList';
-import useTags from '@/components/useTags';
 import { useViewMode } from '@/pages/hooks';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
@@ -32,12 +31,10 @@ const ApplicationsList = ({
   const {
     renderCard,
   } = useCardList(viewMode);
-  const { tagList } = useSelector((state) => state.prompts);
-  const { selectedTagIds } = useTags(tagList);
   const { name } = useSelector((state) => state.trendingAuthor.authorDetails);
 
   const {
-    onLoadMorePublicApplications,
+    onLoadMoreApplications,
     data,
     isApplicationsError,
     isMoreApplicationsError,
@@ -45,15 +42,16 @@ const ApplicationsList = ({
     isApplicationsFetching,
     isApplicationsLoading,
     applicationsError,
-  } = useLoadApplications(viewMode, selectedTagIds, sortBy, sortOrder, statuses);
+    tagList, 
+  } = useLoadApplications(viewMode, sortBy, sortOrder, statuses);
 
   const { rows: applications = [], total = 1 } = data || {};
 
   const loadMoreCollections = React.useCallback(() => {
     const existsMore = applications.length < total;
     if (!existsMore || isApplicationsFetching) return;
-    onLoadMorePublicApplications();
-  }, [applications.length, total, isApplicationsFetching, onLoadMorePublicApplications]);
+    onLoadMoreApplications();
+  }, [applications.length, total, isApplicationsFetching, onLoadMoreApplications]);
 
   return (
     <>
