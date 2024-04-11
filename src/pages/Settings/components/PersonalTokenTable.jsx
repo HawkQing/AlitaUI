@@ -61,7 +61,16 @@ const ExpiryInDays = ({ expires }) => {
         </Typography>
       </Box>
     )
-  } else {
+  } else if (expiryInDays === -1) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '100%' }}>
+        <SuccessIcon width='16px' height='16px' fill={theme.palette.status.published} />
+        <Typography sx={{ marginLeft: '8px', lineHeight: '100%' }} color='text.primary' variant='bodySmall'>
+          Never
+        </Typography>
+      </Box>
+    )
+  } else { 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '100%' }}>
         <RemoveIcon width='16px' height='16px' fill={theme.palette.icon.fill.disabled} />
