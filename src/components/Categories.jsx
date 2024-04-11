@@ -8,6 +8,7 @@ import {
   useAuthorIdFromUrl,
   useFromMyLibrary,
   useFromPrompts,
+  useIsFromApplications,
   useIsFromCollections,
   useIsFromDatasources,
   useIsFromUserPublic,
@@ -148,6 +149,7 @@ const Categories = ({ tagList, title = 'Tags', style, my_liked }) => {
   const isOnUserPublic = useIsFromUserPublic();
   const isFromCollections = useIsFromCollections();
   const isFromDatasources = useIsFromDatasources();
+  const isFromApplications = useIsFromApplications();
   const { tab } = useParams();
 
   React.useEffect(() => {
@@ -175,12 +177,19 @@ const Categories = ({ tagList, title = 'Tags', style, my_liked }) => {
       tagListParams.statuses = 'published';
     } else if (isOnPrompts) {
       tagListParams.statuses = 'published';
+      tagListParams.entity_coverage = 'prompt';
       if (my_liked) {
         tagListParams.my_liked_prompts = my_liked;
       }
     } else if (isFromDatasources) {
       tagListParams.statuses = 'published';
       tagListParams.entity_coverage = 'datasource';
+      if (my_liked) {
+        tagListParams.my_liked = my_liked;
+      }
+    } else if (isFromApplications) {
+      tagListParams.statuses = 'published';
+      tagListParams.entity_coverage = 'application';
       if (my_liked) {
         tagListParams.my_liked = my_liked;
       }
@@ -192,10 +201,20 @@ const Categories = ({ tagList, title = 'Tags', style, my_liked }) => {
       if (tab === MyLibraryTabs[0]) {
         //All
         tagListParams.collection_phrase = queryForTag;
+        tagListParams.entity_coverage = 'all';
       } else if (tab === MyLibraryTabs[4]) {
         //Collections
         tagListParams.collection_phrase = queryForTag;
         tagListParams.query = undefined;
+      } else if (tab === MyLibraryTabs[1]) {
+        //Prompts
+        tagListParams.entity_coverage = 'prompt';
+      } else if (tab === MyLibraryTabs[2]) {
+        //Datasources
+        tagListParams.entity_coverage = 'datasource';
+      } else if (tab === MyLibraryTabs[3]) {
+        //Applications
+        tagListParams.entity_coverage = 'application';
       }
     } else {
       if (isFromCollections) {
@@ -219,7 +238,23 @@ const Categories = ({ tagList, title = 'Tags', style, my_liked }) => {
     }else{
       getTagList(tagListParams);
     }
-  }, [tab, myAuthorId, getTagList, isOnMyLibrary, isOnUserPublic, projectId, authorId, statuses, query, isFromCollections, page, isOnPrompts, my_liked, isFromDatasources]);
+  }, [
+    tab, 
+    myAuthorId, 
+    getTagList, 
+    isOnMyLibrary, 
+    isOnUserPublic, 
+    projectId, 
+    authorId, 
+    statuses, 
+    query, 
+    isFromCollections, 
+    page, 
+    isOnPrompts, 
+    my_liked, 
+    isFromDatasources,
+    isFromApplications,
+  ]);
 
   React.useEffect(() => {
     if(mergeTagListQuery && !isFetching){

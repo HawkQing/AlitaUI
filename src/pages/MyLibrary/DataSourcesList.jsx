@@ -3,7 +3,6 @@ import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Toast from '@/components/Toast.jsx';
 import useCardList from '@/components/useCardList';
-import useTags from '@/components/useTags';
 import { useViewMode } from '@/pages/hooks';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
@@ -32,12 +31,10 @@ const DataSourceList = ({
   const {
     renderCard,
   } = useCardList(viewMode);
-  const { tagList } = useSelector((state) => state.prompts);
-  const { selectedTagIds } = useTags(tagList);
   const { name } = useSelector((state) => state.trendingAuthor.authorDetails);
 
   const {
-    onLoadMorePublicDatasources,
+    onLoadMoreDatasources,
     data,
     isDatasourcesError,
     isMoreDatasourcesError,
@@ -45,15 +42,16 @@ const DataSourceList = ({
     isDatasourcesFetching,
     isDatasourcesLoading,
     datasourcesError,
-  } = useLoadDatasources(viewMode, selectedTagIds, sortBy, sortOrder, statuses);
+    tagList,
+  } = useLoadDatasources(viewMode, sortBy, sortOrder, statuses);
 
   const { rows: datasources = [], total } = data || {};
 
   const loadMoreCollections = React.useCallback(() => {
     const existsMore = datasources.length < total;
     if (!existsMore || isDatasourcesFetching) return;
-    onLoadMorePublicDatasources();
-  }, [datasources.length, total, isDatasourcesFetching, onLoadMorePublicDatasources]);
+    onLoadMoreDatasources();
+  }, [datasources.length, total, isDatasourcesFetching, onLoadMoreDatasources]);
 
   return (
     <>

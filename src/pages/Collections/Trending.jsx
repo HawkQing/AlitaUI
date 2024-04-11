@@ -5,12 +5,10 @@ import CardList from '@/components/CardList';
 import Categories from '@/components/Categories';
 import Toast from '@/components/Toast.jsx';
 import useCardList from '@/components/useCardList';
-import useTags from '@/components/useTags';
 import { rightPanelStyle, tagsStyle } from '@/pages/MyLibrary/CommonStyles';
 import TrendingAuthors from '@/components/TrendingAuthors';
 import { usePageQuery, useSortQueryParamsFromUrl } from '@/pages/hooks';
 import * as React from 'react';
-import { useSelector } from 'react-redux';
 import useDispatchQueryParams from './useDispatchQueryParams';
 
 const emptyListPlaceHolder = <div>No public collections yet. <br />Publish yours now!</div>;
@@ -20,10 +18,7 @@ export default function Trending({trendRange}) {
   const {
     renderCard,
   } = useCardList(ViewMode.Public);
-  const { query, page, setPage } = usePageQuery();
-
-  const { tagList } = useSelector((state) => state.prompts);
-  const { selectedTagIds } = useTags(tagList);
+  const { query, page, setPage, tagList, selectedTagIds } = usePageQuery();
   const { sort_by, sort_order } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
   const { error,
     data,

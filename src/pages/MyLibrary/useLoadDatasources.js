@@ -2,18 +2,11 @@
 import { useDatasourceListQuery, usePublicDataSourcesListQuery } from '@/api/datasources';
 import { ViewMode } from '@/common/constants';
 import { useAuthorIdFromUrl, usePageQuery, useProjectId } from '@/pages/hooks';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { getQueryStatuses } from './useLoadPrompts';
 
-export const useLoadDatasources = (viewMode, selectedTagIds, sortBy, sortOrder, statuses) => {
-  const [datasourcePage, setDatasourcePage] = useState(0);
-  const resetDatasourcePage = useCallback(
-    () => {
-      setDatasourcePage(0);
-    },
-    [],
-  )
-  const { query, pageSize } = usePageQuery(resetDatasourcePage);
+export const useLoadDatasources = (viewMode, sortBy, sortOrder, statuses) => {
+  const { page, setPage, query, pageSize, tagList, selectedTagIds } = usePageQuery();
   const authorId = useAuthorIdFromUrl();
   const projectId = useProjectId();  
   const { 
@@ -23,7 +16,7 @@ export const useLoadDatasources = (viewMode, selectedTagIds, sortBy, sortOrder, 
     isLoading: isPublicDatasourceLoading,
     isFetching: isPublicDatasourceFetching,
   } = usePublicDataSourcesListQuery({
-    page: datasourcePage,
+    page,
     pageSize,
     params: {
       tags: selectedTagIds,
@@ -43,7 +36,7 @@ export const useLoadDatasources = (viewMode, selectedTagIds, sortBy, sortOrder, 
     isFetching: isPrivateDatasourceFetching,
   } = useDatasourceListQuery({
     projectId,
-    page: datasourcePage,
+    page,
     pageSize,
     params: {
       tags: selectedTagIds,
@@ -55,20 +48,22 @@ export const useLoadDatasources = (viewMode, selectedTagIds, sortBy, sortOrder, 
     }
   }, {skip: viewMode !== ViewMode.Owner || !projectId});
 
-  const onLoadMorePublicDatasources = useCallback(() => {
+  const onLoadMoreDatasources = useCallback(() => {
     if (!isPublicDatasourceFetching && !isPrivateDatasourceFetching) {
-      setDatasourcePage(datasourcePage + 1);
+      setPage(page + 1);
     }
-  }, [isPrivateDatasourceFetching, isPublicDatasourceFetching, datasourcePage]);
+  }, [isPublicDatasourceFetching, isPrivateDatasourceFetching, setPage, page]);
 
   return {
-    onLoadMorePublicDatasources,
+    onLoadMoreDatasources,
+    tagList, 
+    selectedTagIds,
     data: viewMode === ViewMode.Owner ? privateDatasourceData : publicDatasourceData,
     isDatasourcesError: viewMode === ViewMode.Owner ? isPrivateDatasourceError : isPublicDatasourceError,
-    isDatasourcesFetching: viewMode === ViewMode.Owner ? (!!datasourcePage && isPrivateDatasourceFetching) : (!!datasourcePage && isPublicDatasourceFetching),
+    isDatasourcesFetching: viewMode === ViewMode.Owner ? (!!page && isPrivateDatasourceFetching) : (!!page && isPublicDatasourceFetching),
     isDatasourcesLoading: viewMode === ViewMode.Owner ? isPrivateDatasourceLoading : isPublicDatasourceLoading,
-    isMoreDatasourcesError: viewMode === ViewMode.Owner ? (!!datasourcePage && isPrivateDatasourceError) : (!!datasourcePage && isPublicDatasourceError),
-    isDatasourcesFirstFetching: viewMode === ViewMode.Owner ? (!datasourcePage && isPrivateDatasourceFetching) : (!datasourcePage && isPublicDatasourceFetching),
+    isMoreDatasourcesError: viewMode === ViewMode.Owner ? (!!page && isPrivateDatasourceError) : (!!page && isPublicDatasourceError),
+    isDatasourcesFirstFetching: viewMode === ViewMode.Owner ? (!page && isPrivateDatasourceFetching) : (!page && isPublicDatasourceFetching),
     datasourcesError: viewMode === ViewMode.Owner ? privateDatasourceError : publicDatasourceError,
   };
 }

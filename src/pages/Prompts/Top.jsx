@@ -5,7 +5,6 @@ import CardList from '@/components/CardList';
 import Categories from '@/components/Categories';
 import Toast from '@/components/Toast.jsx';
 import useCardList from '@/components/useCardList';
-import useTags from '@/components/useTags';
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import TrendingAuthors from '@/components/TrendingAuthors';
@@ -19,9 +18,7 @@ const Top = () => {
   const {
     renderCard,
   } = useCardList(ViewMode.Public);
-  const { query, page, setPage } = usePageQuery();
-  const { tagList } = useSelector((state) => state.prompts);
-  const { selectedTagIds, calculateTagsWidthOnCard } = useTags(tagList);
+  const { query, page, setPage, tagList, selectedTagIds, calculateTagsWidthOnCard } = usePageQuery();
   const { sort_by, sort_order } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
   const { data, error, isError, isLoading, isFetching } = usePublicPromptListQuery({
     page,

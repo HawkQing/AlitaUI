@@ -5,11 +5,9 @@ import Categories from '@/components/Categories';
 import Toast from '@/components/Toast.jsx';
 import useCardList from '@/components/useCardList';
 import * as React from 'react';
-import { useSelector } from 'react-redux';
 import TrendingAuthors from '@/components/TrendingAuthors';
 import { usePageQuery, useSortQueryParamsFromUrl } from '@/pages/hooks';
 import { rightPanelStyle, tagsStyle } from '@/pages/MyLibrary/CommonStyles';
-import useTags from '@/components/useTags';
 import useApplicationDispatchQueryParams from './useApplicationsDispatchQueryParams';
 import { usePublicApplicationsListQuery } from '@/api/applications';
 
@@ -20,10 +18,8 @@ export default function Latest() {
   const {
     renderCard,
   } = useCardList(ViewMode.Public);
-  const { query, page, setPage } = usePageQuery();
+  const { query, page, setPage, tagList, selectedTagIds } = usePageQuery();
   const { sort_by, sort_order } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
-  const { tagList } = useSelector((state) => state.prompts);
-  const { selectedTagIds } = useTags(tagList);
   const { error,
     data,
     isError,

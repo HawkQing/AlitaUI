@@ -1,20 +1,13 @@
 
 import { ViewMode } from '@/common/constants';
 import { useAuthorIdFromUrl, usePageQuery, useProjectId } from '@/pages/hooks';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { getQueryStatuses } from './useLoadPrompts';
 import { usePublicDataSourcesListQuery } from '@/api/datasources';
 import { useApplicationListQuery } from '@/api/applications';
 
-export const useLoadApplications = (viewMode, selectedTagIds, sortBy, sortOrder, statuses) => {
-  const [applicationPage, setApplicationPage] = useState(0);
-  const resetApplicationPage = useCallback(
-    () => {
-      setApplicationPage(0);
-    },
-    [],
-  )
-  const { query, pageSize } = usePageQuery(resetApplicationPage);
+export const useLoadApplications = (viewMode, sortBy, sortOrder, statuses) => {
+  const { query, page, pageSize, setPage, tagList, selectedTagIds } = usePageQuery();
   const authorId = useAuthorIdFromUrl();
   const projectId = useProjectId();  
   const { 
@@ -24,7 +17,7 @@ export const useLoadApplications = (viewMode, selectedTagIds, sortBy, sortOrder,
     isLoading: isPublicApplicationLoading,
     isFetching: isPublicApplicationFetching,
   } = usePublicDataSourcesListQuery({
-    page: applicationPage,
+    page,
     pageSize,
     params: {
       tags: selectedTagIds,
@@ -44,7 +37,7 @@ export const useLoadApplications = (viewMode, selectedTagIds, sortBy, sortOrder,
     isFetching: isPrivateApplicationFetching,
   } = useApplicationListQuery({
     projectId,
-    page: applicationPage,
+    page,
     pageSize,
     params: {
       tags: selectedTagIds,
@@ -56,20 +49,21 @@ export const useLoadApplications = (viewMode, selectedTagIds, sortBy, sortOrder,
     }
   }, {skip: viewMode !== ViewMode.Owner || !projectId});
 
-  const onLoadMorePublicApplications = useCallback(() => {
+  const onLoadMoreApplications = useCallback(() => {
     if (!isPublicApplicationFetching && !isPrivateApplicationFetching) {
-      setApplicationPage(applicationPage + 1);
+      setPage(page + 1);
     }
-  }, [isPrivateApplicationFetching, isPublicApplicationFetching, applicationPage]);
+  }, [isPublicApplicationFetching, isPrivateApplicationFetching, setPage, page]);
 
   return {
-    onLoadMorePublicApplications,
+    tagList, 
+    onLoadMoreApplications,
     data: viewMode === ViewMode.Owner ? privateApplicationData : publicApplicationData,
     isApplicationsError: viewMode === ViewMode.Owner ? isPrivateApplicationError : isPublicApplicationError,
-    isApplicationsFetching: viewMode === ViewMode.Owner ? (!!applicationPage && isPrivateApplicationFetching) : (!!applicationPage && isPublicApplicationFetching),
+    isApplicationsFetching: viewMode === ViewMode.Owner ? (!!page && isPrivateApplicationFetching) : (!!page && isPublicApplicationFetching),
     isApplicationsLoading: viewMode === ViewMode.Owner ? isPrivateApplicationLoading : isPublicApplicationLoading,
-    isMoreApplicationsError: viewMode === ViewMode.Owner ? (!!applicationPage && isPrivateApplicationError) : (!!applicationPage && isPublicApplicationError),
-    isApplicationsFirstFetching: viewMode === ViewMode.Owner ? (!applicationPage && isPrivateApplicationFetching) : (!applicationPage && isPublicApplicationFetching),
+    isMoreApplicationsError: viewMode === ViewMode.Owner ? (!!page && isPrivateApplicationError) : (!!page && isPublicApplicationError),
+    isApplicationsFirstFetching: viewMode === ViewMode.Owner ? (!page && isPrivateApplicationFetching) : (!page && isPublicApplicationFetching),
     applicationsError: viewMode === ViewMode.Owner ? privateApplicationError : publicApplicationError,
   };
 }
