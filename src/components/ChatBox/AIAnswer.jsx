@@ -18,7 +18,7 @@ import BasicAccordion from "@/components/BasicAccordion.jsx";
 import AnimatedProgress from '@/components/AnimatedProgress';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 
-const UserMessageContainer = styled(ListItem)(() => `
+export const UserMessageContainer = styled(ListItem)(() => `
   flex: 1 0 0
   display: flex;
   padding: 0.75rem;
@@ -29,7 +29,7 @@ const UserMessageContainer = styled(ListItem)(() => `
   margin-bottom: 8px;
 `);
 
-const Answer = styled(Box)(({ theme }) => `
+export const Answer = styled(Box)(({ theme }) => `
   min-height: 36px; 
   flex: 1 0 0;
   color:${theme.palette.text.secondary};
@@ -53,7 +53,7 @@ const AIAnswerContainer = styled(UserMessageContainer)(({ theme }) => `
   background: ${theme.palette.background.icon.default};
 `);
 
-const ButtonsContainer = styled(Box)(({ theme }) => `
+export const ButtonsContainer = styled(Box)(({ theme }) => `
 position: absolute;
 top: 6px;
 right: 6px;
@@ -66,7 +66,7 @@ padding-bottom: 2px;
 background: ${theme.palette.background.aiAnswerActions};
 `);
 
-const ReferenceList = ({ references }) => {
+export const ReferenceList = ({ references }) => {
   return (
     <List dense>
       {

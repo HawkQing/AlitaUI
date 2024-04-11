@@ -39,6 +39,7 @@ import {
 import UserMessage from './UserMessage';
 import useDeleteMessageAlert from './useDeleteMessageAlert';
 import { useStopStreaming } from './hooks';
+import ApplicationAnswer from './ApplicationAnswer';
 
 const USE_STREAM = true
 
@@ -122,6 +123,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     isFullScreenChat,
     setIsFullScreenChat,
     messageListSX,
+    isApplicationChat,
   } = props
   const dispatch = useDispatch();
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
@@ -682,7 +684,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                       onDelete={onDeleteAnswer(message.id)}
                     />
                     :
-                    <AIAnswer
+                    !isApplicationChat ? <AIAnswer
                       key={message.id}
                       ref={(ref) => (listRefs.current[index] = ref)}
                       answer={message.content}
@@ -695,7 +697,27 @@ const ChatBox = forwardRef((props, boxRef) => {
                       references={message.references}
                       isLoading={Boolean(message.isLoading)}
                       isStreaming={message.isStreaming}
-                    />
+                    /> :
+                      <ApplicationAnswer
+                        key={message.id}
+                        ref={(ref) => (listRefs.current[index] = ref)}
+                        answer={message.content}
+                        onStop={onStopStreaming(message.id)}
+                        onCopy={onCopyToClipboard(message.id)}
+                        onDelete={onDeleteAnswer(message.id)}
+                        onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
+                        shouldDisableRegenerate={isLoading}
+                        references={message.references}
+                        toolActions={message.toolActions || [
+                          { id: 1, name: 'Tool action 1', content: 'action content', status: 'complete' },
+                          { id: 2, name: 'Tool action 2', content: 'action content', status: 'error' },
+                          { id: 3, name: 'Tool action 3', content: 'Some description about the action', status: 'action_required', query: '{"query": "2 + 3 = ?"}' },
+                          { id: 4, name: 'Tool action 4', content: 'action content', status: 'processing' },
+                          { id: 5, name: 'Tool action 5', content: 'action content', status: 'cancelled' },
+                        ]}
+                        isLoading={Boolean(message.isLoading)}
+                        isStreaming={message.isStreaming}
+                      />
                 }) :
                   <ConversationStartersView items={conversationStarters} onSend={USE_STREAM ? onPredictStream : onClickSend} />
                 ) :
