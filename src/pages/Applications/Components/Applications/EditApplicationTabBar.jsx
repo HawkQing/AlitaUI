@@ -154,12 +154,18 @@ export default function EditApplicationTabBar({
       <SaveNewVersionButton
         applicationId={applicationId}
         versions={versions}
+        disabled={isEditingTool}
         versionDetails={versionDetails}
         getFormValues={getFormValues}
       />
       {
         currentVersionId !== latestVersionId &&
-        <DeleteVersionButton versionIdFromDetail={versionIdFromDetail} versions={versions} applicationId={applicationId} />
+        <DeleteVersionButton
+          disabled={isEditingTool}
+          versionIdFromDetail={versionIdFromDetail}
+          versions={versions}
+          applicationId={applicationId}
+        />
       }
       {
         currentVersionId === latestVersionId && <NormalRoundButton

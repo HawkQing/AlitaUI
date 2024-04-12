@@ -9,7 +9,8 @@ import useSaveNewVersion from './useSaveNewVersion';
 export default function SaveNewVersionButton({
   versions,
   applicationId,
-  getFormValues
+  getFormValues,
+  disabled
 }) {
   const [showInputVersion, setShowInputVersion] = useState(false);
   const [newVersion, setNewVersion] = useState('');
@@ -81,7 +82,7 @@ export default function SaveNewVersionButton({
 
   return <>
     <NormalRoundButton
-      disabled={isSavingNewVersion || showInputVersion}
+      disabled={isSavingNewVersion || showInputVersion || disabled}
       variant='contained'
       color='secondary'
       onClick={onSaveVersion}

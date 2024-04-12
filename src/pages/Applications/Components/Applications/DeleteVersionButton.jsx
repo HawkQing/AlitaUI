@@ -12,6 +12,7 @@ export default function DeleteVersionButton({
   versions,
   versionIdFromDetail,
   applicationId,
+  disabled
 }) {
   const { version: versionId } = useParams();
   const currentVersionId = useMemo(() => versionId || versionIdFromDetail, [versionId, versionIdFromDetail]);
@@ -51,7 +52,7 @@ export default function DeleteVersionButton({
 
   return <>
     <NormalRoundButton
-      disabled={isDeletingVersion}
+      disabled={isDeletingVersion || disabled}
       variant='contained'
       color='secondary'
       onClick={onDeleteVersion}
