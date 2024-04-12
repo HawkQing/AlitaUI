@@ -104,6 +104,11 @@ const VersionSelect = memo(function VersionSelect({ currentVersionId = '', versi
             options={versionSelectOptions}
             enableVersionListAvatar={enableVersionListAvatar}
             showOptionIcon
+            inputSX={{
+              '& .MuiSelect-select': {
+                paddingRight: '8px !important',
+              },
+            }}
           />
         </VersionSelectContainer>
       </>

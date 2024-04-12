@@ -40,7 +40,6 @@ export const StyledGridContainer = styled(Grid)(({ theme }) => ({
 export const VersionSelectContainer = styled('div')(() => ({
   display: 'inline-block',
   marginRight: '2rem',
-  minWidth: '4rem',
   paddingTop: '0.16rem',
 }));
 
