@@ -248,6 +248,32 @@ const isSubpathUnderMyLibraryOrPrompts = (url) => {
   return paths.length > 2;
 }
 
+const calculateBreadCrumbs = (prevPathName, breadCrumbString) => {
+  if (prevPathName.length + breadCrumbString.length > 63) {
+    if (prevPathName.length > breadCrumbString.length) {
+      return {
+        firstPart: prevPathName.slice(0, 60 - breadCrumbString.length) + '...',
+        secondPart: breadCrumbString,
+      }
+    } else if (prevPathName.length < breadCrumbString.length) {
+      return {
+        firstPart: prevPathName,
+        secondPart: breadCrumbString.slice(0, 60 - breadCrumbString.length) + '...',
+      }
+    } else {
+      return {
+        firstPart: prevPathName.slice(0, 29 - breadCrumbString.length) + '...',
+        secondPart: breadCrumbString.slice(0, 29 - breadCrumbString.length) + '...',
+      }
+    }
+  } else {
+    return {
+      firstPart: prevPathName,
+      secondPart: breadCrumbString,
+    }
+  }
+}
+
 const TitleBread = () => {
   const { pathname, state: locationState } = useLocation();
   const { showSearchBar } = useSearchBar();
@@ -336,6 +362,7 @@ const TitleBread = () => {
       const prevPath = getPrevPath(routeStack, pathname, viewMode, collection, authorId, authorName);
       const prevPathName = getPrevPathName(routeStack, pathname, collection, name, authorName);
       const prevState = getPrevState(routeStack, prevPath, prevPathName, viewMode);
+      const { firstPart } = calculateBreadCrumbs(prevPathName, breadCrumbString)
       return (
         <BreadCrumbLink
           component={RouterLink}
@@ -343,12 +370,13 @@ const TitleBread = () => {
           state={prevState}
           underline='hover'
         >
-          {prevPathName}
+          {firstPart}
         </BreadCrumbLink>
       );
     }
     return null;
   }, [
+    breadCrumbString,
     hasMultiplePaths,
     isCreating,
     routeStack,
@@ -364,13 +392,19 @@ const TitleBread = () => {
     fontWeight: '500',
   };
 
+  const secondBreadCrumb = useMemo(() => {
+    const prevPathName = hasMultiplePaths || isCreating ? getPrevPathName(routeStack, pathname, collection, name, authorName) : '';
+    const { secondPart } = calculateBreadCrumbs(prevPathName, breadCrumbString)
+    return secondPart;
+  }, [authorName, breadCrumbString, collection, hasMultiplePaths, isCreating, name, pathname, routeStack])
+
   return (
     <Breadcrumbs aria-label="breadcrumb" color={'text.primary'} {...breadCrumbFontStyle}>
       {(hasMultiplePaths || isCreating) && <PrevPath />}
       <Typography
         color='white'
         sx={breadCrumbFontStyle}
-      >{breadCrumbString}</Typography>
+      >{secondBreadCrumb}</Typography>
     </Breadcrumbs>
   )
 }

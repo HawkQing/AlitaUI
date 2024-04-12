@@ -49,7 +49,7 @@ export const ActionButton = styled(IconButton)(({ theme }) => (`
 `));
 
 export const ToggleButton = styled(IconButton,
-  filterProps['isAutoScroll'])(({ theme, isAutoScroll }) => ({
+  filterProps('isAutoScroll'))(({ theme, isAutoScroll }) => ({
   width: '28px',
   height: '28px',
   background: isAutoScroll ?
