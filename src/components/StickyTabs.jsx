@@ -117,6 +117,7 @@ const CountBadge = styled(Badge)(({ theme }) => ({
     minWidth: '16px',
     borderRadius: '8px',
     padding: '0px 4.5px',
+    background: theme.palette.background.tabButton.active,
   }
 }));
 
