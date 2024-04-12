@@ -5,13 +5,14 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useTheme } from '@emotion/react';
 import CheckedIcon from '@/components/Icons/CheckedIcon';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import { StyledCircleProgress } from './StyledComponents';
 import CancelIcon from '@/components/Icons/CancelIcon';
 import StyledInputEnhancer from '../StyledInputEnhancer';
 import { SaveButton } from '@/pages/Prompts/Components/Common';
 import NormalRoundButton from '../NormalRoundButton';
+import { ToolActionStatus } from '@/common/constants';
 
 export const StyledExpandMoreIcon = styled(KeyboardArrowDownIcon)(({ theme }) => ({
   color: theme.palette.icon.fill.default,
@@ -20,29 +21,30 @@ export const StyledExpandMoreIcon = styled(KeyboardArrowDownIcon)(({ theme }) =>
 const Status = ({ status }) => {
   const theme = useTheme();
   switch (status) {
-    case 'complete':
+    case ToolActionStatus.complete:
       return <CheckedIcon sx={{ width: '16px', height: '16px' }} fill={theme.palette.status.published} />
-    case 'error':
+    case ToolActionStatus.error:
       return <ErrorOutlineIcon sx={{ width: '16px', height: '16px', color: theme.palette.status.rejected }} />
-    case 'action_required':
+    case ToolActionStatus.actionRequired:
       return <AttentionIcon width={16} height={16} fill={theme.palette.status.onModeration} />
-    case 'cancelled':
+    case ToolActionStatus.cancelled:
       return <CancelIcon width={16} height={16} fill={theme.palette.icon.fill.default} />
-    case 'processing':
+    case ToolActionStatus.processing:
       return <Box sx={{ width: '16px', height: '16px' }}> <StyledCircleProgress size={16} sx={{ color: theme.palette.text.info }} /></Box>
     default:
       return <CheckedIcon sx={{ width: '16px', height: '16px' }} fill={theme.palette.status.published} />
   }
 }
 
-export default function ToolAction({ showMode = AccordionShowMode.RightMode, defaultExpanded = true, action }) {
+export default function ToolAction({ showMode = AccordionShowMode.RightMode, defaultExpanded = false, action }) {
   const [result, setResult] = useState()
+  const [expanded, setExpanded] = useState(defaultExpanded)
   const theme = useTheme();
-  const nameColor = useMemo(() => action.status === 'error'
+  const nameColor = useMemo(() => action.status === ToolActionStatus.error
     ?
     theme.palette.status.rejected
     :
-    action.status === 'action_required'
+    action.status === ToolActionStatus.actionRequired
       ?
       theme.palette.status.onModeration
       :
@@ -65,10 +67,26 @@ export default function ToolAction({ showMode = AccordionShowMode.RightMode, def
     },
     [],
   )
+
+  const onExpanded = useCallback(
+    (_, value) => {
+      setExpanded(value);
+    },
+    [],
+  ) 
+
+  useEffect(() => {
+    if (action.status === ToolActionStatus.actionRequired || action.status === ToolActionStatus.error) {
+      setExpanded(true);
+    }
+  }, [action.status])
+  
   return (
     <StyledAccordion
       showMode={showMode}
       defaultExpanded={defaultExpanded}
+      expanded={expanded}
+      onChange={onExpanded}
       sx={{
         borderBottom: `1px solid ${theme.palette.border.lines}`,
         '&.Mui-expanded': {

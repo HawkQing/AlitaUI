@@ -8,7 +8,8 @@ import {
   ROLES,
   sioEvents,
   SocketMessageType,
-  StreamingMessageType
+  StreamingMessageType,
+  ToolActionStatus
 } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useSocket, { useManualSocket } from "@/hooks/useSocket.jsx";
@@ -709,11 +710,11 @@ const ChatBox = forwardRef((props, boxRef) => {
                         shouldDisableRegenerate={isLoading}
                         references={message.references}
                         toolActions={message.toolActions || [
-                          { id: 1, name: 'Tool action 1', content: 'action content', status: 'complete' },
-                          { id: 2, name: 'Tool action 2', content: 'action content', status: 'error' },
-                          { id: 3, name: 'Tool action 3', content: 'Some description about the action', status: 'action_required', query: '{"query": "2 + 3 = ?"}' },
-                          { id: 4, name: 'Tool action 4', content: 'action content', status: 'processing' },
-                          { id: 5, name: 'Tool action 5', content: 'action content', status: 'cancelled' },
+                          { id: 1, name: 'Tool action 1', content: 'action content', status: ToolActionStatus.complete },
+                          { id: 2, name: 'Tool action 2', content: 'action content', status: ToolActionStatus.error },
+                          { id: 3, name: 'Tool action 3', content: 'Some description about the action', status: ToolActionStatus.actionRequired, query: '{"query": "2 + 3 = ?"}' },
+                          { id: 4, name: 'Tool action 4', content: 'action content', status: ToolActionStatus.processing},
+                          { id: 5, name: 'Tool action 5', content: 'action content', status: ToolActionStatus.cancelled },
                         ]}
                         isLoading={Boolean(message.isLoading)}
                         isStreaming={message.isStreaming}
