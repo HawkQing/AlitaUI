@@ -247,7 +247,7 @@ export default function MyLibrary({ publicView = false }) {
   const onChangeTab = useCallback(
     (newTab) => {
       const rootPath = viewMode === ViewMode.Owner ? RouteDefinitions.MyLibrary : RouteDefinitions.UserPublic
-      const pagePath = `${rootPath}/${MyLibraryTabs[newTab]}` + location.search;
+      const pagePath = `${rootPath}/${tabs[newTab].label}` + location.search;
       const { routeStack = [] } = state || {};
       const newRouteStack = viewMode === ViewMode.Owner ? [{
         breadCrumb: PathSessionMap[RouteDefinitions.MyLibrary],
@@ -266,13 +266,18 @@ export default function MyLibrary({ publicView = false }) {
         }
       });
     },
-    [location.search, navigate, state, viewMode],
+    [location.search, navigate, state, tabs, viewMode],
   );
+
+  const currentTabValue = useMemo(() => {
+    const foundIndex = tabs.findIndex(item => item.label === tab);
+    return foundIndex !== -1 ? foundIndex : 0;
+  }, [tab, tabs])
 
   return (
     <StickyTabs
       tabs={tabs}
-      value={MyLibraryTabs.findIndex(item => item === tab)}
+      value={currentTabValue}
       onChangeTab={onChangeTab}
       middleTabComponent={
         <>

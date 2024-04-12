@@ -24,6 +24,7 @@ const CardListContainer = styled(
   width: isFullWidth ? CARD_LIST_WIDTH_FULL : CARD_LIST_WIDTH,
   overflowY: 'hidden',
   marginRight: `-${MARGIN_COMPENSATION}`,
+  paddingTop: '5px',
   [theme.breakpoints.up('centered_content')]: {
     width: isFullWidth ?
       CARD_LIST_WIDTH_FULL_CENTERED :
