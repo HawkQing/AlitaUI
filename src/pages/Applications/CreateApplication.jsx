@@ -13,7 +13,7 @@ import ToolForm from './Components/Tools/ToolForm';
 import { StyledGridContainer } from '@/pages/Prompts/Components/Common.jsx';
 
 const TabContentDiv = styled('div')(({ theme }) => ({
-  padding: `${theme.spacing(3)} 0`,
+  padding: `${theme.spacing(1.5)} 0`,
 }))
 
 export default function CreateApplication() {

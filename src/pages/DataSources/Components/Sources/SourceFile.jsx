@@ -10,6 +10,7 @@ import {useFormikContext} from "formik";
 import {useCallback} from 'react';
 import FormikInput from "./FormikInput";
 import useOptions from "./useOptions";
+import { useTheme } from '@emotion/react';
 
 const documentLoadersOptions = Object.values(documentLoaders)
 export const initialState = {
@@ -22,6 +23,7 @@ export const initialState = {
 }
 
 const SourceFile = ({mode}) => {
+  const theme = useTheme();
   const {setFieldValue} = useFormikContext();
   const options = useOptions({initialState, mode});
   const {
@@ -46,6 +48,7 @@ const SourceFile = ({mode}) => {
       />
       <BasicAccordion
         style={{width: '100%'}}
+        accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
         uppercase={false}
         defaultExpanded={false}
         items={[

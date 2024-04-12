@@ -15,7 +15,7 @@ import { PromptView } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 
 const TabContentDiv = styled('div')(({ theme }) => ({
-  padding: `${theme.spacing(3)} 0`,
+  padding: `${theme.spacing(1.5)} 0`,
 }))
 
 export default function EditPromptTabs({ mode, isLoading, error }) {
@@ -30,7 +30,7 @@ export default function EditPromptTabs({ mode, isLoading, error }) {
     [PromptView.MODERATE]: <ModeratorToolBar />
   }
   return <React.Fragment>
-    <Grid container sx={{ padding: '0.5rem 1.5rem', position: 'fixed', marginTop: '0.7rem' }}>
+    <Grid container sx={{ padding: '0.5rem 0rem', position: 'fixed', marginTop: '0.7rem' }}>
       <Grid item xs={12}>
         <StyledTabs
           tabs={[{

@@ -15,6 +15,7 @@ import { useFormikContext } from "formik";
 import { useCallback, useState } from "react";
 import FormikInput from "./FormikInput";
 import useOptions from "./useOptions";
+import { useTheme } from '@emotion/react';
 
 const hostingOptions = Object.values(hostingTypes)
 const tokenTypeOptions = Object.values(tokenTypes);
@@ -38,6 +39,7 @@ export const initialState = {
 
 
 const SourceConfluence = ({ mode }) => {
+  const theme = useTheme();
   const { setFieldValue } = useFormikContext();
   const options = useOptions({ initialState, mode });
   const {
@@ -151,6 +153,7 @@ const SourceConfluence = ({ mode }) => {
         />
       </Box>
       <BasicAccordion
+        accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
         uppercase={false}
         style={{ width: '100%' }}
         defaultExpanded={false}

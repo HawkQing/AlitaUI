@@ -193,6 +193,7 @@ const DatasourceCreateForm = ({
   return (
     <BasicAccordion
       style={style}
+      accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
       showMode={AccordionShowMode.LeftMode}
       items={[
         {

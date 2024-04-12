@@ -1,6 +1,7 @@
 import { contextResolver } from '@/common/utils';
 import BasicAccordion, { AccordionShowMode } from '@/components/BasicAccordion';
 import FileReaderEnhancer from '@/pages/Prompts/Components/Form/FileReaderInput';
+import { useTheme } from '@emotion/react';
 import { useFormikContext } from 'formik';
 import { useCallback } from 'react';
 
@@ -8,6 +9,7 @@ const ApplicationContext = ({
   style,
   containerStyle,
 }) => {
+  const theme = useTheme();
   const { values: { version_details }, setFieldValue } = useFormikContext();
   const handleChange = useCallback((value) =>
     setFieldValue('version_details.instructions', value),
@@ -29,6 +31,7 @@ const ApplicationContext = ({
     <BasicAccordion
       style={style}
       showMode={AccordionShowMode.LeftMode}
+      accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
       items={[
         {
           title: 'Instructions',

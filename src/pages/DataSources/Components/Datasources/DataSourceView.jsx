@@ -2,6 +2,7 @@ import React from 'react';
 import BasicAccordion, { AccordionShowMode } from '@/components/BasicAccordion';
 import NameDescriptionReadOnlyView from '@/components/NameDescriptionReadOnlyView';
 import EmbeddingModelStorageView from './EmbeddingModelStorageView';
+import { useTheme } from '@emotion/react';
 
 const DataSourceView = ({
   showProjectSelect = false,
@@ -10,10 +11,11 @@ const DataSourceView = ({
   onEdit,
   currentDataSource,
 }) => {
-
+  const theme = useTheme();
   return (
     <BasicAccordion
       style={style}
+      accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
       showMode={AccordionShowMode.LeftMode}
       items={[
         {

@@ -5,8 +5,10 @@ import { useCallback, useMemo } from "react";
 import ToolCard from "./ToolCard";
 import ToolMenu from "./ToolMenu";
 import { ToolInitialValues } from "./consts";
+import { useTheme } from '@emotion/react';
 
 export default function ApplicationTools({ style, setEditToolDetail, containerSX, applicationId }) {
+  const theme = useTheme();
   const { values } = useFormikContext();
   const tools = useMemo(() => (values?.version_details?.tools || []), [values?.version_details?.tools])
   const onAddTool = useCallback((toolType) => () => {
@@ -20,6 +22,7 @@ export default function ApplicationTools({ style, setEditToolDetail, containerSX
     <BasicAccordion
       style={style}
       showMode={AccordionShowMode.LeftMode}
+      accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
       items={[
         {
           title: 'Tools',

@@ -19,7 +19,7 @@ export const ContentContainer = styled(Box)(({ theme }) => ({
     overflowY: 'scroll',
     msOverflowStyle: 'none',
     scrollbarWidth: 'none',
-    height: 'calc(100vh - 165px)',
+    height: 'calc(100vh - 160px)',
     '::-webkit-scrollbar': {
       display: 'none',
     }
@@ -30,7 +30,7 @@ export const StyledGridContainer = styled(Grid)(({ theme }) => ({
   padding: 0,
   [theme.breakpoints.down('lg')]: {
     overflowY: 'scroll',
-    height: 'calc(100vh - 8.6rem)',
+    height: 'calc(100vh - 160px)',
     '::-webkit-scrollbar': {
       display: 'none'
     }

@@ -227,7 +227,12 @@ const Messages = () => {
 
   return (
     <Fragment>
-      <StyledAccordion showMode={AccordionShowMode.LeftMode} defaultExpanded={true} expanded={open} onChange={onChange}>
+      <StyledAccordion
+        showMode={AccordionShowMode.LeftMode}
+        defaultExpanded={true}
+        expanded={open}
+        sx={{background: `${theme.palette.background.tabPanel} !important`}}
+        onChange={onChange}>
         <StyledAccordionSummary
           expandIcon={<StyledExpandMoreIcon sx={{ width: '16px', height: '16px' }} />}
           aria-controls='messages'
@@ -237,7 +242,7 @@ const Messages = () => {
           <StyledTypography uppercase>Messages</StyledTypography>
         </StyledAccordionSummary>
         {!!messages?.length &&
-          <StyledAccordionDetails sx={{paddingLeft: '36px'}}>
+          <StyledAccordionDetails sx={{ paddingLeft: '36px' }}>
             <DragDropContext onDragEnd={handleDragEnd}>
               <Box>
                 <StrictModeDroppable droppableId="droppable">

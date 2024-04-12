@@ -6,7 +6,7 @@ import RocketIcon from '@/components/Icons/RocketIcon';
 import DatasourceCreateForm from "./Components/Datasources/DatasourceCreateForm.jsx";
 
 const TabContentDiv = styled('div')(({ theme }) => ({
-  padding: `${theme.spacing(3)} 0`,
+  padding: `${theme.spacing(1.5)} 0`,
 }))
 
 export default function CreateDatasource() {
@@ -14,7 +14,6 @@ export default function CreateDatasource() {
     <Grid container sx={{ padding: '0.5rem 0rem', position: 'fixed', marginTop: '0.7rem' }}>
       <Grid item xs={12}>
         <StyledTabs
-          tabSX={{ paddingX: '24px'}}
           tabs={[{
             label: 'Build',
             icon: <RocketIcon />,
@@ -22,7 +21,7 @@ export default function CreateDatasource() {
             rightToolbar: <div />,
             content:
               <TabContentDiv>
-                <Grid container sx={{ paddingX: '24px' }}>
+                <Grid container >
                   <Grid item xs={12} lg={6}>
                     <DatasourceCreateForm />
                   </Grid>

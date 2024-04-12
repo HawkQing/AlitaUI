@@ -1,6 +1,7 @@
 import React from 'react';
 import BasicAccordion, { AccordionShowMode } from '@/components/BasicAccordion';
 import NameDescriptionReadOnlyView from '@/components/NameDescriptionReadOnlyView';
+import { useTheme } from '@emotion/react';
 
 const ApplicationView = ({
   showProjectSelect = false,
@@ -9,11 +10,12 @@ const ApplicationView = ({
   onEdit,
   currentApplication,
 }) => {
-
+  const theme = useTheme();
   return (
     <BasicAccordion
       style={style}
       showMode={AccordionShowMode.LeftMode}
+      accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
       items={[
         {
           title: 'General',

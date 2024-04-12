@@ -15,6 +15,7 @@ const gray20 = '#686C76';
 const gray30 = '#3B3E46';
 const gray40 = '#262b34';
 const gray50 = '#181F2A';
+const gray55 = '#101721';
 const gray60 = '#0E131D';
 const blue5 = 'rgba(41, 184, 245, 0.05)';
 const blue10 = 'rgba(106, 232, 250, 0.10)'
@@ -30,6 +31,7 @@ const dangerRed = '#D71616';
 const primaryHover = '#83EFFF';
 const primaryPressed = '#2ABDD2';
 const orange = '#F2994A';
+const warningOrange = '#ED6C02';
 const lightOrange = 'rgba(255, 235, 211, 1)';
 const orangeFill5 = 'rgba(233, 121, 18, 0.05)';
 const orangeOutline40 = 'rgba(233, 121, 18, 0.4)';
@@ -274,6 +276,7 @@ const getDesignTokens = mode => ({
     background: {
       default: gray60,
       secondary: gray50,
+      tabPanel: gray55,
       userInputBackground: white5,
       activeBG: '#26323D',
       categoriesButton: {
@@ -393,6 +396,9 @@ const getDesignTokens = mode => ({
       published: green,
       rejected: dangerRed,
       userApproval: '#F1DB17',
+    },
+    warning: {
+      main: warningOrange,
     }
   } : {
     mode: 'light',

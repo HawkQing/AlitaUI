@@ -4,11 +4,13 @@ import StyledInputEnhancer from '@/components/StyledInputEnhancer';
 import TagEditor from '@/pages/Prompts/Components/Form/TagEditor';
 import { useSelectedProjectId } from '@/pages/hooks';
 import { useTagListQuery } from '@/api/prompts';
+import { useTheme } from '@emotion/react';
 
 const DatasourceEditForm = ({
   formik,
   style,
 }) => {
+  const theme = useTheme();
   const projectId = useSelectedProjectId();
   const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
 
@@ -22,6 +24,7 @@ const DatasourceEditForm = ({
   return (
     <BasicAccordion
       style={style}
+      accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
       showMode={AccordionShowMode.LeftMode}
       items={[
         {
