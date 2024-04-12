@@ -16,6 +16,7 @@ import { useSelectedProjectId } from '@/pages/hooks';
 import useToast from '@/components/useToast';
 import { alitaApi } from '@/api/alitaApi';
 import { useDispatch } from 'react-redux';
+import AlertDialog from '@/components/AlertDialog';
 
 const CardContainer = styled(Box)(() => ({
   borderRadius: '8px',
@@ -82,6 +83,7 @@ export default function ToolCard({
   setEditToolDetail,
   applicationId,
 }) {
+  const [openAlert, setOpenAlert] = useState(false);
   const { ToastComponent: Toast, toastError } = useToast();
   const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
@@ -97,6 +99,11 @@ export default function ToolCard({
   }, [tool.settings.custom_json, tool.type])
 
   const onDelete = useCallback(async () => {
+    setOpenAlert(true);
+  }, []);
+
+  const onConfirmAlert = useCallback(async () => {
+    setOpenAlert(false);
     if (applicationId) {
       await deleteTool({ projectId, toolId: tool?.id })
     } else {
@@ -104,6 +111,13 @@ export default function ToolCard({
         tools.filter((_, i) => i !== index))
     }
   }, [applicationId, deleteTool, index, projectId, setFieldValue, tool?.id, tools]);
+
+  const onCloseAlert = useCallback(
+    () => {
+      setOpenAlert(false);
+    },
+    [],
+  )
 
   const onEditTool = useCallback(() => {
     setEditToolDetail({
@@ -260,6 +274,14 @@ export default function ToolCard({
         </ActionsContainer>
       }
       <Toast />
+      <AlertDialog
+        title={'Warning'}
+        alertContent={`Are you sure to delete tool: ${tool.name}?`}
+        open={openAlert}
+        onClose={onCloseAlert}
+        onCancel={onCloseAlert}
+        onConfirm={onConfirmAlert}
+      />
     </CardContainer >
   )
 }

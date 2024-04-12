@@ -317,14 +317,6 @@ export default function EditModeRunTabBarItems() {
         </NormalRoundButton>
       }
       {
-        showSaveButton &&
-        <NormalRoundButton disabled={isSaving || !hasCurrentPromptBeenChanged} variant="contained" color="secondary" onClick={onSave}>
-          Save
-          {isSaving && <StyledCircleProgress size={20} />}
-        </NormalRoundButton>
-      }
-      <DiscardButton />
-      {
         showSaveVersionButton ?
           <NormalRoundButton
             disabled={isSavingNewVersion || showInputVersion}
@@ -348,6 +340,14 @@ export default function EditModeRunTabBarItems() {
           {isDeletingVersion && <StyledCircleProgress size={20} />}
         </NormalRoundButton>
       }
+      {
+        showSaveButton &&
+        <NormalRoundButton disabled={isSaving || !hasCurrentPromptBeenChanged} variant="contained" color="secondary" onClick={onSave}>
+          Save
+          {isSaving && <StyledCircleProgress size={20} />}
+        </NormalRoundButton>
+      }
+      <DiscardButton />
     </TabBarItems>
     <AlertDialog
       title={alertTitle}

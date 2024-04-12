@@ -151,6 +151,16 @@ export default function EditApplicationTabBar({
           {isUnpublishingVersion && <StyledCircleProgress size={20} />}
         </NormalRoundButton>
       }
+      <SaveNewVersionButton
+        applicationId={applicationId}
+        versions={versions}
+        versionDetails={versionDetails}
+        getFormValues={getFormValues}
+      />
+      {
+        currentVersionId !== latestVersionId &&
+        <DeleteVersionButton versionIdFromDetail={versionIdFromDetail} versions={versions} applicationId={applicationId} />
+      }
       {
         currentVersionId === latestVersionId && <NormalRoundButton
           disabled={isSaving || isSaveSuccess || !isFormDirty || isEditingTool}
@@ -162,16 +172,6 @@ export default function EditApplicationTabBar({
         </NormalRoundButton>
       }
       <DiscardButton disabled={isSaving || !isFormDirty || isEditingTool} onDiscard={onDiscard} />
-      <SaveNewVersionButton
-        applicationId={applicationId}
-        versions={versions}
-        versionDetails={versionDetails}
-        getFormValues={getFormValues}
-      />
-      {
-        currentVersionId !== latestVersionId &&
-        <DeleteVersionButton versionIdFromDetail={versionIdFromDetail} versions={versions} applicationId={applicationId} />
-      }
     </TabBarItems>
     <Toast />
   </>
