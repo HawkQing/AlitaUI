@@ -3,6 +3,8 @@ import { useEffect, useCallback, useMemo } from 'react';
 import { buildErrorMessage } from '@/common/utils';
 import { replaceVersionInPath, useSelectedProjectId } from '@/pages/hooks';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { alitaApi } from '@/api/alitaApi';
+import { useDispatch } from 'react-redux';
 
 const useReplaceVersionInPath = (versions, currentVersionId) => {
   const { pathname, search } = useLocation();
@@ -20,6 +22,7 @@ const useReplaceVersionInPath = (versions, currentVersionId) => {
 
 const useDeleteVersion = ({ versionId, applicationId, toastError, toastInfo, versions }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
   const { state } = useLocation();
 
@@ -41,6 +44,9 @@ const useDeleteVersion = ({ versionId, applicationId, toastError, toastInfo, ver
 
   const handleDeleteSuccess = useCallback(
     () => {
+      dispatch(alitaApi.util.updateQueryData('applicationDetails', { applicationId: applicationId + '', projectId }, (details) => {
+        details.versions = details.versions.filter(item => item.id != versionId);
+      }));
       navigate(
         {
           pathname: encodeURI(newPath),
@@ -52,7 +58,7 @@ const useDeleteVersion = ({ versionId, applicationId, toastError, toastInfo, ver
         });
       resetDeleteVersion();
     },
-    [navigate, newPath, resetDeleteVersion, search, state]
+    [applicationId, dispatch, navigate, newPath, projectId, resetDeleteVersion, search, state, versionId]
   );
 
   useEffect(() => {
