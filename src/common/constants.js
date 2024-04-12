@@ -620,11 +620,18 @@ export const APIKeyTypes = {
   }
 }
 
-
 export const sioEvents = {
   promptlib_predict: 'promptlib_predict',
   promptlib_leave_rooms: 'promptlib_leave_rooms',
   datasource_predict: 'datasource_predict',
   datasource_dataset_status: 'datasource_dataset_status',
   datasource_leave_rooms: 'datasource_leave_rooms'
+}
+
+export const ToolActionStatus = {
+  complete: 'complete',
+  error: 'error',
+  actionRequired: 'action_required',
+  cancelled: 'cancelled',
+  processing: 'processing'
 }
