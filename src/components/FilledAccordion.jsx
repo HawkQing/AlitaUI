@@ -1,6 +1,7 @@
 import { filterProps } from "@/common/utils";
 import { AccordionSummary, Box } from "@mui/material";
 import { AccordionShowMode, StyledAccordion, StyledAccordionDetails, StyledExpandMoreIcon } from "./BasicAccordion";
+import { useTheme } from '@emotion/react';
 
 export const StyledAccordionSummary = styled(AccordionSummary,
   filterProps('showMode')
@@ -32,8 +33,10 @@ export default function FilledAccordion({
   rightContent,
   children
 }) {
+  const theme = useTheme();
   return (<StyledAccordion
     showMode={showMode}
+    sx={{background: `${theme.palette.background.tabPanel} !important`}}
     defaultExpanded={defaultExpanded}
     expanded={expanded}
     onChange={onChange}

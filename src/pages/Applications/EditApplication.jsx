@@ -77,7 +77,7 @@ const EditApplication = () => {
 
   return (
     <>
-      <Grid container sx={{ padding: '0.5rem 1.5rem', position: 'fixed', marginTop: '0.7rem' }}>
+      <Grid container sx={{ padding: '0.5rem 0', position: 'fixed', marginTop: '0.7rem' }}>
         <Grid item xs={12}>       
           <StyledTabs
             tabs={[{
@@ -114,7 +114,7 @@ const EditApplication = () => {
                   >
                     <Form>
                       <DirtyDetector setDirty={setDirty} />
-                      <StyledGridContainer sx={{ paddingBottom: '10px', marginTop: '16px' }} columnSpacing={'32px'} container>
+                      <StyledGridContainer sx={{ paddingBottom: '10px', paddingTop: '12px' }} columnSpacing={'32px'} container>
                         <LeftGridItem item xs={12} lg={lgGridColumns} hidden={isFullScreenChat}>
                           <ContentContainer>
                             {editToolDetail ?

@@ -34,6 +34,7 @@ const ConversationStarters = ({
     <BasicAccordion
       style={style}
       showMode={AccordionShowMode.LeftMode}
+      accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
       items={[
         {
           title: 'Conversation starters',

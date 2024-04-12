@@ -12,6 +12,7 @@ import { Box } from "@mui/material";
 import { useFormikContext } from "formik";
 import { useMemo } from "react";
 import FormikInput from "./FormikInput";
+import { useTheme } from '@emotion/react';
 
 const typeOptions = Object.values(sourceTypes)
   .filter(type => [
@@ -34,6 +35,7 @@ const SourceContentBox = styled(Box)(() => ({
 
 const Source = ({ mode }) => {
   const formik = useFormikContext();
+  const theme = useTheme();
   const { source: errors } = formik.errors || {}
   const { source: touched } = formik.touched || {}
   const name = useMemo(() => formik?.values?.source?.name, [formik?.values?.source]);
@@ -42,7 +44,8 @@ const Source = ({ mode }) => {
   const { isCreate, isView } = useComponentMode(mode);
   return (
     <BasicAccordion
-      items={[
+    accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
+    items={[
         {
           title: 'Source',
           content: <SourceContentBox>

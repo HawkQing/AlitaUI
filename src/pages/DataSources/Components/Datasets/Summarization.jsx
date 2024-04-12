@@ -10,6 +10,7 @@ import {genModelSelectValue} from "@/common/promptApiUtils.js";
 import {getIntegrationOptions} from "@/pages/DataSources/utils.js";
 import {useSelectedProjectId} from "@/pages/hooks.jsx";
 import { useFormikContext } from "formik";
+import { useTheme } from '@emotion/react';
 
 export const initialState = {
   document_summarization: false,
@@ -26,6 +27,7 @@ SUMMARIZATION: {summarization}`,
 
 
 const Summarization = ({readOnly}) => {
+  const theme = useTheme();
   const formik = useFormikContext();
   const {
     document_summarization, document_summarization_prompt,
@@ -59,6 +61,7 @@ const Summarization = ({readOnly}) => {
   return (
     <BasicAccordion
       defaultExpanded={false}
+      accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
       items={[
         {
           title: 'Summarization',

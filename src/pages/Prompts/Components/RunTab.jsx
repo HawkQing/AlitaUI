@@ -96,6 +96,7 @@ const LeftContent = ({ isCreateMode, onChangePrompt, currentVersionId }) => {
 
   return <>
     <BasicAccordion
+      accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
       items={[
         {
           title: 'General',
@@ -179,27 +180,29 @@ const LeftContent = ({ isCreateMode, onChangePrompt, currentVersionId }) => {
           ),
         }
       ]} />
-    <BasicAccordion items={[
-      {
-        title: 'Context',
-        content: (
-          <div>
-            <FileReaderEnhancer
-              showexpandicon='true'
-              id="prompt-context"
-              placeholder='Input the context here'
-              defaultValue={currentPrompt?.prompt}
-              onChange={onChangePrompt(PROMPT_PAYLOAD_KEY.context)}
-              updateVariableList={updateVariableList}
-              label={null}
-              multiline
-              error={error}
-              helperText={helperText}
-            />
-          </div>
-        ),
-      },
-    ]} />
+    <BasicAccordion
+      accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+      items={[
+        {
+          title: 'Context',
+          content: (
+            <div>
+              <FileReaderEnhancer
+                showexpandicon='true'
+                id="prompt-context"
+                placeholder='Input the context here'
+                defaultValue={currentPrompt?.prompt}
+                onChange={onChangePrompt(PROMPT_PAYLOAD_KEY.context)}
+                updateVariableList={updateVariableList}
+                label={null}
+                multiline
+                error={error}
+                helperText={helperText}
+              />
+            </div>
+          ),
+        },
+      ]} />
   </>
 };
 
@@ -220,25 +223,29 @@ export const RightContent = ({
   const boxRef = useRef();
   return (
     <Box display='flex' flexDirection='column' height='100%'>
-      {variables?.length > 0 ? <BasicAccordion
-        style={{ marginBottom: '24px' }}
-        items={[
-          {
-            title: 'Variables',
-            content: (
-              <div>
-                <VariableList
-                  variables={variables}
-                  onChangeVariable={onChangeVariable}
-                  showexpandicon='true'
-                  multiline
-                  collapseContent
-                />
-              </div>
-            ),
-          },
-        ]}
-      /> : null}
+      {
+        variables?.length > 0 ?
+          <BasicAccordion
+            // eslint-disable-next-line react/jsx-no-bind
+            accordionSX={(theme) => ({ background: `${theme.palette.background.tabPanel} !important` })}
+            style={{ marginBottom: '24px' }}
+            items={[
+              {
+                title: 'Variables',
+                content: (
+                  <div>
+                    <VariableList
+                      variables={variables}
+                      onChangeVariable={onChangeVariable}
+                      showexpandicon='true'
+                      multiline
+                      collapseContent
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          /> : null}
       <Box
         // eslint-disable-next-line react/jsx-no-bind
         sx={(theme) => ({

@@ -7,6 +7,7 @@ import { Box } from "@mui/material";
 import { useFormikContext } from "formik";
 import { useCallback } from "react";
 import FormikInput from "../Sources/FormikInput";
+import { useTheme } from '@emotion/react';
 
 const extractorsOptions = Object.values(extractors)
 
@@ -48,6 +49,7 @@ export const initialState = {
 }
 
 export default function Transformers({ readOnly }) {
+  const theme = useTheme();
   const formik = useFormikContext();
   const {
     extract_for_document, extract_for_chunks, extractor,
@@ -66,6 +68,7 @@ export default function Transformers({ readOnly }) {
   return (
     <BasicAccordion
       defaultExpanded={false}
+      accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
       items={[
         {
           title: 'Transformers',

@@ -176,9 +176,9 @@ const EditDatasource = () => {
                   <StyledGridContainer container columnSpacing={'32px'}
                     sx={{
                       paddingX: '24px',
-                      marginTop: '32px',
+                      paddingTop: '16px',
                       [theme.breakpoints.down('lg')]: {
-                        height: 'calc(100vh - 170px)',
+                        height: 'calc(100vh - 160px)',
                       }
                     }}>
                     <Grid item xs={12} lg={leftLgGridColumns} hidden={isFullScreenChat}>

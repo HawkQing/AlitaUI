@@ -42,6 +42,7 @@ const DataSets = ({
 
   return (
     <BasicAccordion
+      accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
       items={[
         {
           title: 'DataSets',

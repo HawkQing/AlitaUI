@@ -91,8 +91,8 @@ export default function StyledTabs({ tabs = [], extraHeaders, tabSX }) {
   }, []);
 
   return (
-    <div>
-      <StyledTabBar sx={tabSX}>
+    <div style={{ height: 'calc(100vh - 95px)', display: 'flex', flexDirection: 'column'}}>
+      <StyledTabBar sx={{...tabSX, boxSizing: 'border-box', padding: '0 1.5rem', paddingBottom: '12px', borderBottom: `1px solid ${theme.palette.border.table}`}}>
         {
           extraHeaders
         }
@@ -111,7 +111,7 @@ export default function StyledTabs({ tabs = [], extraHeaders, tabSX }) {
       </StyledTabBar>
       {tabs.map((tab, index) => (
         <CustomTabPanel
-          style={{ display: tab.display, backgroundColor: theme.palette.background.default, }}
+          style={{ display: tab.display, backgroundColor: theme.palette.background.tabPanel, padding: '0 1.5rem', flex: 1 }}
           value={value}
           index={index}
           key={index}
