@@ -20,7 +20,7 @@ import CreateDeployment from '@/pages/Settings/CreateDeployment';
 import CreatePersonalToken from '@/pages/Settings/CreatePersonalToken';
 import Settings from '@/pages/Settings/Settings';
 import { Box } from "@mui/material";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactGA from "react-ga4";
 import { useSelector } from "react-redux";
 import {
@@ -90,6 +90,7 @@ const ProtectedRoutes = () => {
   const user = useSelector(state => state.user);
   const [getUserDetails] = useLazyAuthorDetailsQuery();
   const projectId = useSelectedProjectId();
+  const [currentProjectId, setCurrentProjectId] = useState(null)
   const [getUserPermissions] = useLazyPermissionListQuery();
   const [getPublicUserPermissions] = useLazyPublicPermissionListQuery();
   useEffect(() => {
@@ -97,14 +98,15 @@ const ProtectedRoutes = () => {
       if (!user.id) {
         getUserDetails();
       }
-      if (projectId && (!user.permissions || !user.permissions.length)) {
+      if (currentProjectId !== projectId) {
         getUserPermissions(projectId);
-      }
+        setCurrentProjectId(projectId);
+      } 
       if (!user.publicPermissions || !user.publicPermissions.length) {
         getPublicUserPermissions();
       }
     }
-  }, [getPublicUserPermissions, user, getUserDetails, projectId, getUserPermissions]);
+  }, [getPublicUserPermissions, user, getUserDetails, projectId, getUserPermissions, currentProjectId]);
 
   useEffect(() => {
     if (!MISSING_ENVS.length && !user.personal_project_id) {
