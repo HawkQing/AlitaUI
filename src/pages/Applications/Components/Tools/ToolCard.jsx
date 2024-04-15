@@ -104,7 +104,7 @@ export default function ToolCard({
 
   const onConfirmAlert = useCallback(async () => {
     setOpenAlert(false);
-    if (applicationId) {
+    if (applicationId &&  tool?.id) {
       await deleteTool({ projectId, toolId: tool?.id })
     } else {
       setFieldValue('version_details.tools',

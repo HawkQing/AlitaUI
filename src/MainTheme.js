@@ -325,6 +325,7 @@ const getDesignTokens = mode => ({
       text: {
         highlight: orange,
       },
+      aiAnswerBkg: '#262B34',
       aiAnswerActions: 'linear-gradient(270deg, #262B34 82.5%, rgba(38, 43, 52, 0.00) 100%)',
       userMessageActions: 'linear-gradient(270deg, #0E131D 82.5%, rgba(14, 19, 29, 0.00) 100%)',
       conversationStarters: {
