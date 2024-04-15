@@ -48,12 +48,12 @@ export default function CreateApplication() {
             tabs={[{
               label: 'Run',
               icon: <RocketIcon />,
-              tabBarItems: <CreateApplicationTabBar isEditingTool={!!editToolDetail}/>,
+              tabBarItems: <CreateApplicationTabBar isEditingTool={!!editToolDetail} />,
               rightToolbar: <div />,
               content:
                 <TabContentDiv>
                   <Form>
-                    <StyledGridContainer columnSpacing={'32px'} container sx={{ paddingX: '24px' }}>
+                    <StyledGridContainer columnSpacing={'32px'} container>
                       <Grid item xs={12} lg={lgGridColumns}
                         hidden={isFullScreenChat}
                         // eslint-disable-next-line react/jsx-no-bind
@@ -71,15 +71,15 @@ export default function CreateApplication() {
                             marginBottom: '24px',
                           }
                         })}>
-                        {
-                          editToolDetail ?
-                            <ToolForm
-                              editToolDetail={editToolDetail}
-                              setEditToolDetail={setEditToolDetail}
-                            />
-                            :
-                            <ApplicationCreateForm setEditToolDetail={setEditToolDetail} />
-                        }
+                        <ToolForm
+                          sx={{ display: editToolDetail ? 'block' : 'none' }}
+                          editToolDetail={editToolDetail}
+                          setEditToolDetail={setEditToolDetail}
+                        />
+                        <ApplicationCreateForm
+                          sx={{ display: editToolDetail ? 'none' : 'block' }}
+                          setEditToolDetail={setEditToolDetail}
+                        />
                       </Grid>
                       <ApplicationRightContent
                         modelOptions={modelOptions}

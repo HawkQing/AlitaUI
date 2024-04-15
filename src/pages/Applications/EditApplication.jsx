@@ -7,7 +7,7 @@ import RocketIcon from "@/components/Icons/RocketIcon.jsx";
 import StyledTabs from "@/components/StyledTabs.jsx";
 import { ContentContainer, LeftGridItem, PromptDetailSkeleton, StyledGridContainer } from "@/pages/Prompts/Components/Common.jsx";
 import { useViewMode } from "@/pages/hooks.jsx";
-import { Grid } from "@mui/material";
+import { Grid, Box } from "@mui/material";
 import { Form, Formik } from 'formik';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ApplicationContext from './Components/Applications/ApplicationContext.jsx';
@@ -78,7 +78,7 @@ const EditApplication = () => {
   return (
     <>
       <Grid container sx={{ padding: '0.5rem 0', position: 'fixed', marginTop: '0.7rem' }}>
-        <Grid item xs={12}>       
+        <Grid item xs={12}>
           <StyledTabs
             tabs={[{
               label: 'Run',
@@ -117,31 +117,29 @@ const EditApplication = () => {
                       <StyledGridContainer sx={{ paddingBottom: '10px', paddingTop: '12px' }} columnSpacing={'32px'} container>
                         <LeftGridItem item xs={12} lg={lgGridColumns} hidden={isFullScreenChat}>
                           <ContentContainer>
-                            {editToolDetail ?
-                              <ToolForm
-                                editToolDetail={editToolDetail}
+                            <ToolForm
+                              sx={{display: editToolDetail ? 'block' : 'none' }}
+                              editToolDetail={editToolDetail}
+                              setEditToolDetail={setEditToolDetail}
+                            />
+                            <Box sx={{ display: editToolDetail ? 'none' : 'block' }}>
+                              {
+                                !isEditing ?
+                                  <ApplicationView
+                                    currentApplication={initialValues}
+                                    canEdit={viewMode === ViewMode.Owner}
+                                    onEdit={onEdit}
+                                  />
+                                  :
+                                  <ApplicationEditForm />
+                              }
+                              <ApplicationContext style={{ marginTop: '16px' }} />
+                              <ApplicationTools
+                                style={{ marginTop: '16px' }}
                                 setEditToolDetail={setEditToolDetail}
-                              />
-                              :
-                              <>
-                                {
-                                  !isEditing ?
-                                    <ApplicationView
-                                      currentApplication={initialValues}
-                                      canEdit={viewMode === ViewMode.Owner}
-                                      onEdit={onEdit}
-                                    />
-                                    :
-                                    <ApplicationEditForm />
-                                }
-                                <ApplicationContext style={{ marginTop: '16px' }} />
-                                <ApplicationTools
-                                  style={{ marginTop: '16px' }}
-                                  setEditToolDetail={setEditToolDetail}
-                                  applicationId={applicationId} />
-                                <ConversationStarters style={{ marginTop: '16px' }} />
-                              </>
-                            }
+                                applicationId={applicationId} />
+                              <ConversationStarters style={{ marginTop: '16px' }} />
+                            </Box>
                           </ContentContainer>
                         </LeftGridItem>
                         <ApplicationRightContent

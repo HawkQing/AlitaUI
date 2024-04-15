@@ -10,6 +10,7 @@ import ToolPrompt from "./ToolPrompt";
 export default function ToolForm({
   editToolDetail,
   setEditToolDetail,
+  sx={}
 }) {
   const toolType = useMemo(() => editToolDetail?.type, [editToolDetail])
   const { setFieldValue } = useFormikContext();
@@ -22,7 +23,7 @@ export default function ToolForm({
     setEditToolDetail(null);
   }, [editToolDetail, setEditToolDetail, setFieldValue]);
   return (
-    <Box sx={{ padding: '12px 12px 12px 24px' }}>
+    <Box sx={{ padding: '12px 12px 12px 24px', ...sx}}>
       {toolType === ToolTypes.datasource.value &&
         <ToolDatasource
           editToolDetail={editToolDetail}
