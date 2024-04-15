@@ -7,6 +7,7 @@ import { useSelectedProjectId } from '@/pages/hooks';
 import { useTheme } from '@emotion/react';
 import { useCallback } from 'react';
 import { useFormikContext } from 'formik';
+import { Box } from '@mui/material'
 import useCreateApplication from './useCreateApplication';
 import ApplicationTools from '../Tools/ApplicationTools';
 import ConversationStarters from './ConversationStarters';
@@ -16,8 +17,9 @@ import ApplicationContext from './ApplicationContext';
 const ApplicationCreateForm = ({
   showProjectSelect = true,
   disableSelectProject = false,
-  style,
+  accordionStyle,
   setEditToolDetail,
+  sx
 }) => {
   const formik = useFormikContext();
   const theme = useTheme();
@@ -35,10 +37,10 @@ const ApplicationCreateForm = ({
   );
 
   return (
-    <>
+    <Box sx={sx}>
       <BasicAccordion
-        style={style}
-        accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
+        style={accordionStyle}
+        accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
         showMode={AccordionShowMode.LeftMode}
         items={[
           {
@@ -100,7 +102,7 @@ const ApplicationCreateForm = ({
       <ApplicationContext containerStyle={{ paddingBottom: '16px' }} />
       <ApplicationTools setEditToolDetail={setEditToolDetail} containerSX={{ paddingBottom: '16px' }} />
       <ConversationStarters />
-    </>
+    </Box>
   );
 }
 
