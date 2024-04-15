@@ -250,20 +250,25 @@ const isSubpathUnderMyLibraryOrPrompts = (url) => {
 
 const calculateBreadCrumbs = (prevPathName, breadCrumbString) => {
   if (prevPathName.length + breadCrumbString.length > 63) {
-    if (prevPathName.length > breadCrumbString.length) {
+    if (prevPathName.length > 32 && breadCrumbString.length > 32) {
+      return {
+        firstPart: prevPathName.slice(0, 29) + '...',
+        secondPart: breadCrumbString.slice(0, 29) + '...',
+      }
+    } else if (prevPathName.length > 32) {
       return {
         firstPart: prevPathName.slice(0, 60 - breadCrumbString.length) + '...',
         secondPart: breadCrumbString,
       }
-    } else if (prevPathName.length < breadCrumbString.length) {
+    } else if (breadCrumbString.length > 32) {
       return {
         firstPart: prevPathName,
-        secondPart: breadCrumbString.slice(0, 60 - breadCrumbString.length) + '...',
+        secondPart: breadCrumbString.slice(0, 60 - prevPathName.length) + '...',
       }
     } else {
       return {
-        firstPart: prevPathName.slice(0, 29 - breadCrumbString.length) + '...',
-        secondPart: breadCrumbString.slice(0, 29 - breadCrumbString.length) + '...',
+        firstPart: prevPathName,
+        secondPart: breadCrumbString,
       }
     }
   } else {

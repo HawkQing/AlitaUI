@@ -157,8 +157,8 @@ const DetailHeader = ({ collection, isOwner, isLoading, refetch, isFetching }) =
   return (
     <DetailHeaderContainer>
       <RowContainer>
-        <RowOneChild>
-          <Typography variant='headingSmall'>{
+        <RowOneChild style={{flex: 1, height: '100%', minWidth: 0}}>
+          <Typography component='div' sx={{ overflow: 'clip', textOverflow: 'ellipsis' }} variant='headingSmall'>{
             isLoading ?
               <Skeleton variant='waved' height='24px' width='100px' /> :
               collection?.name

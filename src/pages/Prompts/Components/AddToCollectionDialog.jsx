@@ -66,11 +66,11 @@ const StyledMenuItem = styled(MenuItem)(({ theme }) => ({
   width: '100%',
 }));
 
-const AddToCollectionDialog = ({ 
-  open, 
-  setOpen, 
-  fetchCollectionParams = {}, 
-  disableFetchingCollectionCondition = false, 
+const AddToCollectionDialog = ({
+  open,
+  setOpen,
+  fetchCollectionParams = {},
+  disableFetchingCollectionCondition = false,
   patchBody = {},
   fieldForAlreadyAdded = '',
 }) => {
@@ -251,12 +251,12 @@ const AddToCollectionDialog = ({
                 sortedOptions.length ?
                   <StyledMenuList onScroll={checkScroll}>
                     {sortedOptions.map(({ id, name, description }) => {
-                      const leftWidth = `calc(100% - 40px - ${addedCollectionIds?.includes(id) ? '50px' : '30px'})`;
                       return (
                         <StyledMenuItem
                           key={id}
+                          sx={{ gap: '16px' }}
                         >
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'top', width: leftWidth }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'top', flex: 1, minWidth: 0 }}>
                             <Typography color={theme.palette.text.secondary} sx={{ overflow: 'clip', textOverflow: 'ellipsis' }} variant="labelMedium" component='div'>
                               {name}
                             </Typography>
