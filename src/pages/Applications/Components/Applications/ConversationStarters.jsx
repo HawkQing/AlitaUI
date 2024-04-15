@@ -51,6 +51,9 @@ const ConversationStarters = ({
                     value={value}
                     onChange={handleChange}
                     containerProps={{ display: 'flex', flex: 2 }}
+                    multiline
+                    maxRows={15}
+                    showexpandicon
                   />
                   <Box paddingBottom={'8px'}>
                     <Tooltip placement='top' title='Delete'>
