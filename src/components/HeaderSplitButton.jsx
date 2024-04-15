@@ -235,13 +235,15 @@ export default function HeaderSplitButton({ onClickCommand }) {
   const isFromEditPromptPage = useMemo(() => !!pathname.match(/\/prompts\/\d+/g), [pathname]);
   const isFromCollectionDetailPage = useMemo(() => !!pathname.match(/\/collections\/\d+/g), [pathname]);
   const isFromDataSourceDetailPage = useMemo(() => !!pathname.match(/\/datasources\/\d+/g), [pathname]);
+  const isFromApplicationDetailPage = useMemo(() => !!pathname.match(/\/applications\/\d+/g), [pathname]);
   const isFromMyLibrary = useFromMyLibrary();
   const isCreatingNow = useMemo(() => pathname.includes('/create'), [pathname]);
   const shouldReplaceThePage = useMemo(() => isFromEditPromptPage ||
       isFromDataSourceDetailPage ||
       isFromCollectionDetailPage ||
+      isFromApplicationDetailPage ||
       isCreatingNow,
-    [isCreatingNow, isFromCollectionDetailPage, isFromDataSourceDetailPage, isFromEditPromptPage]);
+    [isCreatingNow, isFromApplicationDetailPage, isFromCollectionDetailPage, isFromDataSourceDetailPage, isFromEditPromptPage]);
   const [importPrompt, {error, isError, isSuccess, isLoading}] = useImportPromptMutation();
   const {shouldDisablePersonalSpace} = useDisablePersonalSpace();
   const [openSelectModel, setOpenSelectModel] = useState(false);
