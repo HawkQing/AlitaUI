@@ -175,7 +175,6 @@ const EditDatasource = () => {
                 isFetching ? <PromptDetailSkeleton sx={{ marginTop: '16px' }} /> :
                   <StyledGridContainer container columnSpacing={'32px'}
                     sx={{
-                      paddingX: '24px',
                       paddingTop: '16px',
                       [theme.breakpoints.down('lg')]: {
                         height: 'calc(100vh - 160px)',
