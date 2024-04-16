@@ -1,8 +1,10 @@
 import { MuiMarkdown, getOverrides } from 'mui-markdown';
 import styled from '@emotion/styled';
 import Link from '@mui/material/Link';
+import { marked } from 'marked'
+import { Highlight, themes } from 'prism-react-renderer';
 
- const MarkdownMapping = {
+const MarkdownMapping = {
   h1: {
     component: 'h1',
     props: {
@@ -62,17 +64,22 @@ const StyledDiv = styled('div')(() => `
 `);
 
 const Markdown = ({ children }) => {
-  return (
-    <MuiMarkdown overrides={{
-      ...getOverrides(),
-      ...MarkdownMapping,
-      div: {
-        component: StyledDiv,
-        props: {},
-      },
-    }}>
-      {children}
-    </MuiMarkdown>
+  const tokens = marked.lexer(children || '')
+  return tokens.map(
+    (token, index) => <MuiMarkdown
+        key={index}
+        Highlight={Highlight}
+        themes={themes}
+        overrides={{
+          ...getOverrides({ Highlight, themes, theme: themes.vsDark, hideLineNumbers: true }),
+          ...MarkdownMapping,
+          div: {
+            component: StyledDiv,
+            props: {},
+          },
+        }}>
+        {token.raw}
+      </MuiMarkdown>
   )
 };
 
