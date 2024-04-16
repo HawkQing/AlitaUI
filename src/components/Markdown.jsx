@@ -68,8 +68,6 @@ const Markdown = ({ children }) => {
   return tokens.map(
     (token, index) => <MuiMarkdown
         key={index}
-        Highlight={Highlight}
-        themes={themes}
         overrides={{
           ...getOverrides({ Highlight, themes, theme: themes.vsDark, hideLineNumbers: true }),
           ...MarkdownMapping,
