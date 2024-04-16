@@ -85,7 +85,7 @@ const DeduplicateResultContent = ({data, pretty, showOnlyDiff}) => {
     <Box display={"flex"}>
       {pretty ?
         <CardPrettyContent data={data} showOnlyDiff={showOnlyDiff}/> :
-        <Box component={"pre"} flexGrow={1} sx={{textWrap: 'pretty'}}>{JSON.stringify(data, null, 2)}</Box>
+        <Box component={"pre"} flexGrow={1} sx={{wordWrap: 'break-word', overflowWrap: 'break-word', wordBreak: 'normal', hyphens: 'auto', whiteSpace: 'normal'}}>{JSON.stringify(data, null, 2)}</Box>
       }
     </Box>
   );
