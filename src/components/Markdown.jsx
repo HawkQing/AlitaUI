@@ -64,19 +64,39 @@ const StyledDiv = styled('div')(() => `
 `);
 
 const Markdown = ({ children }) => {
-  const tokens = marked.lexer(children || '')
-  return tokens.map(
-    (token, index) => <MuiMarkdown
+  const markedTokens = marked.lexer(children || '')
+  return markedTokens.map(
+    (markedToken, index) => markedToken.type === 'code' ? <Highlight
+      key={index}
+      theme={themes.vsDark}
+      code={markedToken.text}
+      language={markedToken.lang}
+    >
+      {({ className, style, tokens, getLineProps, getTokenProps }) => (
+        <pre className={className} style={style}>
+          {tokens.map((line, i) => (
+            <div key={i} {...getLineProps({ line })}>
+              <span>{' '}</span>
+              {line.map((token, key) => (
+                <span key={key} {...getTokenProps({ token })} />
+              ))}
+            </div>
+          ))}
+        </pre>
+      )}
+    </Highlight>
+      :
+      <MuiMarkdown
         key={index}
         overrides={{
-          ...getOverrides({ Highlight, themes, theme: themes.vsDark, hideLineNumbers: true }),
+          ...getOverrides(),
           ...MarkdownMapping,
           div: {
             component: StyledDiv,
             props: {},
           },
         }}>
-        {token.raw}
+        {markedToken.raw}
       </MuiMarkdown>
   )
 };
