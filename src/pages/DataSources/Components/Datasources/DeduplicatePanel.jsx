@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
 import {Box, Link, Tooltip} from '@mui/material';
 import IconButton from '@mui/material/IconButton';
-import React, {useCallback, useState, useEffect} from 'react';
+import React, {useCallback, useState, useEffect, useMemo} from 'react';
 import ClearIcon from '@/components/Icons/ClearIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import {
@@ -14,7 +14,7 @@ import styled from '@emotion/styled';
 import GenerateFile from './GenerateFile';
 import DeduplicateSettings from './DeduplicateSettings';
 import {useDeduplicateMutation} from "@/api/datasources.js";
-import {useSelectedProjectId} from "@/pages/hooks.jsx";
+import {useGetComponentHeight, useSelectedProjectId} from "@/pages/hooks.jsx";
 import DeduplicateResultContent from "@/pages/DataSources/Components/Datasources/DeduplicateResultContent.jsx";
 import CodeIcon from "@mui/icons-material/Code.js";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted.js";
@@ -38,6 +38,11 @@ const DeduplicatePanel = ({
   isFullScreenChat,
   setIsFullScreenChat
 }) => {
+  const {
+    componentRef: resultContainerRef,
+    componentHeight: resultContainerHeight,
+  } = useGetComponentHeight();
+  const resultSX = useMemo(() => ({ height: `${resultContainerHeight}px` }), [resultContainerHeight])
 
   const currentProjectId = useSelectedProjectId()
   const [makeDeduplicate, {data, isLoading, isSuccess}] = useDeduplicateMutation()
@@ -132,8 +137,8 @@ const DeduplicatePanel = ({
         role="presentation"
         sx={{marginTop: '24px'}}
       >
-        <ChatBodyContainer>
-          <CompletionContainer>
+        <ChatBodyContainer ref={resultContainerRef}>
+          <CompletionContainer sx={resultSX}>
             <CompletionHeader>
               <Tooltip title={prettifyResponse ? 'Code format' : 'Pretty format'} placement="top">
                 <IconButton onClick={() => {

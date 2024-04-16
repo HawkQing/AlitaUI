@@ -9,7 +9,7 @@ import {
 } from '@/common/constants.js';
 import { contextResolver, listMapper } from '@/common/utils';
 import RouteDefinitions from '@/routes';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
@@ -403,4 +403,35 @@ export const replaceVersionInPath = (newVersionName, pathname, encodedCurrentVer
       originalPathname + '/' + encodedVersion
       :
       originalPathname;
+}
+
+export const useGetComponentHeight = () => {
+  const componentRef = useRef(null);
+  const [componentHeight, setComponentHeight] = useState(0);
+
+  useEffect(() => {
+    setComponentHeight(componentRef.current?.offsetHeight || 0);
+  }, []);
+
+ 
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setComponentHeight(entry.contentRect.height);
+      }
+    });
+
+    if (componentRef.current) {
+      resizeObserver.observe(componentRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  return {
+    componentRef,
+    componentHeight,
+  }
 }

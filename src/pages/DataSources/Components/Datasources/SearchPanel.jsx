@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
 import { Box, Stack } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
-import React, { useCallback, useState, useRef, useEffect } from 'react';
+import React, { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import ClearIcon from '@/components/Icons/ClearIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import {
@@ -16,7 +16,7 @@ import ChatInput from '@/components/ChatBox/ChatInput';
 import { useTheme } from '@emotion/react';
 import SearchSettings from './SearchSettings';
 import { useSearchMutation } from "@/api/datasources.js";
-import { useProjectId, useIsSmallWindow } from "@/pages/hooks.jsx";
+import { useProjectId, useIsSmallWindow, useGetComponentHeight } from "@/pages/hooks.jsx";
 import BasicAccordion, { AccordionShowMode } from "@/components/BasicAccordion.jsx";
 import SearchResultContent from "./SearchResultContent.jsx";
 import CodeIcon from '@mui/icons-material/Code';
@@ -48,6 +48,11 @@ const SearchPanel = ({
   const { isSmallWindow } = useIsSmallWindow();
 
   const searchInput = useRef(null);
+  const {
+    componentRef: resultContainerRef,
+    componentHeight: resultContainerHeight,
+  } = useGetComponentHeight();
+  const resultSX = useMemo(() => ({ height: `${resultContainerHeight}px` }), [resultContainerHeight])
 
   const [makeSearch, { data, isLoading, isSuccess }] = useSearchMutation()
   const onSearch = useCallback(
@@ -103,15 +108,15 @@ const SearchPanel = ({
 
   return (
     <Box position={'relative'} display={'flex'} flexDirection={'column'} flexGrow={1}>
-      <Box sx={{ 
+      <Box sx={{
         position: 'absolute',
         top: '-12px',
         transform: 'translateY(-100%)',
-        right: '0px', 
+        right: '0px',
         display: 'flex',
-        flexDirection: 'row', 
-        justifyContent: 'flex-end', 
-        gap: '8px' 
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: '8px'
       }}>
         <FullScreenToggle
           isFullScreenChat={isFullScreenChat}
@@ -187,55 +192,54 @@ const SearchPanel = ({
         role="presentation"
         sx={{ marginTop: '24px' }}
       >
-        <ChatBodyContainer>
-          {
-            <CompletionContainer>
-              <Message>
-                <CompletionHeader>
-                  <IconButton onClick={() => {
-                    setPrettifyResponse(prevState => !prevState)
-                  }} color={'secondary'}>
-                    {prettifyResponse ? <CodeIcon fontSize={'inherit'} /> :
-                      <FormatListBulletedIcon fontSize={'inherit'} />}
-                  </IconButton>
-                  <IconButton disabled={!searchResult} onClick={onCopyCompletion}>
-                    <CopyIcon sx={{ fontSize: '1.13rem' }} />
-                  </IconButton>
-                </CompletionHeader>
-                <Box
-                  position={'absolute'}
-                  top={'50%'}
-                  left={'50%'}
-                  sx={{ transform: 'translate(-50%, 0)' }}
-                  hidden={!isLoading}
-                >
-                  <AnimatedProgress sx={{
-                    fontWeight: "400",
-                    fontSize: "26px",
-                    lineHeight: "40px",
-                  }}
-                    message='Searching...'
-                    duration='2s'
-                    width='200px'
-                  />
-                </Box>
-                <Stack spacing={1}>
-                  <BasicAccordion
-                    style={{ visibility: searchResult?.references ? 'visible' : 'hidden' }}
-                    showMode={AccordionShowMode.LeftMode}
-                    defaultExpanded={false}
-                    items={[
-                      {
-                        title: 'References',
-                        content: searchResult?.references?.map((i, index) => <pre key={index}>{i}</pre>),
-                      }
-                    ]}
-                  />
-                  {getContent()}
-                </Stack>
-              </Message>
-            </CompletionContainer>
-          }
+        <ChatBodyContainer ref={resultContainerRef}>
+          <CompletionContainer sx={resultSX}>
+            <Message>
+              <CompletionHeader>
+                <IconButton onClick={() => {
+                  setPrettifyResponse(prevState => !prevState)
+                }} color={'secondary'}>
+                  {prettifyResponse ? <CodeIcon fontSize={'inherit'} /> :
+                    <FormatListBulletedIcon fontSize={'inherit'} />}
+                </IconButton>
+                <IconButton disabled={!searchResult} onClick={onCopyCompletion}>
+                  <CopyIcon sx={{ fontSize: '1.13rem' }} />
+                </IconButton>
+              </CompletionHeader>
+              <Box
+                position={'absolute'}
+                top={'50%'}
+                left={'50%'}
+                sx={{ transform: 'translate(-50%, 0)' }}
+                hidden={!isLoading}
+              >
+                <AnimatedProgress sx={{
+                  fontWeight: "400",
+                  fontSize: "26px",
+                  lineHeight: "40px",
+                }}
+                  message='Searching...'
+                  duration='2s'
+                  width='200px'
+                />
+              </Box>
+              <Stack spacing={1}>
+                <BasicAccordion
+                  style={{ visibility: searchResult?.references ? 'visible' : 'hidden' }}
+                  accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+                  showMode={AccordionShowMode.LeftMode}
+                  defaultExpanded={false}
+                  items={[
+                    {
+                      title: 'References',
+                      content: searchResult?.references?.map((i, index) => <pre key={index}>{i}</pre>),
+                    }
+                  ]}
+                />
+                {getContent()}
+              </Stack>
+            </Message>
+          </CompletionContainer>
         </ChatBodyContainer>
       </ChatBoxContainer>
     </Box>
