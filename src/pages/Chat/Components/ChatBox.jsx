@@ -2,6 +2,7 @@
 import { useAskAlitaMutation } from '@/api/prompts';
 import {
   DEFAULT_MAX_TOKENS,
+  DEFAULT_TEMPERATURE,
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
   ROLES,
@@ -94,19 +95,29 @@ const ChatBox = forwardRef((props, boxRef) => {
   const theme = useTheme();
   const {
     prompt_id,
-    integration_uid,
-    model_name,
-    temperature,
     context,
     messages,
-    llm_settings = {},
     variables,
     currentVersionId,
     messageListSX,
     isNewConversation,
-    onStartNewConversation
+    onStartNewConversation,
+    activeParticipant
   } = props
-  const { max_tokens = DEFAULT_MAX_TOKENS, top_p = DEFAULT_TOP_P, top_k = DEFAULT_TOP_K } = llm_settings
+  const [conversation, setConversation] = useState({
+    name: 'New Conversation',
+    is_public: false,
+    participant: {},
+    participant_type: 'model',
+  })
+  const {
+    max_tokens = DEFAULT_MAX_TOKENS,
+    top_p = DEFAULT_TOP_P,
+    top_k = DEFAULT_TOP_K,
+    temperature = DEFAULT_TEMPERATURE,
+    integration_uid,
+    model_name,
+  } = conversation.participant
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
   const { name } = useSelector(state => state.user)
   const [chatHistory, setChatHistory] = useState([]);
@@ -120,11 +131,6 @@ const ChatBox = forwardRef((props, boxRef) => {
   const messagesEndRef = useRef();
   const listRefs = useRef([]);
   const chatHistoryRef = useRef(chatHistory);
-
-  const [is_public, setIsPublic] = useState(false)
-  const [selectedChatModel, setSelectedChatModel] = useState({})
-  const [selectedChatDatasource, setSelectedChatDatasource] = useState();
-  const [selectedChatApplication, setSelectedChatApplication] = useState();
 
   const {
     openAlert,
@@ -181,13 +187,26 @@ const ChatBox = forwardRef((props, boxRef) => {
     [isRegenerating],
   )
 
+  const scrollToMessageListEnd = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [])
+
   const handleSocketEvent = useCallback(async message => {
     const { stream_id, type: socketMessageType, message_type, response_metadata } = message
     const [msgIndex, msg] = getMessage(stream_id, message_type)
 
     const scrollToMessageBottom = () => {
       if (sessionStorage.getItem(AUTO_SCROLL_KEY) === 'true') {
-        (listRefs.current[msgIndex] || messagesEndRef?.current)?.scrollIntoView({ block: "end" });
+        const messageElement = listRefs.current[msgIndex]
+        if (messageElement) {
+          const parentElement = messageElement.parentElement;
+          messageElement.scrollIntoView({ block: "end" });
+          if (parentElement) {
+            parentElement.scrollTop += 12;
+          }
+        } else {
+          scrollToMessageListEnd();
+        }
       }
     };
 
@@ -235,15 +254,15 @@ const ChatBox = forwardRef((props, boxRef) => {
       prevState[msgIndex] = msg
       return [...prevState]
     })
-  }, [getMessage, handleError])
+  }, [getMessage, handleError, scrollToMessageListEnd])
 
   const { emit } = useSocket(sioEvents.promptlib_predict, handleSocketEvent)
 
   const onPredictStream = useCallback(question => {
-    onStartNewConversation();
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ block: "end" });
-    }, 0);
+    if (isNewConversation) {
+      onStartNewConversation(conversation);
+    }
+    setTimeout(scrollToMessageListEnd, 0);
     setChatHistory((prevMessages) => {
       return [...prevMessages, {
         id: new Date().getTime(),
@@ -276,7 +295,10 @@ const ChatBox = forwardRef((props, boxRef) => {
       projectId,
       emit,
       currentVersionId,
-      onStartNewConversation
+      onStartNewConversation,
+      scrollToMessageListEnd,
+      conversation,
+      isNewConversation,
     ])
 
   const onClickSend = useCallback(
@@ -297,9 +319,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         }]
       });
       askAlita(payload);
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ block: "end" });
-      }, 0);
+      setTimeout(scrollToMessageListEnd, 0);
     },
     [
       askAlita,
@@ -317,7 +337,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       variables,
       projectId,
       currentVersionId,
-      onStartNewConversation
+      onStartNewConversation,
+      scrollToMessageListEnd
     ]);
 
 
@@ -463,13 +484,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     }
   }, [error, handleError, reset]);
 
-  const onChangeLLMSettings = useCallback(
-    () => {
-      
-    },
-    [],
-  )
-  
 
   return (
     <>
@@ -510,20 +524,13 @@ const ChatBox = forwardRef((props, boxRef) => {
               </MessageList>
               :
               <NewConversationSettings
-                is_public={is_public}
-                setIsPublic={setIsPublic}
-                selectedChatModel={selectedChatModel}
-                setSelectedChatModel={setSelectedChatModel}
-                llm_settings={llm_settings}
-                onChangeLLMSettings={onChangeLLMSettings}
-                selectedChatDatasource={selectedChatDatasource}
-                setSelectedChatDatasource={setSelectedChatDatasource}
-                selectedChatApplication={selectedChatApplication}
-                setSelectedChatApplication={setSelectedChatApplication}
+                conversation={conversation}
+                onChangeConversation={setConversation}
+                
               />
           }
           {
-            selectedChatDatasource && <Box sx={{
+            activeParticipant && <Box sx={{
               width: '100%',
               borderTop: `1px solid ${theme.palette.border.lines}`,
               padding: '8px 16px 8px 16px',
