@@ -241,13 +241,26 @@ const ChatBox = forwardRef((props, boxRef) => {
     [isRegenerating],
   )
 
+  const scrollToMessageListEnd = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [])
+
   const handleSocketEvent = useCallback(async message => {
     const { stream_id, type: socketMessageType, message_type, response_metadata } = message
     const [msgIndex, msg] = getMessage(stream_id, message_type)
 
     const scrollToMessageBottom = () => {
       if (sessionStorage.getItem(AUTO_SCROLL_KEY) === 'true') {
-        (listRefs.current[msgIndex] || messagesEndRef?.current)?.scrollIntoView({ block: "end" });
+        const messageElement = listRefs.current[msgIndex]
+        if (messageElement) {
+          const parentElement = messageElement.parentElement;
+          messageElement.scrollIntoView({ block: "end" });
+          if (parentElement) {
+            parentElement.scrollTop += 12;
+          }
+        } else {
+          scrollToMessageListEnd();
+        }
       }
     };
 
@@ -303,14 +316,12 @@ const ChatBox = forwardRef((props, boxRef) => {
     } else {
       msgIndex > -1 && setCompletionResult(msg)
     }
-  }, [getMessage, handleError])
+  }, [getMessage, handleError, scrollToMessageListEnd])
 
   const { emit } = useSocket(sioEvents.promptlib_predict, handleSocketEvent)
 
   const onPredictStream = useCallback(question => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ block: "end" });
-    }, 0);
+    setTimeout(scrollToMessageListEnd, 0);
     setChatHistory((prevMessages) => {
       return [...prevMessages, {
         id: new Date().getTime(),
@@ -342,7 +353,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       variables,
       projectId,
       emit,
-      currentVersionId
+      currentVersionId,
+      scrollToMessageListEnd
     ])
 
   const onClickSend = useCallback(
@@ -362,9 +374,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         }]
       });
       askAlita(payload);
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ block: "end" });
-      }, 0);
+      setTimeout(scrollToMessageListEnd, 0);
     },
     [
       askAlita,
@@ -381,7 +391,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       top_k,
       variables,
       projectId,
-      currentVersionId
+      currentVersionId,
+      scrollToMessageListEnd
     ]);
   const onClickRun = useCallback(() => {
     setCompletionResult('');

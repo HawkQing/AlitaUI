@@ -99,6 +99,11 @@ const ChatPanel = ({
     return [msgIdx, msg]
   }, [])
 
+
+  const scrollToMessageListEnd = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [])
+
   const handleSocketEvent = useCallback(async message => {
     const { stream_id, type, response_metadata } = message
 
@@ -106,7 +111,16 @@ const ChatPanel = ({
 
     const scrollToMessageBottom = () => {
       if (sessionStorage.getItem(AUTO_SCROLL_KEY) === 'true') {
-        (listRefs.current[msgIndex] || messagesEndRef?.current)?.scrollIntoView({ block: "end" });
+        const messageElement = listRefs.current[msgIndex]
+        if (messageElement) {
+          const parentElement = messageElement.parentElement;
+          messageElement.scrollIntoView({ block: "end" });
+          if (parentElement) {
+            parentElement.scrollTop += 12;
+          }
+        } else {
+          scrollToMessageListEnd();
+        }
       }
     };
 
@@ -131,6 +145,7 @@ const ChatPanel = ({
         msg.references = message.references
         msg.isLoading = false
         msg.isStreaming = true
+        setTimeout(scrollToMessageBottom, 0);
         break
       case SocketMessageType.Error:
         setShowToast(true);
@@ -153,7 +168,7 @@ const ChatPanel = ({
         return [...prevState]
       })
     }
-  }, [getMessage, setChatHistory])
+  }, [getMessage, setChatHistory, scrollToMessageListEnd])
 
   const { emit } = useSocket(sioEvents.datasource_predict, handleSocketEvent)
 
@@ -190,9 +205,7 @@ const ChatPanel = ({
   );
 
   const onPredict = useCallback(async question => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ block: "end" });
-    }, 0);
+    setTimeout(scrollToMessageListEnd, 0);
     setIsLoading(true);
     setChatHistory((prevMessages) => {
       return [...prevMessages, {
@@ -213,6 +226,7 @@ const ChatPanel = ({
     currentProjectId,
     versionId,
     emit,
+    scrollToMessageListEnd,
   ])
 
   const onRegenerateAnswer = useCallback(id => async () => {

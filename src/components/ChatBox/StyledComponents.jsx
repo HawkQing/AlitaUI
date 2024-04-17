@@ -89,7 +89,6 @@ export const ChatBodyContainer = styled(Box)(({ theme }) => `
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.5rem;
   flex: 1 0 0;
   flex-grow: 1;
   align-self: stretch;
@@ -160,9 +159,7 @@ export const MessageList = styled(List)(() => `
   width: 100%;
   flex-grow: 1;
   height: 20.25rem;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  padding-top: 0.75rem;
+  padding: 0.75rem;
   overflow: scroll;
   scrollbar-width: none;
   -ms-overflow-style: none;

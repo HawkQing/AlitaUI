@@ -18,16 +18,18 @@ import BasicAccordion from "@/components/BasicAccordion.jsx";
 import AnimatedProgress from '@/components/AnimatedProgress';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 
-export const UserMessageContainer = styled(ListItem)(() => `
-  flex: 1 0 0
-  display: flex;
-  padding: 0.75rem;
-  align-items: flex-start;
-  gap: 1rem;
-  align-self: stretch;
-  border-radius: 0.25rem;
-  margin-bottom: 8px;
-`);
+export const UserMessageContainer = styled(ListItem)(() => ({
+  flex: '1 0 0',
+  display: 'flex',
+  padding: '0.75rem',
+  alignItems: 'flex-start',
+  gap: '1rem',
+  alignSelf: 'stretch',
+  borderRadius: '0.25rem',
+  '&:not(:last-of-type)': {
+    marginBottom: '8px',
+  },
+}));
 
 export const Answer = styled(Box)(({ theme }) => `
   min-height: 36px; 
@@ -113,7 +115,7 @@ const AIAnswer = React.forwardRef((props, ref) => {
   )
 
   return (
-    <AIAnswerContainer onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+    <AIAnswerContainer ref={ref} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <ListItemAvatar sx={{ minWidth: '24px' }}>
         <AlitaIcon sx={{ fontSize: 24 }} />
       </ListItemAvatar>
@@ -173,7 +175,6 @@ const AIAnswer = React.forwardRef((props, ref) => {
           message='Thinking...'
           duration='2s'
         />}
-        <div ref={ref} />
         {references?.length > 0 && <BasicAccordion style={{ marginTop:  answer ? '15px' : '37px' }} items={[
           { title: 'References', content: <ReferenceList references={references} /> }
         ]} />}
