@@ -14,8 +14,9 @@ const Chat = () => {
   const isCreatingConversation = useIsCreatingConversation();
   const [, setSearchParams] = useSearchParams();
 
-    const onStartNewConversation = useCallback(
-    () => {
+  const onStartNewConversation = useCallback(
+    // eslint-disable-next-line no-unused-vars
+    (_newConversation) => {
       const newSearchParams = new URLSearchParams({});
       setSearchParams(newSearchParams, {
         replace: true,
