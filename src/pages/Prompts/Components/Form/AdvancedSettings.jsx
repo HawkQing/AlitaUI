@@ -33,7 +33,7 @@ const AdvanceSettingHeaderContainer = styled(Box)(() => ({
 
 const AdvanceSettingSelectorContainer = styled(Box)(() => ({ marginTop: '0.5rem', paddingRight: '0.5rem' }));
 
-const AdvanceSettingSliderContainer = styled(Box)(({ theme }) => ({
+export const AdvanceSettingSliderContainer = styled(Box)(({ theme }) => ({
   marginTop: '0.5rem',
   width: '100%',
   paddingLeft: '12px',
@@ -47,7 +47,7 @@ const AdvanceSettingSliderContainer = styled(Box)(({ theme }) => ({
   }
 }));
 
-const AdvanceSettingInputContainer = styled(Box)(() => ({
+export const AdvanceSettingInputContainer = styled(Box)(() => ({
   marginTop: '0',
   width: '100%',
   paddingRight: '0.5rem'

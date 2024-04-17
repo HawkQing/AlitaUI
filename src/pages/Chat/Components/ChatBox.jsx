@@ -2,6 +2,7 @@
 import { useAskAlitaMutation } from '@/api/prompts';
 import {
   DEFAULT_MAX_TOKENS,
+  DEFAULT_TOP_K,
   DEFAULT_TOP_P,
   ROLES,
   sioEvents,
@@ -98,15 +99,14 @@ const ChatBox = forwardRef((props, boxRef) => {
     temperature,
     context,
     messages,
-    max_tokens = DEFAULT_MAX_TOKENS,
-    top_p = DEFAULT_TOP_P,
-    top_k,
+    llm_settings = {},
     variables,
     currentVersionId,
     messageListSX,
     isNewConversation,
     onStartNewConversation
   } = props
+  const { max_tokens = DEFAULT_MAX_TOKENS, top_p = DEFAULT_TOP_P, top_k = DEFAULT_TOP_K } = llm_settings
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
   const { name } = useSelector(state => state.user)
   const [chatHistory, setChatHistory] = useState([]);
@@ -463,6 +463,14 @@ const ChatBox = forwardRef((props, boxRef) => {
     }
   }, [error, handleError, reset]);
 
+  const onChangeLLMSettings = useCallback(
+    () => {
+      
+    },
+    [],
+  )
+  
+
   return (
     <>
       <ChatBoxContainer
@@ -506,6 +514,8 @@ const ChatBox = forwardRef((props, boxRef) => {
                 setIsPublic={setIsPublic}
                 selectedChatModel={selectedChatModel}
                 setSelectedChatModel={setSelectedChatModel}
+                llm_settings={llm_settings}
+                onChangeLLMSettings={onChangeLLMSettings}
                 selectedChatDatasource={selectedChatDatasource}
                 setSelectedChatDatasource={setSelectedChatDatasource}
                 selectedChatApplication={selectedChatApplication}
@@ -522,9 +532,9 @@ const ChatBox = forwardRef((props, boxRef) => {
               flexDirection: 'row',
               alignItems: 'center',
             }}>
-              
+
               <Typography>
-                
+
               </Typography>
             </Box>
           }
