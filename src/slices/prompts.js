@@ -239,6 +239,11 @@ const promptSlice = createSlice({
         state.tagsOnVisibleCards = uniqueTagsByName(newlyFetchedTags(rows));
       });
     builder
+      .addMatcher(alitaApi.endpoints.publicDataSourcesList.matchFulfilled, (state, { payload }) => {
+        const { rows = [] } = payload;
+        state.tagsOnVisibleCards = uniqueTagsByName(newlyFetchedTags(rows));
+      });
+    builder
       .addMatcher(alitaApi.endpoints.publicApplicationsList.matchFulfilled, (state, { payload }) => {
         const { rows = [] } = payload;
         state.tagsOnVisibleCards = uniqueTagsByName(newlyFetchedTags(rows));
