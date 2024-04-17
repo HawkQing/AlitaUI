@@ -11,12 +11,13 @@ const useSaveVersion = ({
 
   const onSave = useCallback(
     async () => {
-      const {id, version_details, name, description } = getFormValues();
+      const {id, version_details, name, description, owner_id } = getFormValues();
       await saveFn({
         name,
         description,
         id,
         projectId,
+        owner_id,
         version:
         {
           ...version_details,
