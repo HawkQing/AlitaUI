@@ -13,6 +13,9 @@ import StyledInputEnhancer from '../StyledInputEnhancer';
 import { SaveButton } from '@/pages/Prompts/Components/Common';
 import NormalRoundButton from '../NormalRoundButton';
 import { ToolActionStatus } from '@/common/constants';
+import StyledTooltip from '../Tooltip';
+import CopyIcon from '@/components/Icons/CopyIcon';
+import useToast from '../useToast';
 
 export const StyledExpandMoreIcon = styled(KeyboardArrowDownIcon)(({ theme }) => ({
   color: theme.palette.icon.fill.default,
@@ -38,6 +41,7 @@ const Status = ({ status }) => {
 
 export default function ToolAction({ showMode = AccordionShowMode.RightMode, defaultExpanded = false, action }) {
   const [result, setResult] = useState()
+  const {ToastComponent: Toast, toastInfo} = useToast();
   const [expanded, setExpanded] = useState(defaultExpanded)
   const theme = useTheme();
   const nameColor = useMemo(() => action.status === ToolActionStatus.error
@@ -73,7 +77,15 @@ export default function ToolAction({ showMode = AccordionShowMode.RightMode, def
       setExpanded(value);
     },
     [],
-  ) 
+  )
+
+  const onCopy = useCallback(
+    async () => {
+      await navigator.clipboard.writeText(action.query);
+      toastInfo('The content has been copied to the clipboard');
+    },
+    [action.query, toastInfo],
+  )
 
   useEffect(() => {
     if (action.status === ToolActionStatus.actionRequired || action.status === ToolActionStatus.error) {
@@ -123,10 +135,26 @@ export default function ToolAction({ showMode = AccordionShowMode.RightMode, def
         {
           action.status === 'action_required' &&
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <Box>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%',
+                cursor: 'pointer',
+                '&:hover #CopyButton': {
+                  visibility: 'visible',
+                },
+              }}>
               <Typography variant='bodyMedium' sx={{ color: theme.palette.text.secondary }}>
                 {action.query}
               </Typography>
+              <StyledTooltip title={'Copy to clipboard'} placement="top">
+                <Box id='CopyButton' sx={{ marginRight: '20px', visibility: 'hidden' }} onClick={onCopy}>
+                  <CopyIcon sx={{ fontSize: '1rem' }} />
+                </Box>
+              </StyledTooltip>
             </Box>
             <StyledInputEnhancer
               onChange={handleChange}
@@ -151,6 +179,7 @@ export default function ToolAction({ showMode = AccordionShowMode.RightMode, def
           </Box>
         }
       </StyledAccordionDetails>
+      <Toast/>
     </StyledAccordion>
   );
 }
