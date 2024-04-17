@@ -206,6 +206,7 @@ const Categories = ({ tagList, title = 'Tags', style, my_liked }) => {
         //Collections
         tagListParams.collection_phrase = queryForTag;
         tagListParams.query = undefined;
+        tagListParams.entity_coverage = 'collection';
       } else if (tab === MyLibraryTabs[1]) {
         //Prompts
         tagListParams.entity_coverage = 'prompt';
@@ -220,6 +221,7 @@ const Categories = ({ tagList, title = 'Tags', style, my_liked }) => {
       if (isFromCollections) {
         tagListParams.collection_phrase = queryForTag;
         tagListParams.query = undefined;
+        tagListParams.entity_coverage = 'collection';
         if (my_liked) {
           tagListParams.my_liked_collections = my_liked;
         }
