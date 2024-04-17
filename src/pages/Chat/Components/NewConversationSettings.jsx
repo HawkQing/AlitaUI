@@ -5,9 +5,16 @@ import {
   FormControlLabel,
   Radio,
 } from '@mui/material';
-import * as React from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { StatusDot } from '@/components/StatusDot';
-import { PromptStatus } from '@/common/constants';
+import {
+  PromptStatus,
+  PROMPT_PAYLOAD_KEY,
+  DEFAULT_TOP_K,
+  DEFAULT_TOP_P,
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_TEMPERATURE
+} from '@/common/constants';
 import GroupedButton from '@/components/GroupedButton';
 import useModelOptions from '@/pages/DataSources/Components/Datasources/useModelOptions';
 import SingleGroupSelect from '@/components/SingleGroupSelect';
@@ -15,6 +22,12 @@ import { genModelSelectValue, getIntegrationNameByUid } from '@/common/promptApi
 import DatasourceSelect from '@/pages/Applications/Components/Tools/DatasourceSelect';
 import ApplicationSelect from './ApplicationSelect';
 import { useTheme } from '@emotion/react';
+import StyledInputEnhancer from '@/components/StyledInputEnhancer';
+import {
+  AdvanceSettingInputContainer,
+  AdvanceSettingSliderContainer
+} from '@/pages/Prompts/Components/Form/AdvancedSettings';
+import Slider from '@/components/Slider';
 
 const DialogTitleDiv = styled('div')(() => ({
   width: '100%',
@@ -36,15 +49,20 @@ const NewConversationSettings = ({
   setIsPublic,
   selectedChatModel,
   setSelectedChatModel,
+  llm_settings = {},
+  onChangeLLMSettings,
   selectedChatDatasource,
   setSelectedChatDatasource,
   selectedChatApplication,
   setSelectedChatApplication,
 }) => {
+  const focusOnMaxTokens = useRef(false);
+
   const theme = useTheme();
   const { modelOptions } = useModelOptions();
-  const [currentSettingType, setCurrentSettingType] = React.useState('model')
-  const chatModelValue = React.useMemo(() =>
+  const [currentSettingType, setCurrentSettingType] = useState('model')
+  const [conversationName, setConversationName] = useState('New Conversation')
+  const chatModelValue = useMemo(() =>
   (
     selectedChatModel.integration_uid &&
       selectedChatModel.model_name ?
@@ -54,11 +72,11 @@ const NewConversationSettings = ({
       : ''),
     [modelOptions, selectedChatModel.integration_uid, selectedChatModel.model_name]);
 
-  const onSelectType = React.useCallback((event) => {
+  const onSelectType = useCallback((event) => {
     setIsPublic(event.target.value);
   }, [setIsPublic]);
 
-  const onSelectParticipantType = React.useCallback(
+  const onSelectParticipantType = useCallback(
     (e) => {
       const newType = e?.target?.value;
       if (currentSettingType !== newType) {
@@ -68,20 +86,55 @@ const NewConversationSettings = ({
     [currentSettingType],
   );
 
-  const onChangeChatModel = React.useCallback((integrationUid, modelName) => {
+  const onChangeName = useCallback((event) => {
+    setConversationName(event.target.value);
+  }, []);
+
+  const onChangeChatModel = useCallback((integrationUid, modelName) => {
     setSelectedChatModel({
       integration_uid: integrationUid,
       model_name: modelName,
     });
   }, [setSelectedChatModel])
 
-  const onChangeChatDatasource = React.useCallback((datasource) => {
+  const onChangeChatDatasource = useCallback((datasource) => {
     setSelectedChatDatasource(datasource);
   }, [setSelectedChatDatasource]);
 
-  const onChangeChatApplication = React.useCallback((application) => {
+  const onChangeChatApplication = useCallback((application) => {
     setSelectedChatApplication(application);
   }, [setSelectedChatApplication]);
+
+  const [maxTokens, setMaxTokens] = useState(llm_settings?.max_tokens || DEFAULT_MAX_TOKENS);
+
+  const onMaxTokensBlur = useCallback(
+    () => {
+      focusOnMaxTokens.current = false;
+      setTimeout(() => {
+        if (!focusOnMaxTokens.current && !maxTokens) {
+          onChangeLLMSettings(PROMPT_PAYLOAD_KEY.maxTokens)(DEFAULT_MAX_TOKENS);
+          setMaxTokens(DEFAULT_MAX_TOKENS);
+        } else {
+          if (maxTokens !== llm_settings?.max_tokens) {
+            onChangeLLMSettings(PROMPT_PAYLOAD_KEY.maxTokens)(parseInt(maxTokens));
+          }
+        }
+      }, 50);
+    },
+    [llm_settings?.max_tokens, maxTokens, onChangeLLMSettings],
+  );
+
+  const onMaxTokensFocus = useCallback(
+    () => {
+      focusOnMaxTokens.current = true;
+    },
+    [],
+  );
+
+  const onInputMaxTokens = useCallback((event) => {
+    event.preventDefault();
+    setMaxTokens(event.target.value);
+  }, []);
 
   return (
     <Box sx={{
@@ -104,9 +157,12 @@ const NewConversationSettings = ({
         background: theme.palette.background.userInputBackground
       }}>
         <DialogTitleDiv>
-          <Typography variant='headingMedium'>
-            New Conversation
-          </Typography>
+          <StyledInputEnhancer
+            value={conversationName}
+            autoComplete="off"
+            variant='standard'
+            onChange={onChangeName}
+          />
         </DialogTitleDiv>
         <Box >
           <RadioGroup
@@ -181,6 +237,51 @@ const NewConversationSettings = ({
             />
           }
         </Box>
+        {
+          currentSettingType === 'model' && selectedChatModel.model_name &&
+          <Box>
+            <AdvanceSettingSliderContainer sx={{ paddingRight: '0 !important' }}>
+              <Slider
+                label='Temperature (0.1 - 1.0)'
+                value={llm_settings.temperature ?? DEFAULT_TEMPERATURE}
+                step={0.1}
+                range={[0.1, 1]}
+                onChange={onChangeLLMSettings(PROMPT_PAYLOAD_KEY.temperature)}
+              />
+            </AdvanceSettingSliderContainer>
+            <AdvanceSettingSliderContainer sx={{ paddingRight: '0 !important' }}>
+              <Slider
+                label='Top P (0-1)'
+                value={+(llm_settings.top_p ?? DEFAULT_TOP_P)}
+                range={[0, 1]}
+                onChange={onChangeLLMSettings(PROMPT_PAYLOAD_KEY.topP)}
+              />
+            </AdvanceSettingSliderContainer>
+            <AdvanceSettingSliderContainer sx={{ paddingRight: '0 !important' }}>
+              <Slider
+                label='Top K'
+                value={+(llm_settings.top_k ?? DEFAULT_TOP_K)}
+                step={1}
+                range={[1, 40]}
+                onChange={onChangeLLMSettings(PROMPT_PAYLOAD_KEY.topK)}
+              />
+            </AdvanceSettingSliderContainer>
+            <AdvanceSettingInputContainer sx={{ paddingRight: '0 !important' }}>
+              <StyledInputEnhancer
+                onBlur={onMaxTokensBlur}
+                onFocus={onMaxTokensFocus}
+                onInput={onInputMaxTokens}
+                value={maxTokens}
+                id="max_tokens"
+                type="number"
+                label="Maximum length"
+                variant="standard"
+                placeholder="Input maximum length here"
+                fullWidth
+              />
+            </AdvanceSettingInputContainer>
+          </Box>
+        }
       </Box>
     </Box>
   );
