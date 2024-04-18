@@ -13,10 +13,11 @@ import { useFormikContext } from "formik";
 import { useMemo } from "react";
 import FormikInput from "./FormikInput";
 import { useTheme } from '@emotion/react';
+import SourceQTest from './SourceQTest';
 
 const typeOptions = Object.values(sourceTypes)
   .filter(type => [
-    sourceTypes.git.value, sourceTypes.confluence.value, sourceTypes.file.value, sourceTypes.table.value
+    sourceTypes.git.value, sourceTypes.confluence.value, sourceTypes.file.value, sourceTypes.table.value, sourceTypes.qtest.value
   ].includes(type.value))
 
 export const initialState = {
@@ -44,8 +45,8 @@ const Source = ({ mode }) => {
   const { isCreate, isView } = useComponentMode(mode);
   return (
     <BasicAccordion
-    accordionSX={{background: `${theme.palette.background.tabPanel} !important`}}
-    items={[
+      accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+      items={[
         {
           title: 'Source',
           content: <SourceContentBox>
@@ -80,6 +81,8 @@ const Source = ({ mode }) => {
               <SourceConfluence mode={mode} />}
             {type === sourceTypes.table.value &&
               <SourceTable mode={mode} />}
+            {type === sourceTypes.qtest.value &&
+              <SourceQTest mode={mode} />}
           </SourceContentBox>
         }
       ]} />

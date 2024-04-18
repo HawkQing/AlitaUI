@@ -28,6 +28,10 @@ export const sourceTypes = {
   jira: {
     label: 'Jira',
     value: 'jira'
+  },
+  qtest: {
+    label: 'QTest',
+    value: 'qtest'
   }
 }
 
