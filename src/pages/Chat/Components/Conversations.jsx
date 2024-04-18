@@ -35,6 +35,11 @@ const Conversations = ({ conversations, onSelectConversation, selectedConversati
             />
           ))
         }
+        {
+          !conversations.length && <Typography variant='bodyMedium' color='text.button.disabled'>
+            Still no conversations created
+          </Typography>
+        }
       </Box>
     </Box>
 

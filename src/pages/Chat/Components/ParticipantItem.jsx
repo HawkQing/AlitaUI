@@ -3,27 +3,28 @@ import CancelIcon from '@/components/Icons/CancelIcon';
 import ConsoleIcon from '@/components/Icons/ConsoleIcon';
 import DatabaseIcon from '@/components/Icons/DatabaseIcon';
 import EmojiIcon from '@/components/Icons/EmojiIcon';
+import ModelIcon from '@/components/Icons/ModelIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import { Box, Typography, useTheme } from '@mui/material';
 import { useCallback, useState } from 'react';
 
-const getIcon = (type) => {
+export const getIcon = (type, isActive, theme) => {
   switch (type) {
-    case 'Prompts':
-      return <ConsoleIcon />
-    case 'Datasource':
-      return <DatabaseIcon />
-    case 'Application':
-      return <ApplicationsIcon />
-    case 'Model':
-      return <EmojiIcon />
+    case 'prompts':
+      return <ConsoleIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+    case 'datasource':
+      return <DatabaseIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+    case 'applications':
+      return <ApplicationsIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+    case 'models':
+      return <ModelIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
     default:
-      return <EmojiIcon fontSize={'16px'} />
+      return <EmojiIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} fontSize={'16px'} />
   }
 }
 
-const ParticipantItem = ({ participant = {}, collapsed }) => {
-  const { type, name } = participant
+const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem }) => {
+  const { type, name, model_name } = participant
   const [showSettings, setShowSettings] = useState(false)
   const theme = useTheme();
   const onShowSettings = useCallback(
@@ -32,10 +33,18 @@ const ParticipantItem = ({ participant = {}, collapsed }) => {
     },
     [],
   )
+  const onClickHandler = useCallback(
+    () => {
+      onClickItem(participant);
+    },
+    [onClickItem, participant],
+  )
 
   return (
     <Box
+      onClick={onClickHandler}
       sx={{
+        cursor: 'pointer',
         padding: collapsed ? '0 0' : '8px 16px',
         borderRadius: '8px',
         gap: '12px',
@@ -52,15 +61,15 @@ const ParticipantItem = ({ participant = {}, collapsed }) => {
         },
       }}
     >
-      <Box sx={{ width: '16px', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ width: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         {
-          getIcon(type)
+          getIcon(type, isActive, theme)
         }
       </Box>
-      {!collapsed && <Box sx={{ flex: 1 }}>
+      {!collapsed && <Box sx={{ flex: 1, display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
         <Typography variant='bodyMedium' color='text.secondary'>
           {
-            name || 'Participant Name'
+            name || model_name || 'Participant Name'
           }
         </Typography>
       </Box>}

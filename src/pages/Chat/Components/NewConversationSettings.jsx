@@ -5,14 +5,15 @@ import {
   FormControlLabel,
   Radio,
 } from '@mui/material';
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { StatusDot } from '@/components/StatusDot';
 import {
   PromptStatus,
   DEFAULT_MAX_TOKENS,
   DEFAULT_TEMPERATURE,
   DEFAULT_TOP_K,
-  DEFAULT_TOP_P
+  DEFAULT_TOP_P,
+  PUBLIC_PROJECT_ID
 } from '@/common/constants';
 import GroupedButton from '@/components/GroupedButton';
 import useModelOptions from '@/pages/DataSources/Components/Datasources/useModelOptions';
@@ -23,20 +24,36 @@ import ApplicationSelect from './ApplicationSelect';
 import { useTheme } from '@emotion/react';
 import StyledInputEnhancer from '@/components/StyledInputEnhancer';
 import LLMSettings from './LLMSettings';
+import styled from '@emotion/styled';
+import VariableList from '@/pages/Prompts/Components/Form/VariableList';
+import useQueryApplicationDetail from './useQueryApplicationDetail';
 
 const DialogTitleDiv = styled('div')(() => ({
   width: '100%',
 }));
 
+const StyledContainer = styled(Box)(() => (
+  `
+  overflow: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  ::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0;import VariableList from '../../Prompts/Components/Form/VariableList';
+
+  }
+  `
+));
+
 const buttonItems = [{
   label: 'Model',
-  value: 'model',
+  value: 'models',
 }, {
   label: 'Datasource',
-  value: 'datasource',
+  value: 'datasources',
 }, {
   label: 'Application',
-  value: 'application',
+  value: 'applications',
 }]
 
 const NewConversationSettings = ({
@@ -44,9 +61,15 @@ const NewConversationSettings = ({
   onChangeConversation,
 }) => {
   const theme = useTheme();
-  const { modelOptions } = useModelOptions();
-  const [currentSettingType, setCurrentSettingType] = useState('model')
+  const conversationRef = useRef(conversation);
+  const { modelOptions } = useModelOptions({ usePublicProjectId: true });
+  const [currentSettingType, setCurrentSettingType] = useState('models')
 
+  useEffect(() => {
+    conversationRef.current = conversation
+  }, [conversation])
+  
+  
   useEffect(() => {
     setCurrentSettingType(conversation.participant_type);
   }, [conversation.participant_type])
@@ -61,6 +84,22 @@ const NewConversationSettings = ({
         getIntegrationNameByUid(selectedChatModel.integration_uid, modelOptions))
       : ''),
     [modelOptions, selectedChatModel.integration_uid, selectedChatModel.model_name]);
+  const { getApplicationDetail, applicationDetail } = useQueryApplicationDetail();
+  const variables = useMemo(() => conversation?.participant?.variables || [], [conversation?.participant?.variables])
+
+  useEffect(() => {
+    if (applicationDetail?.version_details?.variables) {
+      onChangeConversation({
+        ...conversationRef.current,
+        participant: {
+          ...conversation.participant,
+          variables: [...applicationDetail.version_details.variables],
+        },
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicationDetail?.version_details?.variables, onChangeConversation])
+  
 
   const onSelectType = useCallback((event) => {
     onChangeConversation({
@@ -76,7 +115,9 @@ const NewConversationSettings = ({
         onChangeConversation({
           ...conversation,
           participant_type: newType,
-          participant: {}
+          participant: {
+            type: newType,
+          }
         })
       }
     },
@@ -95,6 +136,7 @@ const NewConversationSettings = ({
       ...conversation,
       participant: {
         ...conversation.participant,
+        id: integrationUid + '_' + modelName,
         integration_uid: integrationUid,
         model_name: modelName,
         max_tokens: DEFAULT_MAX_TOKENS,
@@ -122,6 +164,7 @@ const NewConversationSettings = ({
     onChangeConversation({
       ...conversation,
       participant: {
+        ...conversation.participant,
         name: datasource.label,
         id: datasource.value,
         description: datasource.description,
@@ -133,9 +176,22 @@ const NewConversationSettings = ({
     onChangeConversation({
       ...conversation,
       participant: {
+        ...conversation.participant,
         name: application.label,
         id: application.value,
         description: application.description,
+        variables: [],
+      },
+    })
+    getApplicationDetail({ projectId: PUBLIC_PROJECT_ID, applicationId: application.value })
+  }, [conversation, getApplicationDetail, onChangeConversation]);
+
+  const onChangeVariable = useCallback((label, newValue) => {
+    onChangeConversation({
+      ...conversation,
+      participant: {
+        ...conversation.participant,
+        variables: conversation.participant.variables.map((v) => v.name === label ? ({ name: label, value: newValue }) : v)
       },
     })
   }, [conversation, onChangeConversation]);
@@ -144,12 +200,13 @@ const NewConversationSettings = ({
     <Box sx={{
       width: '100%',
       flexGrow: 1,
-      height: 'calc(100vh - 200px)',
+      height: 'calc(100vh - 160px)',
+      maxHeight: 'calc(100% - 56px)',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
     }}>
-      <Box sx={{
+      <StyledContainer sx={{
         display: 'flex',
         width: '80%',
         maxWidth: '600px',
@@ -158,7 +215,8 @@ const NewConversationSettings = ({
         gap: '16px',
         borderRadius: '8px',
         border: `1px solid ${theme.palette.border.table}`,
-        background: theme.palette.background.userInputBackground
+        background: theme.palette.background.userInputBackground,
+        maxHeight: 'calc(100% - 40px)',
       }}>
         <DialogTitleDiv>
           <StyledInputEnhancer
@@ -210,7 +268,7 @@ const NewConversationSettings = ({
         </Box>
         <Box sx={{ width: '100%' }}>
           {
-            currentSettingType === 'model' &&
+            currentSettingType === 'models' &&
             <SingleGroupSelect
               label={'Model'}
               value={chatModelValue}
@@ -219,18 +277,17 @@ const NewConversationSettings = ({
             />
           }
           {
-            currentSettingType === 'datasource' &&
+            currentSettingType === 'datasources' &&
             <DatasourceSelect
               required
               onValueChange={onChangeChatDatasource}
               value={conversation.participant.id}
               error={false}
               helperText={''}
-              shouldUseSelectedProject
             />
           }
           {
-            currentSettingType === 'application' &&
+            currentSettingType === 'applications' &&
             <ApplicationSelect
               required
               onValueChange={onChangeChatApplication}
@@ -242,10 +299,25 @@ const NewConversationSettings = ({
           }
         </Box>
         {
-          currentSettingType === 'model' && selectedChatModel.model_name &&
+          currentSettingType === 'models' && selectedChatModel.model_name &&
           <LLMSettings llmSettings={selectedChatModel} onChangeLLMSettings={onChangeLLMSettings} />
         }
-      </Box>
+        {
+          currentSettingType === 'applications' && !!variables.length &&
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <Typography sx={{ marginLeft: '12px' }} variant='bodySmall' >
+              Application variables
+            </Typography>
+            <VariableList
+              variables={variables}
+              onChangeVariable={onChangeVariable}
+              showexpandicon='true'
+              multiline
+              collapseContent
+            />
+          </Box>
+        }
+      </StyledContainer>
     </Box>
   );
 };

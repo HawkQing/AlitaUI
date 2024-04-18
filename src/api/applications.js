@@ -313,6 +313,7 @@ export const {
   useApplicationCreateMutation,
   useApplicationEditMutation,
   useApplicationDetailsQuery,
+  useLazyApplicationDetailsQuery,
   usePublicApplicationsListQuery,
   useDeleteApplicationMutation,
   usePredictMutation,
