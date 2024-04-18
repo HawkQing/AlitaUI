@@ -282,10 +282,10 @@ export default function HeaderSplitButton({ onClickCommand }) {
         const theSelectedOption = option ?? selectedOption;
         const destUrl = commandPathMap[theSelectedOption];
         const breadCrumb = breadCrumbMap[theSelectedOption]
-        let search = undefined;
+        const search = theSelectedOption === optionsMap.Chat ? 'create=1' : undefined;
         if (destUrl !== pathname || theSelectedOption === optionsMap.Chat) {
           let newRouteStack = [...locationState.routeStack];
-          if (isFromMyLibrary && state) {
+          if (isFromMyLibrary && state && theSelectedOption !== optionsMap.Chat) {
             if (shouldReplaceThePage) {
               newRouteStack.splice(locationState.routeStack.length - 1, 1, {
                 breadCrumb,
@@ -300,15 +300,12 @@ export default function HeaderSplitButton({ onClickCommand }) {
               });
             }
           } else {
-            if (theSelectedOption === optionsMap.Chat) {
-              search = 'create=1'
-            }
             //For opening creating page from solo url or from Discover, we treat it as opening it from My Library
             newRouteStack = theSelectedOption === optionsMap.Chat ?
               [
                 {
                   breadCrumb,
-                  viewMode: ViewMode.Owner,
+                  viewMode: ViewMode.Public,
                   pagePath: destUrl,
                 }]
               :

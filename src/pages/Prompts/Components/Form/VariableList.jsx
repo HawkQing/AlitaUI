@@ -65,13 +65,13 @@ const VariableList = ({variables, onChangeVariable, ...props}) => {
 
   return (
     <div>
-      {variables.map(({ key, value }) => {
+      {variables.map(({ key, name, value }) => {
         return (
           <Variable
             onChangeVariable={onChangeVariable}
-            key={key}
-            label={key}
-            id={key}
+            key={key || name}
+            label={key || name}
+            id={key || name}
             value={value}
             isFirstRender={isFirstRender.current}
             {...props}

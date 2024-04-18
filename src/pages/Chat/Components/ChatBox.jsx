@@ -27,6 +27,8 @@ import useDeleteMessageAlert from '@/components/ChatBox/useDeleteMessageAlert';
 import NewConversationSettings from './NewConversationSettings';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@emotion/react';
+import { getIcon } from './ParticipantItem';
+import CloseIcon from '@/components/Icons/CloseIcon.jsx';
 
 const USE_STREAM = true
 
@@ -102,13 +104,17 @@ const ChatBox = forwardRef((props, boxRef) => {
     messageListSX,
     isNewConversation,
     onStartNewConversation,
-    activeParticipant
+    activeParticipant,
+    onClearActiveParticipant
   } = props
   const [conversation, setConversation] = useState({
+    id: new Date().getTime(),
     name: 'New Conversation',
     is_public: false,
-    participant: {},
-    participant_type: 'model',
+    participant: {
+      type: 'models'
+    },
+    participant_type: 'models',
   })
   const {
     max_tokens = DEFAULT_MAX_TOKENS,
@@ -130,7 +136,12 @@ const ChatBox = forwardRef((props, boxRef) => {
   const chatInput = useRef(null);
   const messagesEndRef = useRef();
   const listRefs = useRef([]);
+  const activeParticipantRef = useRef();
   const chatHistoryRef = useRef(chatHistory);
+
+  useEffect(() => {
+    activeParticipantRef.current = activeParticipant;
+  }, [activeParticipant]);
 
   const {
     openAlert,
@@ -167,6 +178,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         role: ROLES.Assistant,
         content: '',
         isLoading: false,
+        participant: { ...(activeParticipantRef.current || {}) }
       }
     } else {
       msg = chatHistoryRef.current[msgIdx]
@@ -490,7 +502,16 @@ const ChatBox = forwardRef((props, boxRef) => {
       <ChatBoxContainer
         role="presentation"
       >
-        <ChatBodyContainer>
+        <ChatBodyContainer
+          sx={{
+            [theme.breakpoints.up('lg')]: {
+              height: 'calc(100vh - 160px)',
+            },
+            [theme.breakpoints.down('lg')]: {
+              height: '500px',
+            }
+          }}
+        >
           {
             !isNewConversation ?
               <MessageList sx={messageListSX}>
@@ -526,7 +547,7 @@ const ChatBox = forwardRef((props, boxRef) => {
               <NewConversationSettings
                 conversation={conversation}
                 onChangeConversation={setConversation}
-                
+
               />
           }
           {
@@ -538,11 +559,23 @@ const ChatBox = forwardRef((props, boxRef) => {
               display: 'flex',
               flexDirection: 'row',
               alignItems: 'center',
+              justifyContent: 'space-between'
             }}>
+              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px' }}>
+                <Box sx={{ width: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  {
+                    getIcon(activeParticipant.type, false, theme)
+                  }
+                </Box>
+                <Typography variant='bodyMedium' color='secondary'>
+                  {activeParticipant.name || activeParticipant.model_name}
+                </Typography>
 
-              <Typography>
-
-              </Typography>
+              </Box>
+              <Box style={{ cursor: 'pointer', width: '20px', height: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                onClick={onClearActiveParticipant}>
+                <CloseIcon fontSize='16px' />
+              </Box>
             </Box>
           }
           <ChatInput

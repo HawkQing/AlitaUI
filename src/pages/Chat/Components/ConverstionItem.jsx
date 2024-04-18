@@ -7,8 +7,12 @@ import DotMenu from "@/components/DotMenu";
 import DeleteIcon from '../../../components/Icons/DeleteIcon';
 
 const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected = false, collapsed }) => {
-  const { participants, is_public, chat_history = [] } = conversation
+  const { name, participants, is_public, chat_history = [] } = conversation
   const [isHovering, setIsHovering] = useState(false);
+  const participantCount = useMemo(() => {
+    const types = Object.keys(participants)
+    return types.reduce((sum, type) => sum + participants[type].length, 0)
+  }, [participants])
   const theme = useTheme();
   const mainBodyWidth = useMemo(() => isHovering ? 'calc(100% - 56px)' : 'calc(100% - 24px)', [isHovering])
   const onClickConversation = useCallback(
@@ -94,13 +98,13 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected 
             component='div'
             variant='bodyMedium'
             olor='text.secondary'>
-            {chat_history[0]?.content || ''}
+            {name || chat_history[0]?.content || ''}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
           <UsersIcon />
           <Typography>
-            {participants?.length || 0}
+            {participantCount || 0}
           </Typography>
         </Box>
       </Box>
