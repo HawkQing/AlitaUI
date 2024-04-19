@@ -24,6 +24,7 @@ const blue20 = 'rgba(106, 232, 250, 0.20)';
 const blue24 = 'rgba(106, 232, 250, 0.24)';
 const blue30 = 'rgba(106, 232, 250, 0.30)';
 const blue40 = 'rgba(41, 184, 245, 0.40)';
+const skyBlue20 = 'rgba(41, 184, 245, 0.20)';
 const darkBlue = '#006DD1';
 const darkBlue40 = '#29B8F566';
 const grey500 = '#ABB3B9';
@@ -326,6 +327,7 @@ const getDesignTokens = mode => ({
         highlight: orange,
       },
       aiAnswerBkg: '#262B34',
+      aiParticipantIcon: skyBlue20,
       aiAnswerActions: 'linear-gradient(270deg, #262B34 82.5%, rgba(38, 43, 52, 0.00) 100%)',
       userMessageActions: 'linear-gradient(270deg, #0E131D 82.5%, rgba(14, 19, 29, 0.00) 100%)',
       conversationStarters: {

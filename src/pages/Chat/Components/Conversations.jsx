@@ -6,7 +6,6 @@ import { useIsSmallWindow } from '@/pages/hooks';
 
 const Conversations = ({ conversations, onSelectConversation, selectedConversationId, collapsed, onCollapsed }) => {
   const { isSmallWindow } = useIsSmallWindow();
-
   return (
     <Box >
       <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: (collapsed && !isSmallWindow) ? 'center' : 'space-between' }}>
@@ -23,11 +22,11 @@ const Conversations = ({ conversations, onSelectConversation, selectedConversati
           </Box>
         }
       </Box>
-      <Box sx={{ marginTop: '20px', gap: (!collapsed || isSmallWindow) ? '0': '8px', display: 'flex', flexDirection: 'column'  }} >
+      <Box sx={{ marginTop: '20px', gap: '8px', display: 'flex', flexDirection: 'column' }} >
         {
           conversations.map((conversation) => (
             <ConversationItem
-              isSelected={selectedConversationId === conversation.id}
+              isActive={selectedConversationId === conversation.id}
               key={conversation.id}
               conversation={conversation}
               onSelectConversation={onSelectConversation}

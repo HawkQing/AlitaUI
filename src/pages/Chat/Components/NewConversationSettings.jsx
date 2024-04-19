@@ -27,6 +27,7 @@ import LLMSettings from './LLMSettings';
 import styled from '@emotion/styled';
 import VariableList from '@/pages/Prompts/Components/Form/VariableList';
 import useQueryApplicationDetail from './useQueryApplicationDetail';
+import useQueryDataSourceDetail from './useQueryDataSourceDetail';
 
 const DialogTitleDiv = styled('div')(() => ({
   width: '100%',
@@ -68,8 +69,7 @@ const NewConversationSettings = ({
   useEffect(() => {
     conversationRef.current = conversation
   }, [conversation])
-  
-  
+
   useEffect(() => {
     setCurrentSettingType(conversation.participant_type);
   }, [conversation.participant_type])
@@ -85,6 +85,7 @@ const NewConversationSettings = ({
       : ''),
     [modelOptions, selectedChatModel.integration_uid, selectedChatModel.model_name]);
   const { getApplicationDetail, applicationDetail } = useQueryApplicationDetail();
+  const { getDatasourceDetail, datasourceDetail } = useQueryDataSourceDetail();
   const variables = useMemo(() => conversation?.participant?.variables || [], [conversation?.participant?.variables])
 
   useEffect(() => {
@@ -92,14 +93,30 @@ const NewConversationSettings = ({
       onChangeConversation({
         ...conversationRef.current,
         participant: {
-          ...conversation.participant,
+          ...conversationRef.current.participant,
           variables: [...applicationDetail.version_details.variables],
         },
       })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applicationDetail?.version_details?.variables, onChangeConversation])
-  
+
+  useEffect(() => {
+    if (datasourceDetail?.version_details) {
+      onChangeConversation({
+        ...conversationRef.current,
+        participant: {
+          ...conversationRef.current.participant,
+          chatSettings: datasourceDetail?.version_details?.datasource_settings?.chat,
+          versionId: datasourceDetail?.version_details?.id,
+          context: datasourceDetail?.version_details?.context 
+        },
+      })
+    }
+  }, [
+    datasourceDetail?.version_details,
+    onChangeConversation
+  ])
+
 
   const onSelectType = useCallback((event) => {
     onChangeConversation({
@@ -170,7 +187,8 @@ const NewConversationSettings = ({
         description: datasource.description,
       },
     })
-  }, [conversation, onChangeConversation]);
+    getDatasourceDetail({ projectId: PUBLIC_PROJECT_ID, datasourceId: datasource.value })
+  }, [conversation, getDatasourceDetail, onChangeConversation]);
 
   const onChangeChatApplication = useCallback((application) => {
     onChangeConversation({
