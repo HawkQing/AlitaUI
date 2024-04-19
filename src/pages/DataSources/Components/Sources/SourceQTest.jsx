@@ -14,7 +14,7 @@ export const initialState = {
   qtest_api_base_url: '',
   qtest_api_token: '',
   no_of_test_cases_per_page: undefined,
-  project_id: '',
+  qtest_project_id: '',
   columns: [],
 }
 const SourceQTest = ({ mode }) => {
@@ -29,7 +29,7 @@ const SourceQTest = ({ mode }) => {
     qtest_api_base_url = '',
     qtest_api_token = '',
     no_of_test_cases_per_page = '',
-    project_id = '',
+    qtest_project_id = '',
     columns = []
   } = options
 
@@ -46,10 +46,10 @@ const SourceQTest = ({ mode }) => {
         disabled={isView}
       />
       <FormikInput
-        name='source.options.project_id'
+        name='source.options.qtest_project_id'
         label='Project ID'
         required
-        value={project_id}
+        value={qtest_project_id}
         disabled={isView}
         type="number"
       />

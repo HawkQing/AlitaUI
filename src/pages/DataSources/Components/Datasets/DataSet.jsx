@@ -34,7 +34,7 @@ const validationSchema = yup.object({
     options: yup.object({
       qtest_api_base_url: yup.string('Enter url').required('URL is required'),
       qtest_api_token: yup.string('Enter or select API Key').required('API key is required'),
-      project_id: yup.string('Enter project ID').required('Project ID is required'),
+      qtest_project_id: yup.string('Enter project ID').required('Project ID is required'),
       no_of_test_cases_per_page: yup.string('Enter test cases per page').required('Test cases count per page is required'),
     })
   }),
