@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind */
 import { useDatasetCreateMutation, useDatasetUpdateMutation } from "@/api/datasources.js";
-import {ComponentMode, sioEvents, VITE_SERVER_URL} from "@/common/constants";
+import { ComponentMode, sioEvents, VITE_SERVER_URL } from "@/common/constants";
 import AlertDialogV2 from "@/components/AlertDialogV2";
 import Button from '@/components/Button';
 import CheckLabel from "@/components/CheckLabel";
@@ -28,10 +28,17 @@ const initialState = {
 };
 
 const validationSchema = yup.object({
-  source: yup.object({
+  source: yup.object().shape({
     name: yup.string('Enter dataset name').required('Name is required'),
-  })
-})
+    type: yup.string(),
+    options: yup.object({
+      qtest_api_base_url: yup.string('Enter url').required('URL is required'),
+      qtest_api_token: yup.string('Enter or select API Key').required('API key is required'),
+      project_id: yup.string('Enter project ID').required('Project ID is required'),
+      no_of_test_cases_per_page: yup.string('Enter test cases per page').required('Test cases count per page is required'),
+    })
+  }),
+});
 
 const FormWithBlocker = ({
   initialValues,
@@ -262,7 +269,7 @@ export const ViewEditDataset = ({ data, datasourceVersionId, datasourceVersionUU
     }
 
     const filename = data?.task_id + '.log';
-    const url =  VITE_SERVER_URL + '/artifacts/artifact/default/' + projectId + '/dataset-logs/index_' + filename
+    const url = VITE_SERVER_URL + '/artifacts/artifact/default/' + projectId + '/dataset-logs/index_' + filename
     downloadFile({
       url,
       filename,
@@ -330,6 +337,7 @@ export const ViewEditDataset = ({ data, datasourceVersionId, datasourceVersionUU
         <Formik
           initialValues={initialValues}
           onSubmit={handleSubmit}
+          validationSchema={validationSchema}
         >
           <FormWithBlocker
             id={'dataset-form' + data?.id}

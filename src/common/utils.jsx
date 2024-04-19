@@ -506,5 +506,20 @@ export const parseCustomJsonTool = (customJsonStr) => {
   return parsedFunctions
 }
 
+export function getValueByPath(obj, path) {
+  const keys = path.split('.');
+  let current = obj;
+
+  for (let i = 0; i < keys.length; i++) {
+    if (current[keys[i]] === undefined) {
+      return undefined;
+    } else {
+      current = current[keys[i]];
+    }
+  }
+
+  return current;
+}
+
 export default renderStatusComponent;
 
