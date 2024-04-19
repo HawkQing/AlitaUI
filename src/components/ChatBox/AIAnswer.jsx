@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -17,6 +17,9 @@ import ListItemText from "@mui/material/ListItemText";
 import BasicAccordion from "@/components/BasicAccordion.jsx";
 import AnimatedProgress from '@/components/AnimatedProgress';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
+import { useTheme } from '@emotion/react';
+import { formatDistanceToNow } from 'date-fns';
+import { getIcon } from '@/pages/Chat/Components/ParticipantItem';
 
 export const UserMessageContainer = styled(ListItem)(() => ({
   flex: '1 0 0',
@@ -85,8 +88,11 @@ export const ReferenceList = ({ references }) => {
 }
 
 const AIAnswer = React.forwardRef((props, ref) => {
+  const theme = useTheme();
   const {
     answer,
+    created_at,
+    participant,
     hasActions = true,
     onCopy,
     onCopyToMessages,
@@ -97,6 +103,7 @@ const AIAnswer = React.forwardRef((props, ref) => {
     isLoading = false,
     isStreaming,
     onStop,
+    verticalMode,
   } = props
   const [showActions, setShowActions] = useState(false);
   const onMouseEnter = useCallback(
@@ -115,14 +122,40 @@ const AIAnswer = React.forwardRef((props, ref) => {
   )
 
   return (
-    <AIAnswerContainer ref={ref} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-      <ListItemAvatar sx={{ minWidth: '24px' }}>
-        <AlitaIcon sx={{ fontSize: 24 }} />
-      </ListItemAvatar>
-      <Answer>
+    <AIAnswerContainer sx={verticalMode ? { flexDirection: 'column', gap: '8px', padding: '12px 0px 12px 0px', background: 'transparent' } : undefined} ref={ref} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      {verticalMode ?
+        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0px 4px 0px 4px' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px', height: '100%' }}>
+            <Box sx={{width: '24px', height: '24px',display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: '12px', background: theme.palette.background.aiParticipantIcon }}>
+              {getIcon(participant.type, true, theme, false)}
+            </Box>
+            <Typography variant='bodySmall' color='secondary'>
+              {participant.name || participant.model_name}
+            </Typography>
+          </Box>
+          <Typography variant='bodySmall'>
+            {formatDistanceToNow(new Date(created_at)) + ' ago'}
+          </Typography>
+        </Box>
+        :
+        <ListItemAvatar sx={{ minWidth: '24px' }}>
+          <AlitaIcon sx={{ fontSize: 24 }} />
+        </ListItemAvatar>
+      }
+
+      <Answer sx={verticalMode ? {
+        background: theme.palette.background.aiAnswerBkg,
+        width: '100%',
+        borderRadius: '8px',
+        padding: '12px 16px 12px 16px',
+        position: 'relative',
+        boxSizing: 'border-box',
+        minHeight: '48px',
+        flex: 1,
+      } : undefined}>
         {showActions && <ButtonsContainer>
           {
-            isStreaming && 
+            isStreaming &&
             <StyledTooltip title={'Stop generating'} placement="top">
               <IconButton onClick={onStop}>
                 <StopCircleOutlinedIcon sx={{ fontSize: '1.3rem' }} color="icon" />
@@ -175,7 +208,7 @@ const AIAnswer = React.forwardRef((props, ref) => {
           message='Thinking...'
           duration='2s'
         />}
-        {references?.length > 0 && <BasicAccordion style={{ marginTop:  answer ? '15px' : '37px' }} items={[
+        {references?.length > 0 && <BasicAccordion style={{ marginTop: answer ? '15px' : '37px' }} items={[
           { title: 'References', content: <ReferenceList references={references} /> }
         ]} />}
       </Answer>

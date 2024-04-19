@@ -11,6 +11,8 @@ import DeleteIcon from '../Icons/DeleteIcon';
 import StyledTooltip from '../Tooltip';
 import CopyMoveIcon from '../Icons/CopyMoveIcon';
 import IconButton from '@mui/material/IconButton';
+import { useTheme } from '@emotion/react';
+import { formatDistanceToNow } from 'date-fns';
 
 const UserMessageContainer = styled(ListItem)(() => `
   flex: 1 0 0
@@ -42,7 +44,8 @@ background: ${theme.palette.background.userMessageActions};
 `);
 
 const UserMessage = React.forwardRef((props, ref) => {
-  const { content, onCopy, onCopyToMessages, onDelete } = props;
+  const theme = useTheme()
+  const { content, created_at, onCopy, onCopyToMessages, onDelete, verticalMode } = props;
   const avatar = useSelector((state) => state.user?.avatar);
   const userName = useSelector((state) => state.user?.name);
   const [showActions, setShowActions] = useState(false);
@@ -60,17 +63,34 @@ const UserMessage = React.forwardRef((props, ref) => {
   )
 
   return (
-    <UserMessageContainer ref={ref} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-      <ListItemAvatar sx={{ minWidth: '24px' }}>
-        <UserAvatar name={userName} avatar={avatar} size={24} />
-      </ListItemAvatar>
-      <Message>
+    <UserMessageContainer sx={verticalMode ? { flexDirection: 'column', gap: '8px', padding: '12px 0px 12px 0px ' } : undefined} ref={ref} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      {verticalMode ?
+        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0px 4px 0px 4px' }}>
+          <ListItemAvatar sx={{ minWidth: '24px' }}>
+            <UserAvatar name={userName} avatar={avatar} size={24} />
+          </ListItemAvatar>
+          <Typography variant='bodySmall'>
+            {formatDistanceToNow(new Date(created_at)) + ' ago'}
+          </Typography>
+        </Box>
+        :
+        <ListItemAvatar sx={{ minWidth: '24px' }}>
+          <UserAvatar name={userName} avatar={avatar} size={24} />
+        </ListItemAvatar>
+      }
+      <Message sx={verticalMode ? {
+        background: theme.palette.background.aiAnswerBkg,
+        width: '100%',
+        borderRadius: '8px',
+        padding: '12px 16px 12px 16px',
+        position: 'relative'
+      } : undefined}>
         {
           content.split('\n').map((string, index) =>
           (<Box key={index}>
             <Typography sx={{
               whiteSpace: 'normal',
-              overflowWrap: 'break-word', 
+              overflowWrap: 'break-word',
               wordWrap: 'break-word',
               wordBreak: 'break-word'
             }} variant='bodyMedium'>
@@ -78,7 +98,7 @@ const UserMessage = React.forwardRef((props, ref) => {
             </Typography>
           </Box>))
         }
-        {showActions && <ButtonsContainer>
+        {showActions && <ButtonsContainer sx={verticalMode ? { top: '4px', background: theme.palette.background.aiAnswerActions } : undefined}>
           {
             onCopy &&
             <StyledTooltip title={'Copy to clipboard'} placement="top">

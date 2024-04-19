@@ -6,7 +6,7 @@ import { useCallback, useMemo, useState } from 'react';
 import DotMenu from "@/components/DotMenu";
 import DeleteIcon from '../../../components/Icons/DeleteIcon';
 
-const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected = false, collapsed }) => {
+const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = false, collapsed }) => {
   const { name, participants, is_public, chat_history = [] } = conversation
   const [isHovering, setIsHovering] = useState(false);
   const participantCount = useMemo(() => {
@@ -56,7 +56,7 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected 
     <Box
       sx={{
         borderBottom: `1px solid ${theme.palette.border.lines}`,
-        borderLeft: isSelected ? `3px solid ${theme.palette.primary.main}` : '0px solid',
+        borderLeft: isActive ? `3px solid ${theme.palette.primary.main}` : '0px solid',
         padding: '12px 16px',
         gap: '12px',
         display: 'flex',
@@ -64,11 +64,11 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isSelected 
         alignItems: 'flex-start',
         width: '100%',
         boxSizing: 'border-box',
-        background: isSelected ? theme.palette.background.button.default : 'transparent',
-        borderTopRightRadius: isSelected ? '6px' : '0px',
-        borderTopLeftRadius: isSelected ? '6px' : '0px',
-        borderBottomRightRadius: isSelected ? '6px' : '0px',
-        borderBottomLeftRadius: isSelected ? '6px' : '0px',
+        background: isActive ? theme.palette.background.button.default : 'transparent',
+        borderTopRightRadius: isActive ? '6px' : '0px',
+        borderTopLeftRadius: isActive ? '6px' : '0px',
+        borderBottomRightRadius: isActive ? '6px' : '0px',
+        borderBottomLeftRadius: isActive ? '6px' : '0px',
         ':hover': {
           background: theme.palette.background.userInputBackground,
           borderTopRightRadius: '6px',

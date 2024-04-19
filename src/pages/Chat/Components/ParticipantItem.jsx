@@ -8,18 +8,18 @@ import SettingIcon from '@/components/Icons/SettingIcon';
 import { Box, Typography, useTheme } from '@mui/material';
 import { useCallback, useState } from 'react';
 
-export const getIcon = (type, isActive, theme) => {
+export const getIcon = (type, isActive, theme, showBigIcon = false) => {
   switch (type) {
     case 'prompts':
-      return <ConsoleIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
-    case 'datasource':
-      return <DatabaseIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+      return <ConsoleIcon fontSize={showBigIcon ? '24px' : '16px'} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+    case 'datasources':
+      return <DatabaseIcon fontSize={showBigIcon ? '24px' : '16px'} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
     case 'applications':
-      return <ApplicationsIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+      return <ApplicationsIcon width={showBigIcon ? '24px' : '16px'} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
     case 'models':
-      return <ModelIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+      return <ModelIcon width={showBigIcon ? 24 : 16} height={showBigIcon ? 24 : 16} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
     default:
-      return <EmojiIcon fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} fontSize={'16px'} />
+      return <EmojiIcon width={showBigIcon ? 24 : 16} height={showBigIcon ? 24 : 16} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} fontSize={showBigIcon ? '24px' : '16px'} />
   }
 }
 

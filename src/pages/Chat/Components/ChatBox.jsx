@@ -5,6 +5,7 @@ import {
   DEFAULT_TEMPERATURE,
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
+  PUBLIC_PROJECT_ID,
   ROLES,
   sioEvents,
   SocketMessageType,
@@ -13,7 +14,7 @@ import {
 import { buildErrorMessage } from '@/common/utils';
 import useSocket, { useManualSocket } from "@/hooks/useSocket.jsx";
 import { useProjectId } from '@/pages/hooks';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import ChatInput from '@/components/ChatBox/ChatInput';
 import Toast from '@/components/Toast.jsx';
@@ -25,72 +26,12 @@ import AIAnswer from '@/components/ChatBox/AIAnswer';
 import { AUTO_SCROLL_KEY } from '@/components/ChatBox/AutoScrollToggle';
 import useDeleteMessageAlert from '@/components/ChatBox/useDeleteMessageAlert';
 import NewConversationSettings from './NewConversationSettings';
-import { Box, Typography } from '@mui/material';
 import { useTheme } from '@emotion/react';
-import { getIcon } from './ParticipantItem';
-import CloseIcon from '@/components/Icons/CloseIcon.jsx';
+import ActiveParticipantBox from './ActiveParticipantBox';
+import { generateChatPayload } from '@/components/ChatBox/ChatBox';
+import { generateDatasourceChatPayload } from '@/pages/DataSources/Components/Datasources/ChatPanel';
 
 const USE_STREAM = true
-
-const generatePayload = ({
-  projectId, prompt_id, context, temperature,
-  max_tokens, top_p, top_k, model_name, integration_uid,
-  variables, messages, type, name, stream = true, currentVersionId
-}) => ({
-  prompt_id,
-  projectId,
-
-  user_name: name,
-  project_id: projectId,
-  prompt_version_id: currentVersionId,
-
-  type,
-  context,
-  model_settings: {
-    temperature,
-    max_tokens,
-    top_p,
-    top_k,
-    stream,
-    model: {
-      model_name,
-      name: model_name, //TODO: (model_name) if the BE is ready, this "name" field should be removed
-      integration_uid,
-    }
-  },
-  variables: variables ? variables.map((item) => {
-    const { key, value } = item;
-    return {
-      name: key,
-      value,
-    }
-  }) : [],
-  messages,
-  format_response: true,
-})
-
-const generateChatPayload = ({
-  projectId, prompt_id, context, temperature,
-  max_tokens, top_p, top_k, model_name, integration_uid,
-  variables, question, messages, chatHistory, name, stream = true,
-  currentVersionId
-}) => {
-  const payload = generatePayload({
-    projectId, prompt_id, context, temperature,
-    max_tokens, top_p, top_k, model_name, integration_uid,
-    variables, messages, type: 'chat', name, stream, currentVersionId
-  })
-  payload.chat_history = chatHistory ? chatHistory.map((message) => {
-    const { role, content, name: userName } = message;
-    if (userName) {
-      return { role, content, name: userName };
-    } else {
-      return { role, content }
-    }
-  }) : []
-  payload.user_input = question
-  return payload
-}
 
 
 const ChatBox = forwardRef((props, boxRef) => {
@@ -105,28 +46,22 @@ const ChatBox = forwardRef((props, boxRef) => {
     isNewConversation,
     onStartNewConversation,
     activeParticipant,
-    onClearActiveParticipant
+    onClearActiveParticipant,
+    activeConversation,
+    setChatHistory
   } = props
   const [conversation, setConversation] = useState({
-    id: new Date().getTime(),
     name: 'New Conversation',
     is_public: false,
     participant: {
       type: 'models'
     },
     participant_type: 'models',
+    chat_history: [],
   })
-  const {
-    max_tokens = DEFAULT_MAX_TOKENS,
-    top_p = DEFAULT_TOP_P,
-    top_k = DEFAULT_TOP_K,
-    temperature = DEFAULT_TEMPERATURE,
-    integration_uid,
-    model_name,
-  } = conversation.participant
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
   const { name } = useSelector(state => state.user)
-  const [chatHistory, setChatHistory] = useState([]);
+  const chat_history = useMemo(() => activeConversation?.chat_history || [], [activeConversation?.chat_history]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastSeverity, setToastSeverity] = useState('info')
@@ -137,11 +72,68 @@ const ChatBox = forwardRef((props, boxRef) => {
   const messagesEndRef = useRef();
   const listRefs = useRef([]);
   const activeParticipantRef = useRef();
-  const chatHistoryRef = useRef(chatHistory);
+  const chatHistoryRef = useRef(chat_history);
+  const setChatHistoryRef = useRef(setChatHistory);
+
+  const getPayload = useCallback((question, chatHistory) => {
+    const realParticipant = activeParticipant || conversation.participant || {};
+    const {
+      max_tokens = DEFAULT_MAX_TOKENS,
+      top_p = DEFAULT_TOP_P,
+      top_k = DEFAULT_TOP_K,
+      temperature = DEFAULT_TEMPERATURE,
+      integration_uid,
+      model_name,
+    } = realParticipant
+    return realParticipant.type === 'datasources' ? { ...generateDatasourceChatPayload(question, realParticipant.context, chatHistory || chat_history, realParticipant.chatSettings), project_id: PUBLIC_PROJECT_ID, version_id: realParticipant.versionId } :
+      generateChatPayload({
+        projectId, prompt_id, context, temperature, max_tokens, top_p,
+        top_k, model_name, integration_uid, variables, question, messages,
+        chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId
+      })
+  }, [
+    conversation.participant,
+    activeParticipant,
+    chat_history,
+    context,
+    currentVersionId,
+    messages,
+    name,
+    projectId,
+    prompt_id,
+    variables])
+
+  // const getPayloadRef = useRef(getPayload);
+
+  // useEffect(() => {
+  //   getPayloadRef.current = getPayload;
+  // }, [getPayload]);
 
   useEffect(() => {
     activeParticipantRef.current = activeParticipant;
   }, [activeParticipant]);
+
+  useEffect(() => {
+    chatHistoryRef.current = chat_history;
+  }, [chat_history]);
+
+  useEffect(() => {
+    setChatHistoryRef.current = setChatHistory;
+  }, [setChatHistory]);
+
+  useEffect(() => {
+    if (!isNewConversation) {
+      setConversation({
+        name: 'New Conversation',
+        is_public: false,
+        participant: {
+          type: 'models'
+        },
+        participant_type: 'models',
+        chat_history: [],
+      });
+    }
+  }, [isNewConversation]);
 
   const {
     openAlert,
@@ -151,23 +143,23 @@ const ChatBox = forwardRef((props, boxRef) => {
     onConfirmDelete,
     onCloseAlert
   } = useDeleteMessageAlert({
-    setChatHistory,
+    setChatHistory: setChatHistoryRef.current,
     chatInput,
   });
 
   const onClickClearChat = useCallback(() => {
-    if (chatHistory.length) {
+    if (chat_history?.length) {
       onDeleteAll();
     }
-  }, [chatHistory.length, onDeleteAll])
+  }, [chat_history?.length, onDeleteAll])
 
   useImperativeHandle(boxRef, () => ({
     onClear: onClickClearChat,
   }));
 
   useEffect(() => {
-    chatHistoryRef.current = chatHistory;
-  }, [chatHistory]);
+    chatHistoryRef.current = chat_history;
+  }, [chat_history]);
 
   const getMessage = useCallback((messageId) => {
     const msgIdx = chatHistoryRef.current?.findIndex(i => i.id === messageId) || -1;
@@ -178,7 +170,8 @@ const ChatBox = forwardRef((props, boxRef) => {
         role: ROLES.Assistant,
         content: '',
         isLoading: false,
-        participant: { ...(activeParticipantRef.current || {}) }
+        participant: { ...(activeParticipantRef.current || {}) },
+        created_at: new Date().getTime(),
       }
     } else {
       msg = chatHistoryRef.current[msgIdx]
@@ -228,7 +221,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         msg.isStreaming = false
         msg.content = ''
         msg.references = []
-        msgIndex === -1 ? setChatHistory(prevState => [...prevState, msg]) : setChatHistory(prevState => {
+        msgIndex === -1 ? setChatHistoryRef.current(prevState => [...prevState, msg]) : setChatHistoryRef.current(prevState => {
           prevState[msgIndex] = msg
           return [...prevState]
         })
@@ -250,6 +243,9 @@ const ChatBox = forwardRef((props, boxRef) => {
         break
       case SocketMessageType.References:
         msg.references = message.references
+        msg.isLoading = false
+        msg.isStreaming = true
+        setTimeout(scrollToMessageBottom, 0);
         break
       case SocketMessageType.Error:
         msg.isStreaming = false
@@ -262,67 +258,45 @@ const ChatBox = forwardRef((props, boxRef) => {
         console.warn('unknown message type', socketMessageType)
         return
     }
-    msgIndex > -1 && setChatHistory(prevState => {
+    msgIndex > -1 && setChatHistoryRef.current(prevState => {
       prevState[msgIndex] = msg
       return [...prevState]
     })
   }, [getMessage, handleError, scrollToMessageListEnd])
 
-  const { emit } = useSocket(sioEvents.promptlib_predict, handleSocketEvent)
+  const streamingEvent = useMemo(() =>
+    (activeParticipant?.type || conversation.participant.type) === 'datasources'
+      ?
+      sioEvents.datasource_predict 
+      :
+      sioEvents.promptlib_predict, [activeParticipant?.type, conversation.participant.type])
+
+  const { emit } = useSocket(streamingEvent, handleSocketEvent)
 
   const onPredictStream = useCallback(question => {
     if (isNewConversation) {
       onStartNewConversation(conversation);
     }
     setTimeout(scrollToMessageListEnd, 0);
-    setChatHistory((prevMessages) => {
+    setChatHistoryRef.current((prevMessages) => {
       return [...prevMessages, {
         id: new Date().getTime(),
         role: ROLES.User,
         name,
         content: question,
+        created_at: new Date().getTime()
       }]
     })
-    const payload = generateChatPayload({
-      projectId, prompt_id, context, temperature, max_tokens, top_p,
-      top_k, model_name, integration_uid, variables, question, messages,
-      chatHistory, name, stream: true, currentVersionId
-    })
+    const payload = getPayload(question)
     emit(payload)
   },
-    [
-      messages,
-      context,
-      integration_uid,
-      max_tokens,
-      chatHistory,
-      setChatHistory,
-      model_name,
-      name,
-      prompt_id,
-      temperature,
-      top_p,
-      top_k,
-      variables,
-      projectId,
-      emit,
-      currentVersionId,
-      onStartNewConversation,
-      scrollToMessageListEnd,
-      conversation,
-      isNewConversation,
-    ])
+    [isNewConversation, scrollToMessageListEnd, getPayload, emit, onStartNewConversation, conversation, name])
 
   const onClickSend = useCallback(
     async (question) => {
       onStartNewConversation();
-      const payload = generateChatPayload({
-        projectId, prompt_id, context, temperature, max_tokens,
-        top_p, top_k, model_name, integration_uid, variables,
-        question, messages, chatHistory, name, stream: false,
-        currentVersionId
-      })
-      setChatHistory((prevMessages) => {
+      const payload = getPayload(question)
+      setChatHistoryRef.current((prevMessages) => {
         return [...prevMessages, {
           id: new Date().getTime(),
           role: 'user',
@@ -333,25 +307,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       askAlita(payload);
       setTimeout(scrollToMessageListEnd, 0);
     },
-    [
-      askAlita,
-      messages,
-      context,
-      integration_uid,
-      max_tokens,
-      chatHistory,
-      model_name,
-      name,
-      prompt_id,
-      temperature,
-      top_p,
-      top_k,
-      variables,
-      projectId,
-      currentVersionId,
-      onStartNewConversation,
-      scrollToMessageListEnd
-    ]);
+    [onStartNewConversation, getPayload, askAlita, scrollToMessageListEnd, name]);
 
 
   const onCloseToast = useCallback(
@@ -367,14 +323,14 @@ const ChatBox = forwardRef((props, boxRef) => {
     onStopStreaming
   } = useStopStreaming({
     chatHistoryRef,
-    chatHistory,
+    chatHistory: chat_history,
     setChatHistory,
     manualEmit,
   });
 
   const onCopyToClipboard = useCallback(
     (id) => async () => {
-      const message = chatHistory.find(item => item.id === id);
+      const message = chat_history.find(item => item.id === id);
       if (message) {
         await navigator.clipboard.writeText(message.content);
         setShowToast(true);
@@ -382,44 +338,24 @@ const ChatBox = forwardRef((props, boxRef) => {
         setToastSeverity('success');
       }
     },
-    [chatHistory],
+    [chat_history],
   );
 
   const onRegenerateAnswerStream = useCallback(id => async () => {
-    const questionIndex = chatHistory.findIndex(item => item.id === id) - 1;
-    const theQuestion = chatHistory[questionIndex]?.content;
-    const leftChatHistory = chatHistory.slice(0, questionIndex);
+    const questionIndex = chat_history.findIndex(item => item.id === id) - 1;
+    const theQuestion = chat_history[questionIndex]?.content;
+    const leftChatHistory = chat_history.slice(0, questionIndex);
 
-    const payload = generateChatPayload({
-      projectId, prompt_id, context, temperature, max_tokens, top_p, top_k,
-      model_name, integration_uid, variables, question: theQuestion, messages,
-      chatHistory: leftChatHistory, name, stream: true, currentVersionId
-    })
+    const payload = getPayload(theQuestion, leftChatHistory)
     payload.message_id = id
     emit(payload)
-  }, [
-    chatHistory,
-    context,
-    integration_uid,
-    max_tokens,
-    messages,
-    model_name,
-    prompt_id,
-    temperature,
-    top_p,
-    variables,
-    projectId,
-    emit,
-    name,
-    top_k,
-    currentVersionId
-  ]);
+  }, [chat_history, getPayload, emit]);
 
   const onRegenerateAnswer = useCallback(
     (id) => () => {
       setIsRegenerating(true);
       setAnswerIdToRegenerate(id);
-      setChatHistory((prevMessages) => {
+      setChatHistoryRef.current((prevMessages) => {
         return prevMessages.map(
           message => message.id !== id ?
             message
@@ -427,35 +363,15 @@ const ChatBox = forwardRef((props, boxRef) => {
             ({ ...message, content: 'regenerating...' }));
       });
       chatInput.current?.reset();
-      const questionIndex = chatHistory.findIndex(item => item.id === id) - 1;
-      const theQuestion = chatHistory[questionIndex]?.content;
-      const leftChatHistory = chatHistory.slice(0, questionIndex);
+      const questionIndex = chat_history.findIndex(item => item.id === id) - 1;
+      const theQuestion = chat_history[questionIndex]?.content;
+      const leftChatHistory = chat_history.slice(0, questionIndex);
 
-      const payload = generateChatPayload({
-        projectId, prompt_id, context, temperature, max_tokens, top_p, top_k,
-        model_name, integration_uid, variables, question: theQuestion, messages,
-        chatHistory: leftChatHistory, name, stream: false, currentVersionId
-      })
+      const payload = getPayload(theQuestion, leftChatHistory)
       payload.message_id = id
       askAlita(payload);
     },
-    [
-      askAlita,
-      chatHistory,
-      context,
-      integration_uid,
-      max_tokens,
-      messages,
-      model_name,
-      prompt_id,
-      temperature,
-      top_p,
-      variables,
-      projectId,
-      name,
-      top_k,
-      currentVersionId
-    ],
+    [chat_history, getPayload, askAlita],
   );
 
   useEffect(() => {
@@ -467,7 +383,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     }
     if (answer) {
       if (!isRegenerating) {
-        setChatHistory((prevMessages) => {
+        setChatHistoryRef.current((prevMessages) => {
           return [...prevMessages, {
             id: new Date().getTime(),
             role: 'assistant',
@@ -475,7 +391,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           }];
         });
       } else {
-        setChatHistory((prevMessages) => {
+        setChatHistoryRef.current((prevMessages) => {
           return prevMessages.map(
             message => message.id !== answerIdToRegenerate ?
               message
@@ -516,20 +432,25 @@ const ChatBox = forwardRef((props, boxRef) => {
             !isNewConversation ?
               <MessageList sx={messageListSX}>
                 {
-                  chatHistory.map((message, index) => {
+                  chat_history.map((message, index) => {
                     return message.role === 'user' ?
                       <UserMessage
                         key={message.id}
+                        verticalMode
                         ref={(ref) => (listRefs.current[index] = ref)}
                         content={message.content}
+                        created_at={message.created_at}
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                       />
                       :
                       <AIAnswer
                         key={message.id}
+                        verticalMode
                         ref={(ref) => (listRefs.current[index] = ref)}
                         answer={message.content}
+                        created_at={message.created_at}
+                        participant={message.participant}
                         onStop={onStopStreaming(message.id)}
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
@@ -547,36 +468,14 @@ const ChatBox = forwardRef((props, boxRef) => {
               <NewConversationSettings
                 conversation={conversation}
                 onChangeConversation={setConversation}
-
               />
           }
           {
-            activeParticipant && <Box sx={{
-              width: '100%',
-              borderTop: `1px solid ${theme.palette.border.lines}`,
-              padding: '8px 16px 8px 16px',
-              gap: '12px',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px' }}>
-                <Box sx={{ width: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  {
-                    getIcon(activeParticipant.type, false, theme)
-                  }
-                </Box>
-                <Typography variant='bodyMedium' color='secondary'>
-                  {activeParticipant.name || activeParticipant.model_name}
-                </Typography>
-
-              </Box>
-              <Box style={{ cursor: 'pointer', width: '20px', height: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                onClick={onClearActiveParticipant}>
-                <CloseIcon fontSize='16px' />
-              </Box>
-            </Box>
+            !isNewConversation && activeConversation.id &&
+            <ActiveParticipantBox
+              activeParticipant={activeParticipant}
+              onClearActiveParticipant={onClearActiveParticipant}
+            />
           }
           <ChatInput
             ref={chatInput}

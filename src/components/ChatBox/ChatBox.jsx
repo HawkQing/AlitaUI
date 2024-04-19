@@ -44,7 +44,7 @@ import ApplicationAnswer from './ApplicationAnswer';
 
 const USE_STREAM = true
 
-const generatePayload = ({
+export const generatePayload = ({
   projectId, prompt_id, context, temperature,
   max_tokens, top_p, top_k, model_name, integration_uid,
   variables, messages, type, name, stream = true, currentVersionId
@@ -81,7 +81,7 @@ const generatePayload = ({
   format_response: true,
 })
 
-const generateChatPayload = ({
+export const generateChatPayload = ({
   projectId, prompt_id, context, temperature,
   max_tokens, top_p, top_k, model_name, integration_uid,
   variables, question, messages, chatHistory, name, stream = true,

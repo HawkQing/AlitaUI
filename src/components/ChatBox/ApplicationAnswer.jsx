@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Markdown from '../Markdown';
@@ -14,12 +14,14 @@ import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import { UserMessageContainer, Answer, ButtonsContainer, ReferenceList } from './AIAnswer';
 import { useTheme } from '@emotion/react';
 import ToolAction from './ToolAction';
+import { formatDistanceToNow } from 'date-fns';
 
 
 const ApplicationAnswer = React.forwardRef((props, ref) => {
   const theme = useTheme();
   const {
     answer,
+    created_at,
     hasActions = true,
     onCopy,
     onDelete,
@@ -30,6 +32,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     isLoading = false,
     isStreaming,
     onStop,
+    verticalMode = true,
   } = props
   const [showActions, setShowActions] = useState(false);
   const onMouseEnter = useCallback(
@@ -48,11 +51,22 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   )
 
   return (
-    <UserMessageContainer onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-      <ListItemAvatar sx={{ minWidth: '24px' }}>
-        <AlitaIcon sx={{ fontSize: 24 }} />
-      </ListItemAvatar>
-      <Box sx={{ flex: 1 }}>
+    <UserMessageContainer sx={verticalMode ? { flexDirection: 'column', gap: '8px', padding: '12px 0px 12px 0px', background: 'transparent' } : undefined} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      {verticalMode ?
+        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0px 4px 0px 4px' }}>
+          <ListItemAvatar sx={{ minWidth: '24px' }}>
+            <AlitaIcon sx={{ fontSize: 24 }} />
+          </ListItemAvatar>
+          <Typography variant='bodySmall'>
+            {formatDistanceToNow(new Date(created_at)) + ' ago'}
+          </Typography>
+        </Box>
+        :
+        <ListItemAvatar sx={{ minWidth: '24px' }}>
+          <AlitaIcon sx={{ fontSize: 24 }} />
+        </ListItemAvatar>
+      }
+      <Box sx={verticalMode ? { width: '100%' } : { flex: 1 }}>
         {
           toolActions.map((action) => {
             return <ToolAction action={action} key={action.id} />

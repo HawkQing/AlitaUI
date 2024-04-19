@@ -20,7 +20,7 @@ export default function ApplicationSelect({
   return (
     <SingleSelectWithSearch
       required={required}
-      label='Datasource'
+      label='Application'
       value={value}
       onValueChange={onValueChange}
       searchString={query}

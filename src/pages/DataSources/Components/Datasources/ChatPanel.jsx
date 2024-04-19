@@ -27,7 +27,7 @@ import AdvancedChatSettings from './AdvancedChatSettings';
 import ChatSettings from './ChatSettings';
 
 const MESSAGE_REFERENCE_ROLE = 'reference'
-const generatePayload = (question, context, chatHistory, chatSettings) => {
+export const generateDatasourceChatPayload = (question, context, chatHistory, chatSettings) => {
   return {
     input: question,
     context: context,
@@ -215,7 +215,7 @@ const ChatPanel = ({
         content: question,
       }]
     })
-    const payload = generatePayload(question, context, chatHistory, chatSettings)
+    const payload = generateDatasourceChatPayload(question, context, chatHistory, chatSettings)
     emit({ ...payload, project_id: currentProjectId, version_id: versionId })
   }, [
     chatHistory,
@@ -235,7 +235,7 @@ const ChatPanel = ({
     const questionIndex = chatHistory.findIndex(item => item.id === id) - 1;
     const theQuestion = chatHistory[questionIndex].content;
     const leftChatHistory = chatHistory.slice(0, questionIndex);
-    const payload = generatePayload(theQuestion, context, leftChatHistory, chatSettings)
+    const payload = generateDatasourceChatPayload(theQuestion, context, leftChatHistory, chatSettings)
 
     emit({ ...payload, project_id: currentProjectId, version_id: versionId, message_id: id })
   }, [
