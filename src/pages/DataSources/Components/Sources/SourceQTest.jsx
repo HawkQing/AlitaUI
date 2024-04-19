@@ -47,7 +47,7 @@ const SourceQTest = ({ mode }) => {
       />
       <FormikInput
         name='source.options.qtest_project_id'
-        label='Project ID'
+        label='QTest Project ID'
         required
         value={qtest_project_id}
         disabled={isView}
