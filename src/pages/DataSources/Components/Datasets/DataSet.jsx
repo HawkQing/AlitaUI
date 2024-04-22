@@ -159,6 +159,10 @@ export const CreateDataset = ({ handleCancel, datasourceVersionId }) => {
                 handleCancel={handleCancel}
                 initialValues={initialState}
                 submitButtonLabel='Create'
+                onSubmit={async e => {
+                  e.preventDefault()
+                  await handleSubmit(values)
+                }}
               >
                 <Source mode={ComponentMode.CREATE} />
                 <Transformers readOnly={false} />
