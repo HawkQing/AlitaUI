@@ -1,21 +1,20 @@
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
-import CancelIcon from '@/components/Icons/CancelIcon';
 import ConsoleIcon from '@/components/Icons/ConsoleIcon';
 import DatabaseIcon from '@/components/Icons/DatabaseIcon';
 import EmojiIcon from '@/components/Icons/EmojiIcon';
 import ModelIcon from '@/components/Icons/ModelIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import { Box, Typography, useTheme } from '@mui/material';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 export const getIcon = (type, isActive, theme, showBigIcon = false) => {
   switch (type) {
     case 'prompts':
       return <ConsoleIcon fontSize={showBigIcon ? '24px' : '16px'} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
     case 'datasources':
-      return <DatabaseIcon fontSize={showBigIcon ? '24px' : '16px'} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+      return <DatabaseIcon fontSize={showBigIcon ? '24px' : '16px'} sx={{ color: isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default }} />
     case 'applications':
-      return <ApplicationsIcon width={showBigIcon ? '24px' : '16px'} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
+      return <ApplicationsIcon sx={{ color: isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default, fontSize: showBigIcon ? 24 : 16 }} />
     case 'models':
       return <ModelIcon width={showBigIcon ? 24 : 16} height={showBigIcon ? 24 : 16} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
     default:
@@ -23,15 +22,26 @@ export const getIcon = (type, isActive, theme, showBigIcon = false) => {
   }
 }
 
-const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem }) => {
+const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, onShowSettings }) => {
   const { type, name, model_name } = participant
-  const [showSettings, setShowSettings] = useState(false)
+  const hasSettings = useMemo(() => {
+    switch (participant.type) {
+      case 'models':
+        return true;
+      case 'prompts':
+      case 'applications':
+        return !!participant.variables?.length;
+      default:
+        return false;
+    }
+  }, [participant.type, participant.variables])
   const theme = useTheme();
-  const onShowSettings = useCallback(
-    () => {
-      setShowSettings(prev => !prev);
+  const onClickSettings = useCallback(
+    (event) => {
+      event.stopPropagation();
+      onShowSettings(participant);
     },
-    [],
+    [onShowSettings, participant],
   )
   const onClickHandler = useCallback(
     () => {
@@ -59,6 +69,9 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem })
         ':hover': {
           background: theme.palette.border.table,
         },
+        '&:hover #SettingButton': {
+          visibility: 'visible',
+        },
       }}
     >
       <Box sx={{ width: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -73,18 +86,20 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem })
           }
         </Typography>
       </Box>}
-      {!collapsed && <Box
+      {!collapsed && hasSettings && <Box
+        id='SettingButton'
         sx={{
           width: '24px',
           height: '100%',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          visibility: 'hidden',
         }}
-        onClick={onShowSettings}
+        onClick={onClickSettings}
       >
-        {showSettings ? <CancelIcon /> : <SettingIcon fill={theme.palette.icon.fill.default} fontSize={'16pz'} />}
+        <SettingIcon fill={theme.palette.icon.fill.default} fontSize={'16pz'} />
       </Box>}
     </Box>
   )

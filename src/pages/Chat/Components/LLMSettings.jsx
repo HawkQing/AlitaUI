@@ -1,7 +1,7 @@
 import {
   Box,
 } from '@mui/material';
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   PROMPT_PAYLOAD_KEY,
   DEFAULT_TOP_K,
@@ -50,8 +50,15 @@ const LLMSettings = ({
 
   const onInputMaxTokens = useCallback((event) => {
     event.preventDefault();
+    onChangeLLMSettings(PROMPT_PAYLOAD_KEY.maxTokens)(event.target.value);
     setMaxTokens(event.target.value);
-  }, []);
+  }, [onChangeLLMSettings]);
+
+  useEffect(() => {
+    if (llmSettings?.max_tokens && llmSettings?.max_tokens !== maxTokens) {
+      setMaxTokens(llmSettings?.max_tokens)
+    }
+  }, [llmSettings?.max_tokens, maxTokens])
 
   return (
     <Box>

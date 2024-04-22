@@ -88,6 +88,7 @@ export default function SingleSelectWithSearch({
   error,
   helperText,
   isFetching,
+  maxListHeight = '530px', 
   onLoadMore = () => { },
 }) {
   // dropdown related
@@ -216,7 +217,7 @@ export default function SingleSelectWithSearch({
             <Box sx={{
               borderRadius: '8px',
               marginTop: '8px',
-              maxHeight: '530px',
+              maxHeight: maxListHeight,
               overflowY: 'scroll',
               background: theme.palette.background.secondary,
               border: `1px solid ${theme.palette.border.lines}`,

@@ -71,8 +71,8 @@ const NewConversationSettings = ({
   }, [conversation])
 
   useEffect(() => {
-    setCurrentSettingType(conversation.participant_type);
-  }, [conversation.participant_type])
+    setCurrentSettingType(conversation.participant.type);
+  }, [conversation.participant.type])
 
   const selectedChatModel = useMemo(() => conversation.participant || {}, [conversation.participant])
   const chatModelValue = useMemo(() =>
@@ -95,10 +95,11 @@ const NewConversationSettings = ({
         participant: {
           ...conversationRef.current.participant,
           variables: [...applicationDetail.version_details.variables],
+          llm_settings: applicationDetail.version_details.llm_settings
         },
       })
     }
-  }, [applicationDetail?.version_details?.variables, onChangeConversation])
+  }, [applicationDetail?.version_details?.llm_settings, applicationDetail?.version_details?.variables, onChangeConversation])
 
   useEffect(() => {
     if (datasourceDetail?.version_details) {
@@ -128,10 +129,9 @@ const NewConversationSettings = ({
   const onSelectParticipantType = useCallback(
     (e) => {
       const newType = e?.target?.value;
-      if (newType !== conversation.participant_type) {
+      if (newType !== conversation.participant.type) {
         onChangeConversation({
           ...conversation,
-          participant_type: newType,
           participant: {
             type: newType,
           }
