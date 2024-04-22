@@ -165,6 +165,7 @@ export default function MyLibrary({ publicView = false }) {
         sortBy={sortBy}
         sortOrder={sortOrder}
         statuses={statuses}
+        displayedTabs={displayedTabs}
       />
     },
       {

@@ -29,6 +29,7 @@ const AllStuffList = ({
   sortBy,
   sortOrder,
   statuses,
+  displayedTabs,
 }) => {
   const { query, page, setPage, pageSize, tagList, selectedTagIds } = usePageQuery();
   const viewMode = useViewMode();
@@ -45,7 +46,7 @@ const AllStuffList = ({
     isPromptFetching,
     isPromptLoading,
     promptError,
-  } = useLoadPrompts(viewMode, sortBy, sortOrder, statuses);
+  } = useLoadPrompts(viewMode, sortBy, sortOrder, statuses, !displayedTabs.prompts);
 
   const { total = 0 } = data || {};
   const authorId = useAuthorIdFromUrl();
@@ -74,7 +75,7 @@ const AllStuffList = ({
       statuses: getQueryStatuses(statuses),
     }
   }, {
-    skip: !projectId
+    skip: !projectId || !displayedTabs.collections
   });
   const { rows: collections = [], total: collectionTotal = 0 } = collectionsData || {};
 
@@ -92,7 +93,7 @@ const AllStuffList = ({
     isDatasourcesFetching,
     isDatasourcesLoading,
     datasourcesError,
-  } = useLoadDatasources(viewMode, sortBy, sortOrder, statuses);
+  } =  useLoadDatasources(viewMode, sortBy, sortOrder, statuses, !displayedTabs.datasources) 
   const { rows: datasources = [], total: datasourcesTotal = 0 } = datasourcesData || {};
 
   const loadMoreDatasources = React.useCallback(() => {
@@ -101,7 +102,7 @@ const AllStuffList = ({
     } 
     onLoadMoreDatasources();
   }, [datasourcesTotal, datasources.length, onLoadMoreDatasources]);
-
+  
   const {
     onLoadMoreApplications,
     data: applicationData,
@@ -109,7 +110,7 @@ const AllStuffList = ({
     isApplicationsFetching,
     isApplicationsLoading,
     applicationsError,
-  } = useLoadApplications(viewMode, sortBy, sortOrder, statuses);
+  } = useLoadApplications(viewMode, sortBy, sortOrder, statuses, !displayedTabs.applications)
   const { rows: applications = [], total: applicationsTotal = 0 } = applicationData || {};
 
   const loadMoreApplications = React.useCallback(() => {

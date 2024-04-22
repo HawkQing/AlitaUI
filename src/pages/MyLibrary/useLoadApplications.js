@@ -6,7 +6,7 @@ import { getQueryStatuses } from './useLoadPrompts';
 import { usePublicDataSourcesListQuery } from '@/api/datasources';
 import { useApplicationListQuery } from '@/api/applications';
 
-export const useLoadApplications = (viewMode, sortBy, sortOrder, statuses) => {
+export const useLoadApplications = (viewMode, sortBy, sortOrder, statuses, forceSkip=false) => {
   const { query, page, pageSize, setPage, tagList, selectedTagIds } = usePageQuery();
   const authorId = useAuthorIdFromUrl();
   const projectId = useProjectId();  
@@ -27,7 +27,7 @@ export const useLoadApplications = (viewMode, sortBy, sortOrder, statuses) => {
       sort_order: sortOrder,
       query,
     }
-  }, {skip: viewMode !== ViewMode.Public});
+  }, {skip: viewMode !== ViewMode.Public || forceSkip});
 
   const { 
     data: privateApplicationData,
@@ -47,7 +47,7 @@ export const useLoadApplications = (viewMode, sortBy, sortOrder, statuses) => {
       sort_order: sortOrder,
       query,
     }
-  }, {skip: viewMode !== ViewMode.Owner || !projectId});
+  }, {skip: viewMode !== ViewMode.Owner || !projectId || forceSkip});
 
   const onLoadMoreApplications = useCallback(() => {
     if (!isPublicApplicationFetching && !isPrivateApplicationFetching) {

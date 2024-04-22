@@ -521,7 +521,7 @@ export const PERMISSIONS = {
 }
 
 export const PERMISSION_GROUPS = {
-  // chat: [PERMISSIONS.chat.list],
+  chat: [PERMISSIONS.chat.list],
   prompts: [PERMISSIONS.prompts.list],
   collections: [PERMISSIONS.collections.list],
   datasources: [PERMISSIONS.datasources.list],

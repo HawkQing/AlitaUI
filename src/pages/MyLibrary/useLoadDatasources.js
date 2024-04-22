@@ -5,7 +5,7 @@ import { useAuthorIdFromUrl, usePageQuery, useProjectId } from '@/pages/hooks';
 import { useCallback } from 'react';
 import { getQueryStatuses } from './useLoadPrompts';
 
-export const useLoadDatasources = (viewMode, sortBy, sortOrder, statuses) => {
+export const useLoadDatasources = (viewMode, sortBy, sortOrder, statuses, forceSkip=false) => {
   const { page, setPage, query, pageSize, tagList, selectedTagIds } = usePageQuery();
   const authorId = useAuthorIdFromUrl();
   const projectId = useProjectId();  
@@ -26,7 +26,7 @@ export const useLoadDatasources = (viewMode, sortBy, sortOrder, statuses) => {
       sort_order: sortOrder,
       query,
     }
-  }, {skip: viewMode !== ViewMode.Public});
+  }, {skip: viewMode !== ViewMode.Public || forceSkip});
 
   const { 
     data: privateDatasourceData,
@@ -46,7 +46,7 @@ export const useLoadDatasources = (viewMode, sortBy, sortOrder, statuses) => {
       sort_order: sortOrder,
       query,
     }
-  }, {skip: viewMode !== ViewMode.Owner || !projectId});
+  }, {skip: viewMode !== ViewMode.Owner || !projectId || forceSkip});
 
   const onLoadMoreDatasources = useCallback(() => {
     if (!isPublicDatasourceFetching && !isPrivateDatasourceFetching) {

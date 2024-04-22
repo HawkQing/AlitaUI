@@ -47,7 +47,7 @@ const ApplicationsList = ({
 
   const { rows: applications = [], total = 1 } = data || {};
 
-  const loadMoreCollections = React.useCallback(() => {
+  const loadMoreItems = React.useCallback(() => {
     const existsMore = applications.length < total;
     if (!existsMore || isApplicationsFetching) return;
     onLoadMoreApplications();
@@ -65,7 +65,7 @@ const ApplicationsList = ({
         rightPanelContent={<RightPanel tagList={tagList} />}
         renderCard={renderCard}
         isLoadingMore={isApplicationsFetching}
-        loadMoreFunc={loadMoreCollections}
+        loadMoreFunc={loadMoreItems}
         cardType={viewMode === ViewMode.Owner ? ContentType.MyLibraryApplications : ContentType.UserPublicApplications}
         emptyListPlaceHolder={<EmptyListPlaceHolder viewMode={viewMode} name={name} />}
       />

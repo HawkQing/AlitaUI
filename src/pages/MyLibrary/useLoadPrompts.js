@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 
 export const getQueryStatuses = (statuses) => statuses?.length && !statuses?.includes(PromptStatus.All) ? statuses.join(',') : undefined;
 
-export const useLoadPrompts = (viewMode, sortBy, sortOrder, statuses) => {
+export const useLoadPrompts = (viewMode, sortBy, sortOrder, statuses, forceSkip=false) => {
   const { query, page, setPage, pageSize, selectedTagIds, tagList } = usePageQuery();
   const authorId = useAuthorIdFromUrl();
   const projectId = useProjectId();  
@@ -29,7 +29,7 @@ export const useLoadPrompts = (viewMode, sortBy, sortOrder, statuses) => {
       sort_order: sortOrder,
       query,
     }
-  }, {skip: viewMode !== ViewMode.Public});
+  }, {skip: viewMode !== ViewMode.Public || forceSkip});
 
   const { 
     data: privatePromptData,
@@ -49,7 +49,7 @@ export const useLoadPrompts = (viewMode, sortBy, sortOrder, statuses) => {
       sort_order: sortOrder,
       query,
     }
-  }, {skip: viewMode !== ViewMode.Owner || !projectId});
+  }, {skip: viewMode !== ViewMode.Owner || !projectId || forceSkip});
 
   const onLoadMorePrompts = useCallback(() => {
     if (!isPublicPromptFetching && !isPrivatePromptFetching) {
