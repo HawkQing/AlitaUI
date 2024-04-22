@@ -33,6 +33,44 @@ import { generateDatasourceChatPayload } from '@/pages/DataSources/Components/Da
 
 const USE_STREAM = true
 
+const getModelSettings = (participant) => {
+  if (participant.type === 'models') {
+    const  {
+      max_tokens = DEFAULT_MAX_TOKENS,
+      top_p = DEFAULT_TOP_P,
+      top_k = DEFAULT_TOP_K,
+      temperature = DEFAULT_TEMPERATURE,
+      integration_uid,
+      model_name,
+    } = participant;
+    return  {
+      max_tokens,
+      top_p,
+      top_k,
+      temperature,
+      integration_uid,
+      model_name,
+    }
+  } else if (participant.type === 'applications') {
+    const  {
+      max_tokens = DEFAULT_MAX_TOKENS,
+      top_p = DEFAULT_TOP_P,
+      top_k = DEFAULT_TOP_K,
+      temperature = DEFAULT_TEMPERATURE,
+      integration_uid,
+      model_name,
+    } = participant.llm_settings || {};
+    return  {
+      max_tokens,
+      top_p,
+      top_k,
+      temperature,
+      integration_uid,
+      model_name,
+    }
+  }
+  return {}
+}
 
 const ChatBox = forwardRef((props, boxRef) => {
   const theme = useTheme();
@@ -56,11 +94,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     participant: {
       type: 'models'
     },
-    participant_type: 'models',
     chat_history: [],
   })
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
-  const { name } = useSelector(state => state.user)
+  const { name, id: userId } = useSelector(state => state.user)
   const chat_history = useMemo(() => activeConversation?.chat_history || [], [activeConversation?.chat_history]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -75,7 +112,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const chatHistoryRef = useRef(chat_history);
   const setChatHistoryRef = useRef(setChatHistory);
 
-  const getPayload = useCallback((question, chatHistory) => {
+  const getPayload = useCallback((question, question_id, chatHistory) => {
     const realParticipant = activeParticipant || conversation.participant || {};
     const {
       max_tokens = DEFAULT_MAX_TOKENS,
@@ -84,12 +121,13 @@ const ChatBox = forwardRef((props, boxRef) => {
       temperature = DEFAULT_TEMPERATURE,
       integration_uid,
       model_name,
-    } = realParticipant
+    } = getModelSettings(realParticipant) 
     return realParticipant.type === 'datasources' ? { ...generateDatasourceChatPayload(question, realParticipant.context, chatHistory || chat_history, realParticipant.chatSettings), project_id: PUBLIC_PROJECT_ID, version_id: realParticipant.versionId } :
       generateChatPayload({
         projectId, prompt_id, context, temperature, max_tokens, top_p,
         top_k, model_name, integration_uid, variables, question, messages,
-        chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId
+        chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId,
+        question_id
       })
   }, [
     conversation.participant,
@@ -102,12 +140,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     projectId,
     prompt_id,
     variables])
-
-  // const getPayloadRef = useRef(getPayload);
-
-  // useEffect(() => {
-  //   getPayloadRef.current = getPayload;
-  // }, [getPayload]);
 
   useEffect(() => {
     activeParticipantRef.current = activeParticipant;
@@ -129,7 +161,6 @@ const ChatBox = forwardRef((props, boxRef) => {
         participant: {
           type: 'models'
         },
-        participant_type: 'models',
         chat_history: [],
       });
     }
@@ -278,27 +309,32 @@ const ChatBox = forwardRef((props, boxRef) => {
       onStartNewConversation(conversation);
     }
     setTimeout(scrollToMessageListEnd, 0);
+    const question_id = new Date().getTime();
     setChatHistoryRef.current((prevMessages) => {
       return [...prevMessages, {
-        id: new Date().getTime(),
+        id: question_id,
         role: ROLES.User,
         name,
         content: question,
-        created_at: new Date().getTime()
+        created_at: new Date().getTime(),
+        user_id: userId,
       }]
     })
-    const payload = getPayload(question)
+    const payload = getPayload(question, question_id)
     emit(payload)
   },
-    [isNewConversation, scrollToMessageListEnd, getPayload, emit, onStartNewConversation, conversation, name])
+    [isNewConversation, scrollToMessageListEnd, getPayload, emit, onStartNewConversation, conversation, name, userId])
 
   const onClickSend = useCallback(
     async (question) => {
-      onStartNewConversation();
-      const payload = getPayload(question)
+      if (isNewConversation) {
+        onStartNewConversation(conversation);
+      }
+      const question_id = new Date().getTime();
+      const payload = getPayload(question, question_id)
       setChatHistoryRef.current((prevMessages) => {
         return [...prevMessages, {
-          id: new Date().getTime(),
+          id: question_id,
           role: 'user',
           name,
           content: question,
@@ -307,7 +343,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       askAlita(payload);
       setTimeout(scrollToMessageListEnd, 0);
     },
-    [onStartNewConversation, getPayload, askAlita, scrollToMessageListEnd, name]);
+    [isNewConversation, conversation, onStartNewConversation, getPayload, askAlita, scrollToMessageListEnd, name]);
 
 
   const onCloseToast = useCallback(
@@ -346,7 +382,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     const theQuestion = chat_history[questionIndex]?.content;
     const leftChatHistory = chat_history.slice(0, questionIndex);
 
-    const payload = getPayload(theQuestion, leftChatHistory)
+    const payload = getPayload(theQuestion, id, leftChatHistory)
     payload.message_id = id
     emit(payload)
   }, [chat_history, getPayload, emit]);
@@ -367,7 +403,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       const theQuestion = chat_history[questionIndex]?.content;
       const leftChatHistory = chat_history.slice(0, questionIndex);
 
-      const payload = getPayload(theQuestion, leftChatHistory)
+      const payload = getPayload(theQuestion, id, leftChatHistory)
       payload.message_id = id
       askAlita(payload);
     },

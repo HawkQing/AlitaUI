@@ -47,7 +47,7 @@ const USE_STREAM = true
 export const generatePayload = ({
   projectId, prompt_id, context, temperature,
   max_tokens, top_p, top_k, model_name, integration_uid,
-  variables, messages, type, name, stream = true, currentVersionId
+  variables, messages, type, name, stream = true, currentVersionId, question_id
 }) => ({
   prompt_id,
   projectId,
@@ -79,18 +79,20 @@ export const generatePayload = ({
   }) : [],
   messages,
   format_response: true,
+  question_id,
 })
 
 export const generateChatPayload = ({
   projectId, prompt_id, context, temperature,
   max_tokens, top_p, top_k, model_name, integration_uid,
   variables, question, messages, chatHistory, name, stream = true,
-  currentVersionId
+  currentVersionId,
+  question_id
 }) => {
   const payload = generatePayload({
     projectId, prompt_id, context, temperature,
     max_tokens, top_p, top_k, model_name, integration_uid,
-    variables, messages, type: 'chat', name, stream, currentVersionId
+    variables, messages, type: 'chat', name, stream, currentVersionId, question_id
   })
   payload.chat_history = chatHistory ? chatHistory.map((message) => {
     const { role, content, name: userName } = message;

@@ -18,11 +18,11 @@ const Conversations = ({ conversations, onSelectConversation, selectedConversati
         {
           !isSmallWindow &&
           <Box sx={{ cursor: 'pointer' }} onClick={onCollapsed}>
-            {!collapsed ? <DoubleLeftIcon width={'16px'} /> : <DoubleRightIcon width={'16px'} />}
+            {!collapsed ? <DoubleLeftIcon width={16} /> : <DoubleRightIcon width={16} />}
           </Box>
         }
       </Box>
-      <Box sx={{ marginTop: '20px', gap: '8px', display: 'flex', flexDirection: 'column' }} >
+      <Box sx={{ marginTop: '20px', gap: '8px', display: collapsed ? 'none' : 'flex', flexDirection: 'column' }} >
         {
           conversations.map((conversation) => (
             <ConversationItem

@@ -9,10 +9,6 @@ import DeleteIcon from '../../../components/Icons/DeleteIcon';
 const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = false, collapsed }) => {
   const { name, participants, is_public, chat_history = [] } = conversation
   const [isHovering, setIsHovering] = useState(false);
-  const participantCount = useMemo(() => {
-    const types = Object.keys(participants)
-    return types.reduce((sum, type) => sum + participants[type].length, 0)
-  }, [participants])
   const theme = useTheme();
   const mainBodyWidth = useMemo(() => isHovering ? 'calc(100% - 56px)' : 'calc(100% - 24px)', [isHovering])
   const onClickConversation = useCallback(
@@ -104,7 +100,7 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
           <UsersIcon />
           <Typography>
-            {participantCount || 0}
+            {participants.length}
           </Typography>
         </Box>
       </Box>

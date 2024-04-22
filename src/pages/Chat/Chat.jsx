@@ -10,13 +10,15 @@ import { useSearchParams } from 'react-router-dom';
 import { ActionButton } from '@/components/ChatBox/StyledComponents';
 import ClearIcon from '../../components/Icons/ClearIcon';
 import { stableSort } from '@/common/utils';
+import ParticipantSettings from './Components/ParticipantSettings';
 
 const Chat = () => {
   const [conversations, setConversations] = useState([]);
   const conversationsRef = useRef(conversations)
-  const [activeConversation, setActiveConversation] = useState({chat_history: []})
+  const [activeConversation, setActiveConversation] = useState({ chat_history: [] })
   const [activeParticipant, setActiveParticipant] = useState()
   const isCreatingConversation = useIsCreatingConversation();
+  const [theParticipantEdited, setTheParticipantEdited] = useState()
   const [, setSearchParams] = useSearchParams();
 
   const onStartNewConversation = useCallback(
@@ -26,7 +28,6 @@ const Chat = () => {
         name,
         is_public,
         participant,
-        participant_type,
         chat_history,
       } = newConversation;
       const newSearchParams = new URLSearchParams({});
@@ -37,26 +38,14 @@ const Chat = () => {
         id,
         name,
         is_public,
-        participants: {
-          models: [],
-          applications: [],
-          datasources: [],
-          prompts: [],
-          [participant_type]: [participant]
-        },
+        participants: [participant],
         chat_history,
       });
       const sortedConversations = stableSort([...conversations, {
         id,
         name,
         is_public,
-        participants: {
-          models: [],
-          applications: [],
-          datasources: [],
-          prompts: [],
-          [participant_type]: [participant]
-        },
+        participants: [participant],
         chat_history,
       }], (first, second) => {
         return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
@@ -76,14 +65,14 @@ const Chat = () => {
   const setChatHistory = useCallback(
     (chat_history) => {
       if (typeof chat_history === 'function') {
-        setActiveConversation(prev => ({...prev, chat_history: chat_history(prev.chat_history)}));
+        setActiveConversation(prev => ({ ...prev, chat_history: chat_history(prev.chat_history) }));
       } else {
-        setActiveConversation(prev => ({...prev, chat_history}));
+        setActiveConversation(prev => ({ ...prev, chat_history }));
       }
     },
     [],
   )
-  
+
   const settings = useMemo(() => ({
     chatOnly: true,
     type: ChatBoxMode.Chat,
@@ -95,11 +84,11 @@ const Chat = () => {
     activeConversation,
     setChatHistory
   }), [
-    activeConversation, 
-    activeParticipant, 
-    isCreatingConversation, 
-    onClearActiveParticipant, 
-    onStartNewConversation, 
+    activeConversation,
+    activeParticipant,
+    isCreatingConversation,
+    onClearActiveParticipant,
+    onStartNewConversation,
     setChatHistory
   ]);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
@@ -113,7 +102,7 @@ const Chat = () => {
       return 6
     }
   }, [collapsedConversations, collapsedParticipants])
-  const boxRef = useRef();  
+  const boxRef = useRef();
 
   const onSelectConversation = useCallback(
     (conversation) => {
@@ -144,14 +133,64 @@ const Chat = () => {
     [],
   )
 
+  const onShowSettings = useCallback(
+    (theSelectedParticipant) => {
+      setTheParticipantEdited(theSelectedParticipant);
+    },
+    [],
+  )
+
+  const onFinishEditParticipant = useCallback(
+    (editedParticipant) => {
+      //TODO Save editedParticipant
+      setActiveConversation(prev => {
+        return {
+          ...prev,
+          participants: prev.participants.map(participant => participant.id === editedParticipant.id ? editedParticipant : participant)
+        }
+      });
+      setConversations(prev => {
+        return prev.map(conversation => conversation.id === activeConversation.id ? ({
+          ...activeConversation,
+          participants: activeConversation.participants?.map(participant => participant.id === editedParticipant.id ? editedParticipant : participant)
+        }) : conversation)
+      })
+      setTheParticipantEdited(undefined);
+    },
+    [activeConversation],
+  )
+
+  const onDeleteParticipant = useCallback(
+    (id) => {
+      //TODO delete editedParticipant
+      setActiveConversation(prev => {
+        return {
+          ...prev,
+          participants: prev.participants.filter(participant => participant.id !== id)
+        }
+      });
+      setConversations(prev => {
+        return prev.map(conversation => conversation.id === activeConversation.id ? ({
+          ...activeConversation,
+          participants: activeConversation.participants?.filter(participant => participant.id === id)
+        }) : conversation)
+      })
+      setTheParticipantEdited(undefined);
+      if (activeParticipant?.id === id) {
+        setActiveParticipant();
+      }
+    },
+    [activeConversation, activeParticipant?.id],
+  )
+ 
   useEffect(() => {
     conversationsRef.current = conversations
   }, [conversations])
-  
+
   useEffect(() => {
-    setConversations(conversationsRef.current.map(conversation => conversation.id === activeConversation.id ? {...activeConversation} : conversation ))
+    setConversations(conversationsRef.current.map(conversation => conversation.id === activeConversation.id ? { ...activeConversation } : conversation))
   }, [activeConversation])
-  
+
   return (
     <>
       <Grid container sx={{ padding: '0.5rem 1.5rem' }} columnSpacing={'32px'}>
@@ -171,11 +210,11 @@ const Chat = () => {
           },
           gap: '12px'
         }}>
-          <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginBottom: '12px'}}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginBottom: '12px' }}>
             <Typography variant='bodyMedium' color='secondary'>
-            {
-              activeConversation?.name
-            }
+              {
+                activeConversation?.name
+              }
             </Typography>
             <ActionButton
               aria-label="clear the chat"
@@ -192,12 +231,23 @@ const Chat = () => {
           <ChatBox {...settings} ref={boxRef} />
         </Grid>
         <Grid item xs={12} lg={collapsedParticipants ? 0.5 : 3}>
-          <Participants
-            collapsed={collapsedParticipants}
-            onCollapsed={onParticipantsCollapsed}
-            activeParticipantId={activeParticipant?.id}
-            participants={activeConversation?.participants || {}}
-            onSelectParticipant={onSelectParticipant} />
+          {
+            !theParticipantEdited ?
+              <Participants
+                collapsed={collapsedParticipants}
+                onCollapsed={onParticipantsCollapsed}
+                activeParticipantId={activeParticipant?.id}
+                participants={activeConversation?.participants || []}
+                onShowSettings={onShowSettings}
+                onSelectParticipant={onSelectParticipant} />
+              :
+              <ParticipantSettings
+                participant={theParticipantEdited}
+                onBackAndSave={onFinishEditParticipant}
+                isActive={activeParticipant?.id === theParticipantEdited?.id}
+                onDelete={onDeleteParticipant}
+              />
+          }
         </Grid>
       </Grid>
     </>

@@ -30,6 +30,7 @@ export default function ApplicationSelect({
       onLoadMore={onLoadMore}
       error={error}
       helperText={helperText}
+      maxListHeight={'400px'}
     />
   )
 }
