@@ -500,7 +500,8 @@ export const TIME_FORMAT = {
 
 export const PERMISSIONS = {
   chat: {
-    list: 'models.prompt_lib.chat.list'
+    list: 'models.prompt_lib.chat.list',
+    create: 'models.prompt_lib.chat.create'
   },
   prompts: {
     list: 'models.prompt_lib.public_prompts.list'

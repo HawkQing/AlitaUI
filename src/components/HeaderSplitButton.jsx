@@ -1,4 +1,4 @@
-import { MyLibraryTabs, SearchParams, ViewMode } from '@/common/constants';
+import {MyLibraryTabs, PERMISSIONS, SearchParams, ViewMode} from '@/common/constants';
 import { useFromMyLibrary, useSelectedProjectId } from '@/pages/hooks';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 import { useTheme } from '@emotion/react';
@@ -29,6 +29,7 @@ const optionsMap = {
 };
 
 const displayPermissions = {
+  Chat: [PERMISSIONS.chat.create],
   Prompt: ['models.prompt_lib.prompts.create'],
   Datasource: ['models.datasources.datasources.create'],
   Application: ['models.applications.applications.create'],
@@ -256,7 +257,7 @@ export default function HeaderSplitButton({ onClickCommand }) {
 
   const options = useMemo(() => {
     const permissionsSet = new Set(permissions)
-    return [...Object.keys(optionsMap).filter(i => displayPermissions[i]?.some(p => permissionsSet.has(p))), optionsMap.Chat]
+    return [...Object.keys(optionsMap).filter(i => displayPermissions[i]?.some(p => permissionsSet.has(p)))]
   }, [permissions])
 
   const onCloseSelectModel = useCallback(
