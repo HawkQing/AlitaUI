@@ -31,11 +31,16 @@ const validationSchema = yup.object({
   source: yup.object().shape({
     name: yup.string('Enter dataset name').required('Name is required'),
     type: yup.string(),
-    options: yup.object({
-      qtest_api_base_url: yup.string('Enter url').required('URL is required'),
-      qtest_api_token: yup.string('Enter or select API Key').required('API key is required'),
-      qtest_project_id: yup.string('Enter project ID').required('Project ID is required'),
-      no_of_test_cases_per_page: yup.string('Enter test cases per page').required('Test cases count per page is required'),
+    options: yup.object().when('type', {
+      is: (value) => {
+        return value === 'qtest'
+      },
+      then: () => yup.object({
+        qtest_api_base_url: yup.string('Enter url').required('URL is required'),
+        qtest_api_token: yup.string('Enter or select API Key').required('API key is required'),
+        qtest_project_id: yup.string('Enter project ID').required('Project ID is required'),
+        no_of_test_cases_per_page: yup.string('Enter test cases per page').required('Test cases count per page is required'),
+      }),
     })
   }),
 });
@@ -159,10 +164,6 @@ export const CreateDataset = ({ handleCancel, datasourceVersionId }) => {
                 handleCancel={handleCancel}
                 initialValues={initialState}
                 submitButtonLabel='Create'
-                onSubmit={async e => {
-                  e.preventDefault()
-                  await handleSubmit(values)
-                }}
               >
                 <Source mode={ComponentMode.CREATE} />
                 <Transformers readOnly={false} />
