@@ -13,7 +13,6 @@ import {
   DEFAULT_TEMPERATURE,
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
-  PUBLIC_PROJECT_ID
 } from '@/common/constants';
 import GroupedButton from '@/components/GroupedButton';
 import useModelOptions from '@/pages/DataSources/Components/Datasources/useModelOptions';
@@ -28,6 +27,7 @@ import styled from '@emotion/styled';
 import VariableList from '@/pages/Prompts/Components/Form/VariableList';
 import useQueryApplicationDetail from './useQueryApplicationDetail';
 import useQueryDataSourceDetail from './useQueryDataSourceDetail';
+import { useSelectedProjectId } from '@/pages/hooks';
 
 const DialogTitleDiv = styled('div')(() => ({
   width: '100%',
@@ -63,8 +63,9 @@ const NewConversationSettings = ({
 }) => {
   const theme = useTheme();
   const conversationRef = useRef(conversation);
-  const { modelOptions } = useModelOptions({ usePublicProjectId: true });
+  const { modelOptions } = useModelOptions();
   const [currentSettingType, setCurrentSettingType] = useState('models')
+  const projectId = useSelectedProjectId();
 
   useEffect(() => {
     conversationRef.current = conversation
@@ -148,7 +149,7 @@ const NewConversationSettings = ({
     })
   }, [conversation, onChangeConversation]);
 
-  const onChangeChatModel = useCallback((integrationUid, modelName) => {
+  const onChangeChatModel = useCallback((integrationUid, modelName, integrationName) => {
     onChangeConversation({
       ...conversation,
       participant: {
@@ -160,6 +161,7 @@ const NewConversationSettings = ({
         top_p: DEFAULT_TOP_P,
         top_k: DEFAULT_TOP_K,
         temperature: DEFAULT_TEMPERATURE,
+        integration_name: integrationName,
       },
     })
   }, [conversation, onChangeConversation])
@@ -187,8 +189,8 @@ const NewConversationSettings = ({
         description: datasource.description,
       },
     })
-    getDatasourceDetail({ projectId: PUBLIC_PROJECT_ID, datasourceId: datasource.value })
-  }, [conversation, getDatasourceDetail, onChangeConversation]);
+    getDatasourceDetail({ projectId, datasourceId: datasource.value })
+  }, [conversation, getDatasourceDetail, onChangeConversation, projectId]);
 
   const onChangeChatApplication = useCallback((application) => {
     onChangeConversation({
@@ -201,8 +203,8 @@ const NewConversationSettings = ({
         variables: [],
       },
     })
-    getApplicationDetail({ projectId: PUBLIC_PROJECT_ID, applicationId: application.value })
-  }, [conversation, getApplicationDetail, onChangeConversation]);
+    getApplicationDetail({ projectId, applicationId: application.value })
+  }, [conversation, getApplicationDetail, onChangeConversation, projectId]);
 
   const onChangeVariable = useCallback((label, newValue) => {
     onChangeConversation({
@@ -302,6 +304,7 @@ const NewConversationSettings = ({
               value={conversation.participant.id}
               error={false}
               helperText={''}
+              shouldUseSelectedProject
             />
           }
           {

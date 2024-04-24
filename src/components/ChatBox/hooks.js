@@ -2,7 +2,7 @@ import { ROLES, SocketMessageType } from '@/common/constants';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUTO_SCROLL_KEY } from './AutoScrollToggle';
 
-export const useCtrlEnterKeyEventsHandler = ({ onShiftEnterPressed, onCtrlEnterDown, onEnterDown }) => {
+export const useCtrlEnterKeyEventsHandler = ({ onShiftEnterPressed, onCtrlEnterDown, onEnterDown, onNormalKeyDown }) => {
   const keysPressed = useMemo(() => ({}), [])
   const [isInComposition, setIsInComposition] = useState(false)
   const onKeyDown = useCallback(
@@ -17,9 +17,13 @@ export const useCtrlEnterKeyEventsHandler = ({ onShiftEnterPressed, onCtrlEnterD
         onShiftEnterPressed()
       } else if (!keysPressed['Control'] && !keysPressed['Shift'] && event.key === 'Enter' && onEnterDown) {
         onEnterDown(event)
+      } else {
+        if (onNormalKeyDown) {
+          onNormalKeyDown(event);
+        }
       }
     },
-    [isInComposition, keysPressed, onCtrlEnterDown, onEnterDown, onShiftEnterPressed],
+    [isInComposition, keysPressed, onCtrlEnterDown, onEnterDown, onShiftEnterPressed, onNormalKeyDown],
   );
 
   const onKeyUp = useCallback(

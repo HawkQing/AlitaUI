@@ -9,7 +9,7 @@ import {
 } from './StyledDialog';
 import { Typography } from '@mui/material';
 
-export default function AlertDialogV2 ({ open, setOpen, title, content, onConfirm }) {
+export default function AlertDialogV2 ({ open, setOpen, title, content, onConfirm, confirmButtonTitle = 'Confirm', confirmButtonSX }) {
   const closeAlert = React.useCallback(() => {
       setOpen(false);
   }, [setOpen]);
@@ -41,8 +41,8 @@ export default function AlertDialogV2 ({ open, setOpen, title, content, onConfir
       </DialogContent>
       <StyledDialogActions>
         <StyledConfirmButton onClick={closeAlert} autoFocus>Cancel</StyledConfirmButton>
-        <StyledConfirmButton danger onClick={doConfirm}>
-          Confirm
+        <StyledConfirmButton sx={confirmButtonSX} danger onClick={doConfirm}>
+          {confirmButtonTitle}
         </StyledConfirmButton>
       </StyledDialogActions>
     </StyledDialog>

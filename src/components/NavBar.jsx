@@ -48,6 +48,7 @@ import useSearchBar from './useSearchBar';
 import useTags from './useTags';
 import { filterProps } from '@/common/utils';
 import ProjectSelect from '@/pages/MyLibrary/ProjectSelect';
+import ChatSearchBar from './ChatSearchBar';
 
 
 const StyledAppBar = styled(AppBar,
@@ -448,7 +449,7 @@ const NavBar = () => {
   const [searchString, setSearchString] = useState(query);
   const [searchTags, setSearchTags] = useState(queryTags);
   const [openSideMenu, setOpenSideMenu] = useState(false);
-  const { showSearchBar } = useSearchBar();
+  const { showSearchBar, isChatPage } = useSearchBar();
   const isFromChat = useIsFromChat();
   const onClickIcon = useCallback(
     () => {
@@ -476,6 +477,14 @@ const NavBar = () => {
       }
     },
     [dispatch, navigateWithTags, urlTags],
+  );
+
+  const onClearChatSearch = useCallback(
+    () => {
+      setSearchString('');
+      dispatch(actions.resetQuery());
+    },
+    [dispatch],
   );
 
   useEffect(() => {
@@ -516,6 +525,13 @@ const NavBar = () => {
           setSearchTags={setSearchTags}
           onClear={onClear}
         />}
+        {
+          isChatPage && <ChatSearchBar
+            searchString={searchString}
+            setSearchString={setSearchString}
+            onClear={onClearChatSearch}
+          />
+        }
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <HeaderSplitButton />
           <NotificationButton display='none' />

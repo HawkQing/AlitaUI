@@ -8,20 +8,22 @@ const useSearchBar = () => {
   const isPublicCollectionsPage = useMatch({ path: RouteDefinitions.CollectionsWithTab });
   const isMyLibraryPage = useMatch({ path: RouteDefinitions.MyLibraryWithTab });
   const isUserPublicPage = useMatch({ path: RouteDefinitions.UserPublicWithTab });
+  const isChatPage = useMatch({ path: RouteDefinitions.Chat });
 
   const showSearchBar = useMemo(() => {
-    return isFromChat ||
+    return (isFromChat ||
       isPublicPromptsPage ||
       isPublicCollectionsPage ||
       isMyLibraryPage ||
-      isUserPublicPage;
-  }, [isFromChat, isPublicPromptsPage, isPublicCollectionsPage, isMyLibraryPage, isUserPublicPage]);
+      isUserPublicPage) && !isChatPage;
+  }, [isFromChat, isPublicPromptsPage, isPublicCollectionsPage, isMyLibraryPage, isUserPublicPage, isChatPage]);
   return {
     showSearchBar,
     isPublicPromptsPage,
     isPublicCollectionsPage,
     isMyLibraryPage,
     isUserPublicPage,
+    isChatPage,
   }
 }
 

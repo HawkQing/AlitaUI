@@ -420,6 +420,7 @@ export const {
   useUnpublishVersionMutation,
   usePublicPromptListQuery,
   useGetPublicPromptQuery,
+  useLazyGetPublicPromptQuery,
   useExportPromptMutation,
   useImportPromptMutation,
   useExportCollectionMutation,
@@ -429,5 +430,6 @@ export const {
   useTotalPublicPromptsQuery,
   useTotalMyLikedPublicPromptsQuery,
   useTotalTrendingPublicPromptsQuery,
+  useLazyPromptListQuery
 } = promptApi
 

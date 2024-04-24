@@ -320,6 +320,7 @@ export const apiSlice = alitaApi.enhanceEndpoints({
 
 export const {
   useDatasourceListQuery,
+  useLazyDatasourceListQuery,
   useTotalDataSourcesQuery,
   useTotalPublicDataSourcesQuery,
   useDatasourceCreateMutation,
