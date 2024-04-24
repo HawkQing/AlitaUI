@@ -131,13 +131,21 @@ export default function StickyTabs({
   tabsContainerStyle,
   noRightPanel
 }) {
+  const tabBarRef = React.useRef();
+  const [tabBarHeight, setTabBarHeight] = React.useState(51)
   const handleChange = React.useCallback((_, newValue) => {
     onChangeTab(newValue);
   }, [onChangeTab]);
 
+  React.useLayoutEffect(() => {
+    if (tabBarRef.current && tabBarRef.current.clientHeight) {
+      setTabBarHeight(tabBarRef.current.clientHeight);
+    }
+  }, [])
+  
   return (
     <ResponsiveBox sx={containerStyle}>
-      <FixedTabBar sx={tabBarStyle} container>
+      <FixedTabBar ref={tabBarRef} sx={tabBarStyle} container>
         <TabsContainer container sx={{ ...tabsContainerStyle, width: tabs[value]?.fullWidth ? '100%' : CARD_LIST_WIDTH }}>
           <Grid item>
             <CustomTabs value={value} onChange={handleChange} aria-label="basic tabs example">
@@ -172,7 +180,7 @@ export default function StickyTabs({
           }
         </TabsContainer>
       </FixedTabBar>
-      <HeaderPlaceHolder />
+      <HeaderPlaceHolder sx={{height: tabBarHeight + 'px'}} />
       {tabs.map((tab, index) => (
         <CustomTabPanel style={{ display: tab.display }} value={value} index={index} key={index}>
           {tab.content}
