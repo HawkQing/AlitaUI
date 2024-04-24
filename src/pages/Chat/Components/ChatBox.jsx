@@ -5,7 +5,6 @@ import {
   DEFAULT_TEMPERATURE,
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
-  PUBLIC_PROJECT_ID,
   ROLES,
   sioEvents,
   SocketMessageType,
@@ -13,7 +12,7 @@ import {
 } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useSocket, { useManualSocket } from "@/hooks/useSocket.jsx";
-import { useProjectId } from '@/pages/hooks';
+import { useSelectedProjectId } from '@/pages/hooks';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import ChatInput from '@/components/ChatBox/ChatInput';
@@ -30,12 +29,15 @@ import { useTheme } from '@emotion/react';
 import ActiveParticipantBox from './ActiveParticipantBox';
 import { generateChatPayload } from '@/components/ChatBox/ChatBox';
 import { generateDatasourceChatPayload } from '@/pages/DataSources/Components/Datasources/ChatPanel';
+import useInputKeyDownHandler from './useInputKeyDownHandler';
+import SuggestedParticipants from './SuggestedParticipants';
+import ChatBoxHeader from './ChatBoxHeader';
 
 const USE_STREAM = true
 
 const getModelSettings = (participant) => {
   if (participant.type === 'models') {
-    const  {
+    const {
       max_tokens = DEFAULT_MAX_TOKENS,
       top_p = DEFAULT_TOP_P,
       top_k = DEFAULT_TOP_K,
@@ -43,7 +45,7 @@ const getModelSettings = (participant) => {
       integration_uid,
       model_name,
     } = participant;
-    return  {
+    return {
       max_tokens,
       top_p,
       top_k,
@@ -52,7 +54,7 @@ const getModelSettings = (participant) => {
       model_name,
     }
   } else if (participant.type === 'applications') {
-    const  {
+    const {
       max_tokens = DEFAULT_MAX_TOKENS,
       top_p = DEFAULT_TOP_P,
       top_k = DEFAULT_TOP_K,
@@ -60,7 +62,7 @@ const getModelSettings = (participant) => {
       integration_uid,
       model_name,
     } = participant.llm_settings || {};
-    return  {
+    return {
       max_tokens,
       top_p,
       top_k,
@@ -86,7 +88,8 @@ const ChatBox = forwardRef((props, boxRef) => {
     activeParticipant,
     onClearActiveParticipant,
     activeConversation,
-    setChatHistory
+    setChatHistory,
+    onSelectNewParticipant,
   } = props
   const [conversation, setConversation] = useState({
     name: 'New Conversation',
@@ -96,6 +99,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     },
     chat_history: [],
   })
+  const projectId = useSelectedProjectId();
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
   const { name, id: userId } = useSelector(state => state.user)
   const chat_history = useMemo(() => activeConversation?.chat_history || [], [activeConversation?.chat_history]);
@@ -104,13 +108,14 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [toastSeverity, setToastSeverity] = useState('info')
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [answerIdToRegenerate, setAnswerIdToRegenerate] = useState('');
-  const projectId = useProjectId();
   const chatInput = useRef(null);
   const messagesEndRef = useRef();
   const listRefs = useRef([]);
   const activeParticipantRef = useRef();
   const chatHistoryRef = useRef(chat_history);
   const setChatHistoryRef = useRef(setChatHistory);
+  const suggestedParticipantsRef = useRef();
+
 
   const getPayload = useCallback((question, question_id, chatHistory) => {
     const realParticipant = activeParticipant || conversation.participant || {};
@@ -121,8 +126,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       temperature = DEFAULT_TEMPERATURE,
       integration_uid,
       model_name,
-    } = getModelSettings(realParticipant) 
-    return realParticipant.type === 'datasources' ? { ...generateDatasourceChatPayload(question, realParticipant.context, chatHistory || chat_history, realParticipant.chatSettings), project_id: PUBLIC_PROJECT_ID, version_id: realParticipant.versionId } :
+    } = getModelSettings(realParticipant)
+    return realParticipant.type === 'datasources' ? { ...generateDatasourceChatPayload(question, realParticipant.context, chatHistory || chat_history, realParticipant.chatSettings), project_id: projectId, version_id: realParticipant.versionId } :
       generateChatPayload({
         projectId, prompt_id, context, temperature, max_tokens, top_p,
         top_k, model_name, integration_uid, variables, question, messages,
@@ -298,7 +303,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const streamingEvent = useMemo(() =>
     (activeParticipant?.type || conversation.participant.type) === 'datasources'
       ?
-      sioEvents.datasource_predict 
+      sioEvents.datasource_predict
       :
       sioEvents.promptlib_predict, [activeParticipant?.type, conversation.participant.type])
 
@@ -356,7 +361,8 @@ const ChatBox = forwardRef((props, boxRef) => {
   const { emit: manualEmit } = useManualSocket(sioEvents.promptlib_leave_rooms);
   const {
     isStreaming,
-    onStopStreaming
+    onStopStreaming,
+    onStopAll,
   } = useStopStreaming({
     chatHistoryRef,
     chatHistory: chat_history,
@@ -448,11 +454,55 @@ const ChatBox = forwardRef((props, boxRef) => {
     }
   }, [error, handleError, reset]);
 
+  const {
+    onKeyDown,
+    participantType,
+    suggestions,
+    isProcessingSymbols,
+    query,
+    stopProcessingSymbols
+  } = useInputKeyDownHandler(activeConversation.participants)
+
+  const onSelectParticipant = useCallback(
+    (participant) => {
+      stopProcessingSymbols();
+      onSelectNewParticipant(participant);
+      setTimeout(() => {
+        const symbol = query.charAt(0);
+        chatInput.current?.replaceSymbolWithParticipantName(symbol, participant.name || participant.model_name);
+      }, 0);
+    },
+    [onSelectNewParticipant, query, stopProcessingSymbols],
+  )
+
+  const onEnterDownHandler = useCallback(
+    () => {
+      if (isProcessingSymbols) {
+        suggestedParticipantsRef.current?.selectParticipant()
+      } else {
+        chatInput.current?.sendQuestion();
+      }
+    },
+    [isProcessingSymbols],
+  )
+
+  useEffect(() => {
+    if (isNewConversation && chatInput.current) {
+      chatInput.current.reset();
+    }
+  }, [isNewConversation])
 
   return (
     <>
+      <ChatBoxHeader
+        isStreaming={isStreaming}
+        onClear={onClickClearChat}
+        conversationName={activeConversation?.name}
+        onStopStreaming={onStopAll}
+      />
       <ChatBoxContainer
         role="presentation"
+        sx={{ paddingBottom: '0px' }}
       >
         <ChatBodyContainer
           sx={{
@@ -507,17 +557,29 @@ const ChatBox = forwardRef((props, boxRef) => {
               />
           }
           {
-            !isNewConversation && activeConversation.id &&
+            !isNewConversation && activeConversation.id && !isProcessingSymbols &&
             <ActiveParticipantBox
               activeParticipant={activeParticipant}
               onClearActiveParticipant={onClearActiveParticipant}
+            />
+          }
+          {
+            !isNewConversation && isProcessingSymbols &&
+            <SuggestedParticipants
+              ref={suggestedParticipantsRef}
+              participants={suggestions || []}
+              participantType={participantType}
+              onSelectParticipant={onSelectParticipant}
             />
           }
           <ChatInput
             ref={chatInput}
             onSend={USE_STREAM ? onPredictStream : onClickSend}
             isLoading={isLoading || isStreaming}
-            disabledSend={isLoading || isStreaming}
+            disabledSend={isLoading || isStreaming || isProcessingSymbols || (!activeConversation.id && !isNewConversation)}
+            onNormalKeyDown={onKeyDown}
+            onEnterDownHandler={onEnterDownHandler}
+            disabledInput = {!activeConversation.id && !isNewConversation}
             shouldHandleEnter />
         </ChatBodyContainer>
       </ChatBoxContainer>

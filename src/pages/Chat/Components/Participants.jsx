@@ -4,6 +4,8 @@ import ParticipantItem from './ParticipantItem';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import { useIsSmallWindow } from '@/pages/hooks';
 import { useMemo } from 'react';
+import { useTheme } from '@emotion/react';
+import ParticipantsDropdown from './ParticipantsDropdown';
 
 const getTypes = (participants) => {
   const types = []
@@ -17,6 +19,7 @@ const getTypes = (participants) => {
 
 const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, activeParticipantId, onSelectParticipant }) => {
   const { isSmallWindow } = useIsSmallWindow();
+  const theme = useTheme()
   const types = useMemo(() => getTypes(participants), [participants]);
 
   return (
@@ -30,7 +33,18 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
         }
         {
           !isSmallWindow &&
-          <Box sx={{ cursor: 'pointer' }} onClick={onCollapsed}>
+          <Box sx={{
+            cursor: 'pointer',
+            padding: '4px',
+            borderRadius: '6px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            '&:hover': {
+              background: theme.palette.background.button.secondary.hover,
+            }
+          }}
+            onClick={onCollapsed}>
             {collapsed ? <DoubleLeftIcon width={16} /> : <DoubleRightIcon width={16} />}
           </Box>
         }
@@ -43,12 +57,22 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
           </Typography>
         </Box>
       }
-      <Box sx={{ marginTop: '16px', gap: '8px', display: 'flex', flexDirection: 'column' }} >
+      <Box
+        sx={{
+          marginTop: '8px',
+          gap: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: (!collapsed || isSmallWindow) ? 'flex-start' : 'center'
+        }} >
         {
           types.map((type) => {
             const participantsOfTheType = participants.filter(participant => participant.type === type)
-            return  <Box key={type} sx={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                <Typography sx={{textTransform: 'capitalize'}} variant='bodySmall' color='text.default'>
+            return (!collapsed || isSmallWindow) ?
+              <Box
+                key={type}
+                sx={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <Typography sx={{ textTransform: 'capitalize' }} variant='bodySmall' color='text.default'>
                   {type}
                 </Typography>
                 {
@@ -64,6 +88,13 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
                   ))
                 }
               </Box>
+              :
+              <ParticipantsDropdown
+                activeParticipantId={activeParticipantId}
+                type={type}
+                participants={participantsOfTheType}
+                onSelectParticipant={onSelectParticipant}
+              />
           })
         }
 

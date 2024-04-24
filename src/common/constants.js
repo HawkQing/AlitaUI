@@ -546,6 +546,18 @@ export const AutoSuggestionTypes = [
   'collection',
 ]
 
+export const AutoChatSuggestionTypes = [
+  'application',
+  'prompt',
+  'datasource',
+]
+
+export const AutoChatSuggestionTitles = {
+  APPLICATIONS: 'Applications',
+  PROMPTS: 'Prompts',
+  DATASOURCES: 'Datasources',
+}
+
 export const AutoSuggestionTitles = {
   TOP: 'Top Search Requests',
   TAGS: 'Tags',

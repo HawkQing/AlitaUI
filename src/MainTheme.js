@@ -334,6 +334,7 @@ const getDesignTokens = mode => ({
         default: purple20,
         hover: purple40
       },
+      conversationEditor: gray40
     },
     border: {
       lines: gray30,

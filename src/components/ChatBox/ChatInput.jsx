@@ -25,13 +25,32 @@ const ChatInput = forwardRef(function ChatInput(props, ref) {
     disabledSend,
     sx,
     placeholder = 'Type your message',
-    clearInputAfterSubmit = true
+    clearInputAfterSubmit = true,
+    onNormalKeyDown,
+    onEnterDownHandler,
+    disabledInput
   } = props;
   const theme = useTheme();
   const [question, setQuestion] = useState('');
   const [inputContent, setInputContent] = useState('');
   const [showExpandIcon, setShowExpandIcon] = useState(false);
   const [rows, setRows] = useState(MAX_ROWS);
+
+  const sendQuestion = useCallback(
+    () => {
+      if (question.trim() && !disabledSend) {
+        onSend(question)
+        if (clearInputAfterSubmit) {
+          setTimeout(() => {
+            setInputContent('');
+            setQuestion('');
+          }, 0);
+          setShowExpandIcon(false);
+        }
+      }
+    },
+    [clearInputAfterSubmit, disabledSend, onSend, question],
+  )
 
   useImperativeHandle(ref, () => ({
     reset: () => {
@@ -41,7 +60,14 @@ const ChatInput = forwardRef(function ChatInput(props, ref) {
     },
     setValue: (value) => {
       setInputContent(value);
-    }
+    },
+    replaceSymbolWithParticipantName: (symbol, name) => {
+      const index = inputContent.lastIndexOf(symbol);
+      const newContent = inputContent.substring(0, index) + symbol + name
+      setQuestion(newContent);
+      setInputContent(newContent);
+    },
+    sendQuestion
   }));
 
   const onClickExpander = useCallback(
@@ -66,21 +92,17 @@ const ChatInput = forwardRef(function ChatInput(props, ref) {
   }, [])
 
   const onEnterDown = useCallback(() => {
-    if (question.trim() && !disabledSend) {
-      onSend(question)
-      if (clearInputAfterSubmit) {
-        setTimeout(() => {
-          setInputContent('');
-          setQuestion('');
-        }, 0);
-        setShowExpandIcon(false);
-      }
+    if (!onEnterDownHandler) {
+      sendQuestion();
+    } else {
+      onEnterDownHandler();
     }
-  }, [disabledSend, onSend, question, clearInputAfterSubmit]);
+  }, [onEnterDownHandler, sendQuestion]);
 
   const { onKeyDown, onKeyUp, onCompositionStart, onCompositionEnd } = useCtrlEnterKeyEventsHandler({
     onCtrlEnterDown,
     onEnterDown,
+    onNormalKeyDown,
   });
 
   useEffect(() => {
@@ -105,7 +127,7 @@ const ChatInput = forwardRef(function ChatInput(props, ref) {
           onKeyUp={onKeyUp}
           onCompositionStart={onCompositionStart}
           onCompositionEnd={onCompositionEnd}
-          disabled={isLoading}
+          disabled={isLoading || disabledInput}
           placeholder={placeholder}
           InputProps={{
             style: { color: theme.palette.text.secondary },

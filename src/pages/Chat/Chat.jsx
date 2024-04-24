@@ -7,8 +7,6 @@ import ChatBox from './Components/ChatBox';
 import Participants from './Components/Participants';
 import { useIsCreatingConversation } from '../hooks';
 import { useSearchParams } from 'react-router-dom';
-import { ActionButton } from '@/components/ChatBox/StyledComponents';
-import ClearIcon from '../../components/Icons/ClearIcon';
 import { stableSort } from '@/common/utils';
 import ParticipantSettings from './Components/ParticipantSettings';
 
@@ -73,6 +71,13 @@ const Chat = () => {
     [],
   )
 
+  const onSelectNewParticipant = useCallback(
+    () => {
+      
+    },
+    [],
+  )
+  
   const settings = useMemo(() => ({
     chatOnly: true,
     type: ChatBoxMode.Chat,
@@ -82,14 +87,16 @@ const Chat = () => {
     activeParticipant,
     onClearActiveParticipant,
     activeConversation,
-    setChatHistory
+    setChatHistory,
+    onSelectNewParticipant,
   }), [
     activeConversation,
     activeParticipant,
     isCreatingConversation,
     onClearActiveParticipant,
     onStartNewConversation,
-    setChatHistory
+    setChatHistory,
+    onSelectNewParticipant
   ]);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
   const [collapsedParticipants, setCollapsedParticipants] = useState(false);
@@ -210,25 +217,12 @@ const Chat = () => {
           },
           gap: '12px'
         }}>
-          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <Typography variant='bodyMedium' color='secondary'>
-              {
-                activeConversation?.name
-              }
-            </Typography>
-            <ActionButton
-              aria-label="clear the chat"
-              disabled={false}
-              // eslint-disable-next-line react/jsx-no-bind
-              onClick={() => {
-                boxRef.current?.onClear();
-              }}
-              sx={{ height: '28px', width: '28px' }}
-            >
-              <ClearIcon sx={{ fontSize: 16 }} />
-            </ActionButton>
-          </Box>
           <ChatBox {...settings} ref={boxRef} />
+          <Box sx={{marginTop: '5px'}}>
+            <Typography variant='bodySmall' color='text.button.disabled'>
+              {"Mention symbols: / - prompt, # - datasource, @ - application, > - model"}
+            </Typography>
+          </Box>
         </Grid>
         <Grid item xs={12} lg={collapsedParticipants ? 0.5 : 3}>
           {

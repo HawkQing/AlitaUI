@@ -308,6 +308,7 @@ export const apiSlice = alitaApi.enhanceEndpoints({
 
 export const {
   useApplicationListQuery,
+  useLazyApplicationListQuery,
   useTotalApplicationsQuery,
   useTotalPublicApplicationsQuery,
   useApplicationCreateMutation,
