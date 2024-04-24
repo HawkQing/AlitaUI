@@ -688,6 +688,9 @@ const ChatBox = forwardRef((props, boxRef) => {
             {
               mode === ChatBoxMode.Chat ?
                 (chatHistory?.length > 0 ? chatHistory.map((message, index) => {
+                  if (!message.created_at) {
+                    message.created_at = new Date()
+                  }
                   return message.role === 'user' ?
                     <UserMessage
                       key={message.id}
@@ -696,6 +699,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                       onCopy={onCopyToClipboard(message.id)}
                       onCopyToMessages={onCopyToMessages(message.id, ROLES.User)}
                       onDelete={onDeleteAnswer(message.id)}
+                      created_at={message.created_at}
                     />
                     :
                     !isApplicationChat ? <AIAnswer
@@ -711,6 +715,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                       references={message.references}
                       isLoading={Boolean(message.isLoading)}
                       isStreaming={message.isStreaming}
+                      created_at={message.created_at}
                     /> :
                       <ApplicationAnswer
                         key={message.id}
@@ -731,6 +736,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                         ]}
                         isLoading={Boolean(message.isLoading)}
                         isStreaming={message.isStreaming}
+                        created_at={message.created_at}
                       />
                 }) :
                   <ConversationStartersView items={conversationStarters} onSend={USE_STREAM ? onPredictStream : onClickSend} />
