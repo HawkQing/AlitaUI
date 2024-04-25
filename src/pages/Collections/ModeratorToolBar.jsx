@@ -17,7 +17,7 @@ export default function ModeratorToolBar({ collectionId }) {
 
   const { version } = useParams();
   const { versions, currentVersionFromDetail } = useSelector(state => state.prompts);
-  const versionName = version || currentVersionFromDetail;
+  const versionName = version ? decodeURIComponent(version) : currentVersionFromDetail;
   const restOptionLength = React.useMemo(
     () => versions.filter(
       item => item.status === PromptStatus.OnModeration &&
