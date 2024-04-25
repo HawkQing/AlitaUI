@@ -17,7 +17,7 @@ export default function ModeratorToolBar() {
 
   const { version } = useParams();
   const { versions, currentVersionFromDetail } = useSelector(state => state.prompts);
-  const versionName = version || currentVersionFromDetail;
+  const versionName = version ? decodeURIComponent(version) : currentVersionFromDetail;
   const versionId = React.useMemo(() => versions.find(v => v.name === versionName)?.id, [versions, versionName]);
   const versionStatus = React.useMemo(() => versions.find(v => v.name === versionName)?.status, [versions, versionName]);
   const isOnModeration = React.useMemo(() => versionStatus === PromptStatus.OnModeration, [versionStatus]);
