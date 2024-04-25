@@ -8,6 +8,7 @@ import RestoreIcon from '@/components/Icons/RestoreIcon';
 import VariableList from '@/pages/Prompts/Components/Form/VariableList';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import AlertDialog from '@/components/AlertDialog';
+import { ChatParticipantType } from '@/common/constants';
 
 const ParticipantSettings = ({ onBackAndSave, participant, isActive, onDelete }) => {
   const theme = useTheme()
@@ -29,11 +30,30 @@ const ParticipantSettings = ({ onBackAndSave, participant, isActive, onDelete })
     [],
   )
 
+  const onChangePromptLLMSettings = useCallback(
+    (field) => (value) => {
+      setEditedParticipant(prev => ({
+        ...prev,
+        version_details: {
+          ...prev.version_details,
+          model_settings: {
+            ...prev.version_details.model_settings,
+            [field]: value
+          }
+        }
+      }))
+    },
+    [],
+  )
+
   const onChangeVariable = useCallback(
     (label, newValue) => {
       setEditedParticipant(prev => ({
         ...prev,
-        variables: prev.variables.map((v) => v.name === label ? ({ name: label, value: newValue }) : v)
+        version_details: {
+          ...prev.version_details,
+          variables: prev.variables.map((v) => v.name === label ? ({ name: label, value: newValue }) : v)
+        }
       }))
     },
     [],
@@ -126,18 +146,22 @@ const ParticipantSettings = ({ onBackAndSave, participant, isActive, onDelete })
           </Box>
         </Box>
         {
-          participant.type === 'models' &&
-          <LLMSettings editedParticipant={editedParticipant} onChangeLLMSettings={onChangeLLMSettings} />
+          participant.type === ChatParticipantType.Models &&
+          <LLMSettings llmSettings={editedParticipant} onChangeLLMSettings={onChangeLLMSettings} />
         }
         {
-          participant.type === 'applications' && !!editedParticipant?.variables.length &&
+          participant.type === ChatParticipantType.Prompts &&
+          <LLMSettings llmSettings={editedParticipant.version_details.model_settings} onChangeLLMSettings={onChangePromptLLMSettings} />
+        }
+        {
+          participant.type === ChatParticipantType.Applications && !!editedParticipant?.version_details.variables.length &&
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '8px' }}>
             <Typography sx={{ marginLeft: '12px' }} variant='bodySmall' >
               Application variables
             </Typography>
             <VariableList
               key={forceRenderCounter}
-              variables={editedParticipant?.variables}
+              variables={editedParticipant?.version_details.variables}
               onChangeVariable={onChangeVariable}
               showexpandicon='true'
               multiline

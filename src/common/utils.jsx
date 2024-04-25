@@ -521,5 +521,12 @@ export function getValueByPath(obj, path) {
   return current;
 }
 
+export const uniqueObjectArray = (array, uniqueProp = 'id') => {
+  const result = (array || []).filter((obj, i) => 
+   array.findIndex(o => o[uniqueProp] === obj[uniqueProp]) === i
+ );
+ return result
+}
+
 export default renderStatusComponent;
 

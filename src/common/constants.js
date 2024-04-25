@@ -649,3 +649,36 @@ export const ToolActionStatus = {
   cancelled: 'cancelled',
   processing: 'processing'
 }
+
+export const ChatSearchEvents = {
+  SelectParticipant: 'SelectParticipant'
+}
+
+export const ChatParticipantType = {
+  Applications: 'applications',
+  Datasources: 'datasources',
+  Models: 'models',
+  Prompts: 'prompts',
+}
+
+export const ChatParticipantTypeLabel = {
+  applications: 'Applications',
+  datasources: 'Datasources',
+  models: 'Models',
+  prompts: 'Prompts',
+}
+
+
+export const ChatMentionSymbols = {
+  Prompts: '/',
+  Datasources: '#',
+  Applications: '@',
+  Models: '>'
+}
+
+export const ChatMentionSymbolTypeMap = {
+  '/': ChatParticipantType.Prompts,
+  '#': ChatParticipantType.Datasources,
+  '@': ChatParticipantType.Applications,
+  '>': ChatParticipantType.Models
+}

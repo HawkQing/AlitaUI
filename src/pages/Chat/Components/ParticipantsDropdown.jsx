@@ -27,9 +27,9 @@ const ParticipantsDropdown = ({ type, participants, onSelectParticipant, activeP
 
   const onClickParticipant = useCallback(
     (participant) => () => {
-      onSelectParticipant(participant);
+      onSelectParticipant(participant.id === activeParticipantId ? undefined : participant);
     },
-    [onSelectParticipant],
+    [activeParticipantId, onSelectParticipant],
   )
 
   return participants.length > 1 ? (
@@ -100,6 +100,7 @@ const ParticipantsDropdown = ({ type, participants, onSelectParticipant, activeP
     </>)
     :
     <Box
+      onClick={onClickParticipant(participants[0])}
       sx={{
         display: 'flex',
         justifyContent: 'center',
@@ -109,6 +110,7 @@ const ParticipantsDropdown = ({ type, participants, onSelectParticipant, activeP
         boxSizing: 'border-box',
         padding: '12px',
         borderRadius: '8px',
+        cursor: 'pointer',
         background: isActive ? theme.palette.split.pressed : theme.palette.background.secondary,
         border: isActive ? `1px solid ${theme.palette.split.hover}` : undefined,
       }}>

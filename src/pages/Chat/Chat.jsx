@@ -2,56 +2,36 @@
 import { Grid, Box, Typography } from '@mui/material';
 import Conversations from './Components/Conversations';
 import { useCallback, useState, useRef, useMemo, useEffect } from 'react';
-import { ChatBoxMode } from '@/common/constants';
+import { ChatBoxMode, ChatParticipantType, ChatSearchEvents } from '@/common/constants';
 import ChatBox from './Components/ChatBox';
 import Participants from './Components/Participants';
-import { useIsCreatingConversation } from '../hooks';
-import { useSearchParams } from 'react-router-dom';
+import { useIsCreatingConversation, useSelectedProjectId } from '../hooks';
 import { stableSort } from '@/common/utils';
 import ParticipantSettings from './Components/ParticipantSettings';
+import eventEmitter from '@/common/eventEmitter';
+import { useLazyGetPromptQuery } from '@/api/prompts';
+import { useLazyApplicationDetailsQuery } from '@/api/applications';
+import { useLazyDatasourceDetailsQuery } from '@/api/datasources';
 
 const Chat = () => {
+  const projectId = useSelectedProjectId();
   const [conversations, setConversations] = useState([]);
   const conversationsRef = useRef(conversations)
-  const [activeConversation, setActiveConversation] = useState({ chat_history: [] })
+  const [activeConversation, setActiveConversation] = useState({ chat_history: [], participants: [] })
   const [activeParticipant, setActiveParticipant] = useState()
   const isCreatingConversation = useIsCreatingConversation();
   const [theParticipantEdited, setTheParticipantEdited] = useState()
-  const [, setSearchParams] = useSearchParams();
+  const [getPromptDetail] = useLazyGetPromptQuery();
+  const [getApplicationDetail] = useLazyApplicationDetailsQuery();
+  const [getDatasourceDetail] = useLazyDatasourceDetailsQuery();
 
-  const onStartNewConversation = useCallback(
+  const onChangeConversation = useCallback(
     (newConversation) => {
-      const {
-        id = new Date().getTime(),
-        name,
-        is_public,
-        participant,
-        chat_history,
-      } = newConversation;
-      const newSearchParams = new URLSearchParams({});
-      setSearchParams(newSearchParams, {
-        replace: true,
-      });
-      setActiveConversation({
-        id,
-        name,
-        is_public,
-        participants: [participant],
-        chat_history,
-      });
-      const sortedConversations = stableSort([...conversations, {
-        id,
-        name,
-        is_public,
-        participants: [participant],
-        chat_history,
-      }], (first, second) => {
-        return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
-      })
-      setConversations(sortedConversations);
-      setActiveParticipant(participant);
+      const { participants } = newConversation;
+      setActiveConversation(newConversation);
+      setActiveParticipant(participants[0]);
     },
-    [conversations, setSearchParams],
+    [],
   )
   const onClearActiveParticipant = useCallback(
     () => {
@@ -72,31 +52,61 @@ const Chat = () => {
   )
 
   const onSelectNewParticipant = useCallback(
-    () => {
-      
+    (participant) => {
+      setActiveConversation(prev => {
+        const { participants, id } = prev;
+        if (id) {
+          if (participants.find(item => item.id === participant.id && item.type === ChatParticipantType.Prompts)) {
+            return prev;
+          } else {
+            return {
+              ...prev,
+              participants: [...participants, participant]
+            }
+          }
+        } else {
+          return prev
+        }
+      });
+      setConversations(prev => {
+        return prev.map(conversation => {
+          if (conversation.id === activeConversation.id) {
+            const { participants } = activeConversation;
+            if (participants.find(item => item.id === participant.id && item.type === ChatParticipantType.Prompts)) {
+              return activeConversation;
+            } else {
+              return {
+                ...activeConversation,
+                participants: [...participants, participant]
+              }
+            }
+          } else {
+            return conversation
+          }
+        })
+      })
     },
-    [],
+    [activeConversation],
   )
-  
+
   const settings = useMemo(() => ({
     chatOnly: true,
     type: ChatBoxMode.Chat,
     messageListSX: { height: 'calc(100vh - 250px)' },
     isNewConversation: isCreatingConversation,
-    onStartNewConversation,
     activeParticipant,
     onClearActiveParticipant,
     activeConversation,
     setChatHistory,
-    onSelectNewParticipant,
+    onChangeConversation,
+    onSelectActiveParticipant: setActiveParticipant,
   }), [
     activeConversation,
     activeParticipant,
     isCreatingConversation,
     onClearActiveParticipant,
-    onStartNewConversation,
     setChatHistory,
-    onSelectNewParticipant
+    onChangeConversation
   ]);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
   const [collapsedParticipants, setCollapsedParticipants] = useState(false);
@@ -189,7 +199,64 @@ const Chat = () => {
     },
     [activeConversation, activeParticipant?.id],
   )
- 
+
+  const onSelectParticipantFromSearch = useCallback(
+    async ({ type, participant }) => {
+      if (!activeConversation.id) {
+        return;
+      }
+      switch (type) {
+        case ChatParticipantType.Prompts:
+          {
+            const result = await getPromptDetail({ projectId, promptId: participant.id })
+            const promptDetail = result?.data || {};
+            onSelectNewParticipant({
+              type: ChatParticipantType.Prompts,
+              id: participant.id,
+              name: promptDetail.name,
+              version_id: promptDetail.version_details.id,
+              version_details: promptDetail.version_details,
+              versions: promptDetail.versions
+            })
+          }
+          break;
+        case ChatParticipantType.Applications:
+          {
+            const result = await getApplicationDetail({ projectId, applicationId: participant.id })
+            const applicationDetail = result?.data || {};
+            onSelectNewParticipant({
+              type: ChatParticipantType.Applications,
+              id: participant.id,
+              name: applicationDetail.name,
+              version_id: applicationDetail.version_details.id,
+              version_details: applicationDetail.version_details,
+              versions: applicationDetail.versions
+            })
+          }
+          break;
+        case ChatParticipantType.Datasources:
+          {
+            const result = await getDatasourceDetail({ projectId, datasourceId: participant.id })
+            const datasourceDetail = result?.data || {};
+            onSelectNewParticipant({
+              type: ChatParticipantType.Datasources,
+              id: participant.id,
+              name: datasourceDetail.name,
+              description: datasourceDetail.description,
+              version_id: datasourceDetail.version_details.id,
+              version_details: datasourceDetail.version_details,
+              versions: datasourceDetail.versions
+            })
+          }
+          break;
+        default:
+          break;
+      }
+
+    },
+    [activeConversation.id, getApplicationDetail, getDatasourceDetail, getPromptDetail, onSelectNewParticipant, projectId],
+  )
+
   useEffect(() => {
     conversationsRef.current = conversations
   }, [conversations])
@@ -197,6 +264,34 @@ const Chat = () => {
   useEffect(() => {
     setConversations(conversationsRef.current.map(conversation => conversation.id === activeConversation.id ? { ...activeConversation } : conversation))
   }, [activeConversation])
+
+  useEffect(() => {
+    eventEmitter.on(ChatSearchEvents.SelectParticipant, onSelectParticipantFromSearch)
+    return () => {
+      eventEmitter.off(ChatSearchEvents.SelectParticipant, onSelectParticipantFromSearch)
+    }
+  }, [onSelectParticipantFromSearch])
+
+  useEffect(() => {
+    if (isCreatingConversation) {
+      const newConversation = {
+        id: new Date().getTime(),
+        name: 'New Conversation',
+        is_public: false,
+        participants: [{ type: ChatParticipantType.Models }],
+        chat_history: [],
+      }
+      setActiveConversation(newConversation);
+      setActiveParticipant()
+
+      setConversations((prev) => {
+        const sortedConversations = stableSort([...prev, newConversation], (first, second) => {
+          return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
+        })
+        return sortedConversations
+      });
+    }
+  }, [isCreatingConversation])
 
   return (
     <>
@@ -218,7 +313,7 @@ const Chat = () => {
           gap: '12px'
         }}>
           <ChatBox {...settings} ref={boxRef} />
-          <Box sx={{marginTop: '5px'}}>
+          <Box sx={{ marginTop: '5px' }}>
             <Typography variant='bodySmall' color='text.button.disabled'>
               {"Mention symbols: / - prompt, # - datasource, @ - application, > - model"}
             </Typography>

@@ -1,5 +1,6 @@
 import {
   AutoChatSuggestionTitles,
+  ChatParticipantType,
   SortFields,
   SortOrderOptions
 } from '@/common/constants';
@@ -26,6 +27,7 @@ const useDebounce = (value, delay) => {
 export default function ChatSuggestionList({
   searchString,
   isEmptyInput,
+  onSelectParticipant,
 }) {
   const {
     projectId,
@@ -111,20 +113,39 @@ export default function ChatSuggestionList({
     setApplicationPage(prev => prev + 1);
   }, []);
 
-  const debouncedInputValue = useDebounce(searchString, 500);
-  useEffect(() => {
-    if (!isEmptyInput) {
+  const resetSearchResult = useCallback(
+    () => {
       setPromptPage(0)
       setDatasourcePage(0)
       setApplicationPage(0)
       clearPrompts()
       clearApplications()
       clearDatasources()
+    },
+    [clearApplications, clearDatasources, clearPrompts],
+  )
+  const resetSearchResultRef = useRef(resetSearchResult);
+
+  useEffect(() => {
+    resetSearchResultRef.current = resetSearchResult;
+  }, [resetSearchResult])
+  
+
+  const debouncedInputValue = useDebounce(searchString, 500);
+  useEffect(() => {
+    if (!isEmptyInput) {
+      resetSearchResultRef.current();
       getPromptsRef.current(debouncedInputValue, 0);
       getDatasourcesRef.current(debouncedInputValue, 0);
       getApplicationsRef.current(debouncedInputValue, 0);
     }
-  }, [isEmptyInput, debouncedInputValue, clearPrompts, clearApplications, clearDatasources]);
+  }, [isEmptyInput, debouncedInputValue]);
+
+  useEffect(() => {
+    if (isEmptyInput) {
+      resetSearchResultRef.current()
+    }
+  }, [isEmptyInput])
 
   useEffect(() => {
     if (promptPage > 0) {
@@ -144,12 +165,36 @@ export default function ChatSuggestionList({
     }
   }, [applicationPage, getApplications, searchString]);
 
-  const renderItem = useCallback((item) => {
-    // eslint-disable-next-line react/jsx-no-bind, no-console
-    return <StyledListItem key={item.id} onClick={() => console.log('select=======>', item.name)}>
+  const clickOneItem = useCallback(
+    (type, item) => () => {
+      onSelectParticipant(type, item)
+    },
+    [onSelectParticipant],
+  )
+
+  const renderPromptsItem = useCallback((item) => {
+    return <StyledListItem key={item.id} onClick={clickOneItem(ChatParticipantType.Prompts, item)}>
       {item.name}
     </StyledListItem>
-  }, []);
+  }, [clickOneItem]);
+
+  const renderDatasourceItem = useCallback((item) => {
+    return <StyledListItem key={item.id} onClick={clickOneItem(ChatParticipantType.Datasources, item)}>
+      {item.name}
+    </StyledListItem>
+  }, [clickOneItem]);
+
+  const renderApplicationItem = useCallback((item) => {
+    return <StyledListItem key={item.id} onClick={clickOneItem(ChatParticipantType.Applications, item)}>
+      {item.name}
+    </StyledListItem>
+  }, [clickOneItem]);
+
+  useEffect(() => {
+    return () => {
+      resetSearchResultRef.current()
+    }
+  }, [])
 
   return (
     <StyledList>
@@ -158,7 +203,7 @@ export default function ChatSuggestionList({
         data={promptResult}
         total={promptTotal}
         isFetching={isFetchingPrompts}
-        renderItem={renderItem}
+        renderItem={renderPromptsItem}
         fetchMoreData={fetchMorePromptData}
       />
       <ListSection
@@ -166,7 +211,7 @@ export default function ChatSuggestionList({
         data={datasourceResult}
         total={datasourceTotal}
         isFetching={isFetchingDatasources}
-        renderItem={renderItem}
+        renderItem={renderDatasourceItem}
         fetchMoreData={fetchMoreDatasourceData}
       />
       <ListSection
@@ -174,7 +219,7 @@ export default function ChatSuggestionList({
         data={applicationResult}
         total={applicationTotal}
         isFetching={isFetchingApplications}
-        renderItem={renderItem}
+        renderItem={renderApplicationItem}
         fetchMoreData={fetchMoreApplicationData}
       />
       <ApiToast />

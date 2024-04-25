@@ -1,3 +1,4 @@
+import { ChatParticipantType } from '@/common/constants';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import ConsoleIcon from '@/components/Icons/ConsoleIcon';
 import DatabaseIcon from '@/components/Icons/DatabaseIcon';
@@ -5,17 +6,17 @@ import EmojiIcon from '@/components/Icons/EmojiIcon';
 import ModelIcon from '@/components/Icons/ModelIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import { Box, Tooltip, Typography, useTheme } from '@mui/material';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
 export const getIcon = (type, isActive, theme, showBigIcon = false) => {
   switch (type) {
-    case 'prompts':
+    case ChatParticipantType.Prompts:
       return <ConsoleIcon fontSize={showBigIcon ? '24px' : '16px'} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
-    case 'datasources':
+    case ChatParticipantType.Datasources:
       return <DatabaseIcon fontSize={showBigIcon ? '24px' : '16px'} sx={{ color: isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default }} />
-    case 'applications':
+    case ChatParticipantType.Applications:
       return <ApplicationsIcon sx={{ color: isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default, fontSize: showBigIcon ? 24 : 16 }} />
-    case 'models':
+    case ChatParticipantType.Models:
       return <ModelIcon width={showBigIcon ? 24 : 16} height={showBigIcon ? 24 : 16} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} />
     default:
       return <EmojiIcon width={showBigIcon ? 24 : 16} height={showBigIcon ? 24 : 16} fill={isActive ? theme.palette.icon.fill.tips : theme.palette.icon.fill.default} fontSize={showBigIcon ? '24px' : '16px'} />
@@ -24,17 +25,6 @@ export const getIcon = (type, isActive, theme, showBigIcon = false) => {
 
 const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, onShowSettings }) => {
   const { type, name, model_name } = participant
-  const hasSettings = useMemo(() => {
-    switch (participant.type) {
-      case 'models':
-        return true;
-      case 'prompts':
-      case 'applications':
-        return !!participant.variables?.length;
-      default:
-        return false;
-    }
-  }, [participant.type, participant.variables])
   const theme = useTheme();
   const onClickSettings = useCallback(
     (event) => {
@@ -88,7 +78,7 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
             }
           </Typography>
         </Box>}
-        {!collapsed && hasSettings && <Box
+        {!collapsed && <Box
           id='SettingButton'
           sx={{
             width: '24px',
