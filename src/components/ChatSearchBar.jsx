@@ -1,30 +1,24 @@
 import {
-  MIN_SEARCH_KEYWORD_LENGTH
-} from '@/common/constants';
-import { actions } from '@/slices/search';
-import {
   ClickAwayListener,
-  Popper} from '@mui/material';
+  Popper
+} from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import {
   SearchPanel,
   StyledCancelIcon,
   StyledInputBase,
   StyledSearchIcon,
-  StyledSendIcon,
 } from './SearchBarComponents';
-import useToast from './useToast';
 import ChatSuggestionList from './ChatSuggestionList';
+import eventEmitter from '@/common/eventEmitter';
+import { ChatSearchEvents } from '@/common/constants';
 
 export default function ChatSearchBar({
   searchString,
   setSearchString,
   onClear,
 }) {
-  const { query } = useSelector(state => state.search);
-  const disableSearchButton = useMemo(() => !searchString || query === searchString, [query, searchString]);
 
   // input props
   const isEmptyInput = useMemo(() => !searchString || searchString.trim() === '', [searchString]);
@@ -48,7 +42,8 @@ export default function ChatSearchBar({
     if (inputRef.current) {
       inputRef.current.blur();
     }
-  }, []);
+    onClear()
+  }, [onClear]);
 
 
   // auto suggest list items interactions
@@ -63,44 +58,12 @@ export default function ChatSearchBar({
     [onClear, setSearchString],
   );
 
-  const handleClickTop = useCallback((search_keyword) => {
-    handleInputChange({ target: { value: search_keyword } })
-  }, [handleInputChange]);
-
-
-  // search logics
-  const dispatch = useDispatch();
-  const { ToastComponent: Toast, toastInfo } = useToast();
-  const onSearch = useCallback(
-    () => {
-      handleClickAway();
-      if (isEmptyInput) {
-        dispatch(actions.setQuery({ query: ''}));
-        return;
-      }
-
-      const trimmedSearchString = searchString.trim();
-      setSearchString(trimmedSearchString);
-      if (trimmedSearchString.length >= MIN_SEARCH_KEYWORD_LENGTH) {
-        const isChanged = query !== trimmedSearchString;
-        if (isChanged) {
-          dispatch(actions.setQuery({ query: trimmedSearchString }));
-        }
-      } else {
-        toastInfo('The search key word should be at least 3 letters long');
-      }
+  const onSelectParticipant = useCallback(
+    (type, participant) => {
+      eventEmitter.emit(ChatSearchEvents.SelectParticipant, { type, participant })
     },
-    [dispatch, handleClickAway, isEmptyInput, query, searchString, setSearchString, toastInfo],
-  );
-
-  const onKeyDown = useCallback(
-    (event) => {
-      if (event.key === 'Enter') {
-        onSearch();
-      }
-    },
-    [onSearch],
-  );
+    [],
+  )
 
   useEffect(() => {
     if (open) {
@@ -120,21 +83,16 @@ export default function ChatSearchBar({
         <SearchPanel ref={panelRef}>
           <StyledSearchIcon />
           <StyledInputBase
-            placeholder='Let’s find something amaizing!'
+            placeholder='Let’s add participants to your conversation!'
             inputProps={{ 'aria-label': 'search' }}
             inputRef={inputRef}
             onChange={handleInputChange}
             onFocus={handleFocus}
-            onKeyDown={onKeyDown}
             value={searchString}
             endAdornment={
               showSearchButton &&
               <InputAdornment position='end'>
                 <StyledCancelIcon onClick={onClear} />
-                <StyledSendIcon
-                  disabled={disableSearchButton}
-                  onClick={onSearch}
-                />
               </InputAdornment>
             }
           />
@@ -148,10 +106,9 @@ export default function ChatSearchBar({
             <ChatSuggestionList
               searchString={searchString}
               isEmptyInput={isEmptyInput}
-              handleClickTop={handleClickTop}
+              onSelectParticipant={onSelectParticipant}
             />
           </Popper>
-          <Toast />
         </SearchPanel>
       </ClickAwayListener>
     </>

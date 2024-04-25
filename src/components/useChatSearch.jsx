@@ -4,6 +4,7 @@ import { useLazyDatasourceListQuery } from '@/api/datasources';
 import { useLazyApplicationListQuery } from '@/api/applications';
 import { useSelectedProjectId } from '@/pages/hooks';
 import { useLazyPromptListQuery } from '@/api/prompts';
+import { uniqueObjectArray } from '@/common/utils';
 
 const getErrorMessage = (error) => {
   return error?.data?.message || error?.data?.error
@@ -19,6 +20,7 @@ export default function useChatSearch() {
     data: prompt = {},
     isFetching: isFetchingPrompts,
     error: promptSuggestionError,
+    isSuccess: isPromptSuccess, 
   }] = useLazyPromptListQuery();
 
   const { rows: promptResult = [], total: promptTotal } = prompt || {};
@@ -31,8 +33,10 @@ export default function useChatSearch() {
   )
 
   useEffect(() => {
-    setCachedPrompts(prev => [...prev, ...promptResult])
-  }, [promptResult])
+    if (isPromptSuccess) {
+      setCachedPrompts(prev => uniqueObjectArray([...prev, ...promptResult], 'id'))
+    }
+  }, [isPromptSuccess, promptResult])
 
   useEffect(() => {
     if (isFetchingPrompts) return;
@@ -45,6 +49,7 @@ export default function useChatSearch() {
     data: datasource = {},
     isFetching: isFetchingDatasources,
     error: datasourceSuggestionError,
+    isSuccess: isDatasourceSuccess,
   }] = useLazyDatasourceListQuery()
 
   const { rows: datasourceResult = [], total: datasourceTotal } = datasource || {};
@@ -57,8 +62,10 @@ export default function useChatSearch() {
   )
 
   useEffect(() => {
-    setCachedDatasources(prev => [...prev, ...datasourceResult])
-  }, [datasourceResult])
+    if (isDatasourceSuccess) {
+      setCachedDatasources(prev => uniqueObjectArray([...prev, ...datasourceResult], 'id'))
+    }
+  }, [datasourceResult, isDatasourceSuccess])
 
   useEffect(() => {
     if (isFetchingDatasources) return;
@@ -71,6 +78,7 @@ export default function useChatSearch() {
     data: application = {},
     isFetching: isFetchingApplications,
     error: applicationSuggestionError,
+    isSuccess: isApplicationSuccess,
   }] = useLazyApplicationListQuery();
 
   const { rows: applicationResult = [], total: applicationTotal } = application || {};
@@ -83,8 +91,10 @@ export default function useChatSearch() {
   )
 
   useEffect(() => {
-    setCachedApplications(prev => [...prev, ...applicationResult])
-  }, [applicationResult])
+    if (isApplicationSuccess) {
+      setCachedApplications(prev => uniqueObjectArray([...prev, ...applicationResult], 'id'))
+    }
+  }, [applicationResult, isApplicationSuccess])
 
   useEffect(() => {
     if (isFetchingApplications) return;

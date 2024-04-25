@@ -66,14 +66,13 @@ export const generatePayload = ({
     stream,
     model: {
       model_name,
-      name: model_name, //TODO: (model_name) if the BE is ready, this "name" field should be removed
       integration_uid,
     }
   },
   variables: variables ? variables.map((item) => {
-    const { key, value } = item;
+    const { key, name: variableName, value } = item;
     return {
-      name: key,
+      name: variableName || key,
       value,
     }
   }) : [],

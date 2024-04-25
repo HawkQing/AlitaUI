@@ -1,28 +1,7 @@
+import { ChatMentionSymbolTypeMap } from '@/common/constants';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 
-const SpecialSymbols = {
-  Prompts: '/',
-  Datasources: '#',
-  Applications: '@',
-  Models: '>'
-}
-
 const SpecialSymbolsString = '/#@>'
-
-const getParticipantType = (symbol) => {
-  switch (symbol) {
-    case SpecialSymbols.Prompts:
-      return 'prompts'
-    case SpecialSymbols.Models:
-      return 'models'
-    case SpecialSymbols.Datasources:
-      return 'datasources'
-    case SpecialSymbols.Applications:
-      return 'applications'
-    default:
-      return '';
-  }
-}
 
 const useInputKeyDownHandler = (participants) => {
   const [isProcessingSymbols, setIsProcessingSymbols] = useState(false)
@@ -35,8 +14,8 @@ const useInputKeyDownHandler = (participants) => {
   const suggestions = useMemo(() => {
     if (isProcessingSymbols) {
       return !realQuery ?
-      theSelectedParticipants :
-      theSelectedParticipants.filter(
+        theSelectedParticipants :
+        theSelectedParticipants.filter(
           participant => (participant.name || participant.model_name).startsWith(realQuery)
         )
     }
@@ -48,7 +27,7 @@ const useInputKeyDownHandler = (participants) => {
       if (!isProcessingSymbols && event.key.length === 1 && SpecialSymbolsString.includes(event.key)) {
         setIsProcessingSymbols(true);
         setQuery(event.key);
-        setParticipantType(getParticipantType(event.key))
+        setParticipantType(ChatMentionSymbolTypeMap[event.key])
       } else if (isProcessingSymbols) {
         if (event.key.length === 1 && event.key.match(/^[\w\s]+$/)) {
           setQuery(prev => prev + event.key);

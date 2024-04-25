@@ -1,23 +1,9 @@
 import { useLazyGetModelsQuery } from '@/api/integrations';
+import { ChatParticipantType, ChatParticipantTypeLabel } from '@/common/constants';
 import { useSelectedProjectId } from '@/pages/hooks';
 import { useTheme } from '@emotion/react';
 import { Box, Typography } from '@mui/material';
 import { useCallback, useRef, useState, forwardRef, useImperativeHandle, useEffect } from 'react';
-
-const getTypeLabel = (type) => {
-  switch (type) {
-    case 'models':
-      return 'Models';
-    case 'applications':
-      return 'Agents';
-    case 'datasources':
-      return 'Datasources';
-    case 'prompts':
-      return 'Prompts';
-    default:
-      break;
-  }
-}
 
 const SuggestedParticipants = forwardRef(({ participants, participantType, onSelectParticipant }, controlRef) => {
   const theme = useTheme();
@@ -56,7 +42,7 @@ const SuggestedParticipants = forwardRef(({ participants, participantType, onSel
   }));
 
   useEffect(() => {
-    if (participantType === 'models') {
+    if (participantType === ChatParticipantType.Models) {
       getModels(projectId);
     }
   }, [getModels, participantType, projectId])
@@ -76,7 +62,7 @@ const SuggestedParticipants = forwardRef(({ participants, participantType, onSel
           }}
         >
           <Typography variant='bodyMedium' color='text.default'>
-            {`${getTypeLabel(participantType)} suggestions`}
+            {`${ChatParticipantTypeLabel[participantType]} suggestions`}
           </Typography>
         </Box>
         <Box
@@ -119,7 +105,7 @@ const SuggestedParticipants = forwardRef(({ participants, participantType, onSel
                   }
                 </Typography>
                 {
-                  participantType === 'models' &&
+                  participantType === ChatParticipantType.Models &&
                   <Typography variant='bodySmall' color='text.default'>
                     {
                       participant.integration_name || integrations?.find(integration => integration.uid === participant.integration_uid)?.config?.name

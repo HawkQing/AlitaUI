@@ -90,6 +90,7 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
               </Box>
               :
               <ParticipantsDropdown
+                key={type}
                 activeParticipantId={activeParticipantId}
                 type={type}
                 participants={participantsOfTheType}

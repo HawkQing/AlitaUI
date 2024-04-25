@@ -13,6 +13,7 @@ import {
   DEFAULT_TEMPERATURE,
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
+  ChatParticipantType,
 } from '@/common/constants';
 import GroupedButton from '@/components/GroupedButton';
 import useModelOptions from '@/pages/DataSources/Components/Datasources/useModelOptions';
@@ -48,13 +49,13 @@ const StyledContainer = styled(Box)(() => (
 
 const buttonItems = [{
   label: 'Model',
-  value: 'models',
+  value: ChatParticipantType.Models,
 }, {
   label: 'Datasource',
-  value: 'datasources',
+  value: ChatParticipantType.Datasources,
 }, {
   label: 'Application',
-  value: 'applications',
+  value: ChatParticipantType.Applications,
 }]
 
 const NewConversationSettings = ({
@@ -64,7 +65,7 @@ const NewConversationSettings = ({
   const theme = useTheme();
   const conversationRef = useRef(conversation);
   const { modelOptions } = useModelOptions();
-  const [currentSettingType, setCurrentSettingType] = useState('models')
+  const [currentSettingType, setCurrentSettingType] = useState(ChatParticipantType.Models)
   const projectId = useSelectedProjectId();
 
   useEffect(() => {
@@ -72,10 +73,10 @@ const NewConversationSettings = ({
   }, [conversation])
 
   useEffect(() => {
-    setCurrentSettingType(conversation.participant.type);
-  }, [conversation.participant.type])
+    setCurrentSettingType(conversation.participants[0]?.type || ChatParticipantType.Models);
+  }, [conversation.participants])
 
-  const selectedChatModel = useMemo(() => conversation.participant || {}, [conversation.participant])
+  const selectedChatModel = useMemo(() => conversation.participants[0] || {}, [conversation.participants])
   const chatModelValue = useMemo(() =>
   (
     selectedChatModel.integration_uid &&
@@ -87,31 +88,29 @@ const NewConversationSettings = ({
     [modelOptions, selectedChatModel.integration_uid, selectedChatModel.model_name]);
   const { getApplicationDetail, applicationDetail } = useQueryApplicationDetail();
   const { getDatasourceDetail, datasourceDetail } = useQueryDataSourceDetail();
-  const variables = useMemo(() => conversation?.participant?.variables || [], [conversation?.participant?.variables])
+  const variables = useMemo(() => conversation?.participants[0]?.version_details?.variables || [], [conversation?.participants])
 
   useEffect(() => {
-    if (applicationDetail?.version_details?.variables) {
+    if (applicationDetail?.version_details) {
       onChangeConversation({
         ...conversationRef.current,
-        participant: {
-          ...conversationRef.current.participant,
-          variables: [...applicationDetail.version_details.variables],
-          llm_settings: applicationDetail.version_details.llm_settings
-        },
+        participants: [{
+          ...conversationRef.current.participants[0],
+          version_details: applicationDetail.version_details,
+        }],
       })
     }
-  }, [applicationDetail?.version_details?.llm_settings, applicationDetail?.version_details?.variables, onChangeConversation])
+  }, [applicationDetail?.version_details, applicationDetail?.version_details.variables, onChangeConversation])
 
   useEffect(() => {
     if (datasourceDetail?.version_details) {
       onChangeConversation({
         ...conversationRef.current,
-        participant: {
-          ...conversationRef.current.participant,
-          chatSettings: datasourceDetail?.version_details?.datasource_settings?.chat,
-          versionId: datasourceDetail?.version_details?.id,
-          context: datasourceDetail?.version_details?.context 
-        },
+        participants: [{
+          ...conversationRef.current.participants[0],
+          version_details: datasourceDetail?.version_details,
+          versions: datasourceDetail?.version_details,
+        }],
       })
     }
   }, [
@@ -130,12 +129,12 @@ const NewConversationSettings = ({
   const onSelectParticipantType = useCallback(
     (e) => {
       const newType = e?.target?.value;
-      if (newType !== conversation.participant.type) {
+      if (newType !== conversation.participants[0]?.type) {
         onChangeConversation({
           ...conversation,
-          participant: {
+          participants: [{
             type: newType,
-          }
+          }]
         })
       }
     },
@@ -152,8 +151,8 @@ const NewConversationSettings = ({
   const onChangeChatModel = useCallback((integrationUid, modelName, integrationName) => {
     onChangeConversation({
       ...conversation,
-      participant: {
-        ...conversation.participant,
+      participants: [{
+        ...conversation.participants[0],
         id: integrationUid + '_' + modelName,
         integration_uid: integrationUid,
         model_name: modelName,
@@ -162,7 +161,7 @@ const NewConversationSettings = ({
         top_k: DEFAULT_TOP_K,
         temperature: DEFAULT_TEMPERATURE,
         integration_name: integrationName,
-      },
+      }],
     })
   }, [conversation, onChangeConversation])
 
@@ -170,10 +169,10 @@ const NewConversationSettings = ({
     (field) => (value) => {
       onChangeConversation({
         ...conversation,
-        participant: {
-          ...conversation.participant,
+        participants: [{
+          ...conversation.participants[0],
           [field]: value
-        },
+        }],
       })
     },
     [conversation, onChangeConversation],
@@ -182,12 +181,12 @@ const NewConversationSettings = ({
   const onChangeChatDatasource = useCallback((datasource) => {
     onChangeConversation({
       ...conversation,
-      participant: {
-        ...conversation.participant,
+      participants: [{
+        ...conversation.participants[0],
         name: datasource.label,
         id: datasource.value,
         description: datasource.description,
-      },
+      }],
     })
     getDatasourceDetail({ projectId, datasourceId: datasource.value })
   }, [conversation, getDatasourceDetail, onChangeConversation, projectId]);
@@ -195,13 +194,13 @@ const NewConversationSettings = ({
   const onChangeChatApplication = useCallback((application) => {
     onChangeConversation({
       ...conversation,
-      participant: {
-        ...conversation.participant,
+      participants: [{
+        ...conversation.participants[0],
         name: application.label,
         id: application.value,
         description: application.description,
         variables: [],
-      },
+      }],
     })
     getApplicationDetail({ projectId, applicationId: application.value })
   }, [conversation, getApplicationDetail, onChangeConversation, projectId]);
@@ -209,10 +208,13 @@ const NewConversationSettings = ({
   const onChangeVariable = useCallback((label, newValue) => {
     onChangeConversation({
       ...conversation,
-      participant: {
-        ...conversation.participant,
-        variables: conversation.participant.variables.map((v) => v.name === label ? ({ name: label, value: newValue }) : v)
-      },
+      participants: [{
+        ...conversation.participants[0],
+        version_details: {
+          ...conversation.participants[0]?.version_details,
+          variables: conversation.participants[0]?.version_details.variables.map((v) => v.name === label ? ({ name: label, value: newValue }) : v)
+        }
+      }],
     })
   }, [conversation, onChangeConversation]);
 
@@ -240,7 +242,7 @@ const NewConversationSettings = ({
       }}>
         <DialogTitleDiv>
           <StyledInputEnhancer
-            value={conversation.name}
+            value={conversation.name || ''}
             autoComplete="off"
             variant='standard'
             onChange={onChangeName}
@@ -288,7 +290,7 @@ const NewConversationSettings = ({
         </Box>
         <Box sx={{ width: '100%' }}>
           {
-            currentSettingType === 'models' &&
+            currentSettingType === ChatParticipantType.Models &&
             <SingleGroupSelect
               label={'Model'}
               value={chatModelValue}
@@ -297,22 +299,22 @@ const NewConversationSettings = ({
             />
           }
           {
-            currentSettingType === 'datasources' &&
+            currentSettingType === ChatParticipantType.Datasources &&
             <DatasourceSelect
               required
               onValueChange={onChangeChatDatasource}
-              value={conversation.participant.id}
+              value={conversation.participants[0]?.id || ''}
               error={false}
               helperText={''}
               shouldUseSelectedProject
             />
           }
           {
-            currentSettingType === 'applications' &&
+            currentSettingType === ChatParticipantType.Applications &&
             <ApplicationSelect
               required
               onValueChange={onChangeChatApplication}
-              value={conversation.participant.id}
+              value={conversation.participants[0]?.id || ''}
               error={false}
               helperText={''}
               shouldUseSelectedProject
@@ -320,11 +322,11 @@ const NewConversationSettings = ({
           }
         </Box>
         {
-          currentSettingType === 'models' && selectedChatModel.model_name &&
+          currentSettingType === ChatParticipantType.Models && selectedChatModel.model_name &&
           <LLMSettings llmSettings={selectedChatModel} onChangeLLMSettings={onChangeLLMSettings} />
         }
         {
-          currentSettingType === 'applications' && !!variables.length &&
+          currentSettingType === ChatParticipantType.Applications && !!variables.length &&
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
             <Typography sx={{ marginLeft: '12px' }} variant='bodySmall' >
               Application variables

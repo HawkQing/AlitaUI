@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
 import { useAskAlitaMutation } from '@/api/prompts';
 import {
+  ChatParticipantType,
   DEFAULT_MAX_TOKENS,
   DEFAULT_TEMPERATURE,
   DEFAULT_TOP_K,
@@ -32,11 +33,29 @@ import { generateDatasourceChatPayload } from '@/pages/DataSources/Components/Da
 import useInputKeyDownHandler from './useInputKeyDownHandler';
 import SuggestedParticipants from './SuggestedParticipants';
 import ChatBoxHeader from './ChatBoxHeader';
+import { useSearchParams } from 'react-router-dom';
 
 const USE_STREAM = true
 
 const getModelSettings = (participant) => {
-  if (participant.type === 'models') {
+  if (participant.type === ChatParticipantType.Prompts) {
+    const {
+      max_tokens = DEFAULT_MAX_TOKENS,
+      top_p = DEFAULT_TOP_P,
+      top_k = DEFAULT_TOP_K,
+      temperature = DEFAULT_TEMPERATURE,
+      model = {}
+    } = participant.version_details.model_settings
+    const { integration_uid, model_name, } = model
+    return {
+      max_tokens,
+      top_p,
+      top_k,
+      temperature,
+      integration_uid,
+      model_name,
+    }
+  } else if (participant.type === ChatParticipantType.Models) {
     const {
       max_tokens = DEFAULT_MAX_TOKENS,
       top_p = DEFAULT_TOP_P,
@@ -53,7 +72,7 @@ const getModelSettings = (participant) => {
       integration_uid,
       model_name,
     }
-  } else if (participant.type === 'applications') {
+  } else if (participant.type === ChatParticipantType.Applications) {
     const {
       max_tokens = DEFAULT_MAX_TOKENS,
       top_p = DEFAULT_TOP_P,
@@ -61,7 +80,7 @@ const getModelSettings = (participant) => {
       temperature = DEFAULT_TEMPERATURE,
       integration_uid,
       model_name,
-    } = participant.llm_settings || {};
+    } = participant.version_details.llm_settings || {};
     return {
       max_tokens,
       top_p,
@@ -77,28 +96,16 @@ const getModelSettings = (participant) => {
 const ChatBox = forwardRef((props, boxRef) => {
   const theme = useTheme();
   const {
-    prompt_id,
-    context,
-    messages,
-    variables,
-    currentVersionId,
     messageListSX,
     isNewConversation,
-    onStartNewConversation,
+    onChangeConversation,
     activeParticipant,
     onClearActiveParticipant,
     activeConversation,
     setChatHistory,
-    onSelectNewParticipant,
+    onSelectActiveParticipant,
   } = props
-  const [conversation, setConversation] = useState({
-    name: 'New Conversation',
-    is_public: false,
-    participant: {
-      type: 'models'
-    },
-    chat_history: [],
-  })
+  const [, setSearchParams] = useSearchParams();
   const projectId = useSelectedProjectId();
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
   const { name, id: userId } = useSelector(state => state.user)
@@ -116,9 +123,18 @@ const ChatBox = forwardRef((props, boxRef) => {
   const setChatHistoryRef = useRef(setChatHistory);
   const suggestedParticipantsRef = useRef();
 
+  const resetCreateFlag = useCallback(
+    () => {
+      const newSearchParams = new URLSearchParams({});
+      setSearchParams(newSearchParams, {
+        replace: true,
+      });
+    },
+    [setSearchParams],
+  )
 
   const getPayload = useCallback((question, question_id, chatHistory) => {
-    const realParticipant = activeParticipant || conversation.participant || {};
+    const realParticipant = activeParticipant || {};
     const {
       max_tokens = DEFAULT_MAX_TOKENS,
       top_p = DEFAULT_TOP_P,
@@ -127,24 +143,45 @@ const ChatBox = forwardRef((props, boxRef) => {
       integration_uid,
       model_name,
     } = getModelSettings(realParticipant)
-    return realParticipant.type === 'datasources' ? { ...generateDatasourceChatPayload(question, realParticipant.context, chatHistory || chat_history, realParticipant.chatSettings), project_id: projectId, version_id: realParticipant.versionId } :
-      generateChatPayload({
-        projectId, prompt_id, context, temperature, max_tokens, top_p,
-        top_k, model_name, integration_uid, variables, question, messages,
-        chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId,
-        question_id
-      })
+    switch (realParticipant.type) {
+      case ChatParticipantType.Datasources:
+        return {
+          ...generateDatasourceChatPayload(question,
+            realParticipant.version_details?.context,
+            chatHistory || chat_history,
+            realParticipant.version_details?.datasource_settings?.chat,
+          ),
+          project_id: projectId,
+          version_id: realParticipant.version_details?.id
+        }
+      case ChatParticipantType.Prompts:
+        return generateChatPayload({
+          projectId, prompt_id: realParticipant.id, context: realParticipant.version_details.context, temperature, max_tokens, top_p,
+          top_k, model_name, integration_uid, variables: realParticipant.version_details.variables, question,
+          chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId: realParticipant.versionId,
+          question_id
+        })
+      case ChatParticipantType.Applications:
+        return generateChatPayload({
+          projectId, context: realParticipant.version_details.context, temperature, max_tokens, top_p,
+          top_k, model_name, integration_uid, variables: realParticipant.version_details.variables, question, messages: realParticipant.version_details.messages,
+          chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId: realParticipant.versionId,
+          question_id
+        })
+      default:
+        return generateChatPayload({
+          projectId, prompt_id: undefined, context: undefined, temperature, max_tokens, top_p,
+          top_k, model_name, integration_uid, variables: undefined, question, messages: undefined,
+          chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId: undefined,
+          question_id
+        })
+    }
   }, [
-    conversation.participant,
     activeParticipant,
     chat_history,
-    context,
-    currentVersionId,
-    messages,
     name,
     projectId,
-    prompt_id,
-    variables])
+  ])
 
   useEffect(() => {
     activeParticipantRef.current = activeParticipant;
@@ -158,18 +195,18 @@ const ChatBox = forwardRef((props, boxRef) => {
     setChatHistoryRef.current = setChatHistory;
   }, [setChatHistory]);
 
-  useEffect(() => {
-    if (!isNewConversation) {
-      setConversation({
-        name: 'New Conversation',
-        is_public: false,
-        participant: {
-          type: 'models'
-        },
-        chat_history: [],
-      });
-    }
-  }, [isNewConversation]);
+  // useEffect(() => {
+  //   if (!isNewConversation) {
+  //     setConversation({
+  //       name: 'New Conversation',
+  //       is_public: false,
+  //       participant: {
+  //         type: ChatParticipantType.Models
+  //       },
+  //       chat_history: [],
+  //     });
+  //   }
+  // }, [isNewConversation]);
 
   const {
     openAlert,
@@ -301,17 +338,17 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, [getMessage, handleError, scrollToMessageListEnd])
 
   const streamingEvent = useMemo(() =>
-    (activeParticipant?.type || conversation.participant.type) === 'datasources'
+    activeParticipant?.type === ChatParticipantType.Datasources
       ?
       sioEvents.datasource_predict
       :
-      sioEvents.promptlib_predict, [activeParticipant?.type, conversation.participant.type])
+      sioEvents.promptlib_predict, [activeParticipant?.type])
 
   const { emit } = useSocket(streamingEvent, handleSocketEvent)
 
   const onPredictStream = useCallback(question => {
     if (isNewConversation) {
-      onStartNewConversation(conversation);
+      resetCreateFlag();
     }
     setTimeout(scrollToMessageListEnd, 0);
     const question_id = new Date().getTime();
@@ -328,12 +365,12 @@ const ChatBox = forwardRef((props, boxRef) => {
     const payload = getPayload(question, question_id)
     emit(payload)
   },
-    [isNewConversation, scrollToMessageListEnd, getPayload, emit, onStartNewConversation, conversation, name, userId])
+    [isNewConversation, scrollToMessageListEnd, getPayload, emit, resetCreateFlag, name, userId])
 
   const onClickSend = useCallback(
     async (question) => {
       if (isNewConversation) {
-        onStartNewConversation(conversation);
+        resetCreateFlag();
       }
       const question_id = new Date().getTime();
       const payload = getPayload(question, question_id)
@@ -348,7 +385,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       askAlita(payload);
       setTimeout(scrollToMessageListEnd, 0);
     },
-    [isNewConversation, conversation, onStartNewConversation, getPayload, askAlita, scrollToMessageListEnd, name]);
+    [isNewConversation, getPayload, askAlita, scrollToMessageListEnd, resetCreateFlag, name]);
 
 
   const onCloseToast = useCallback(
@@ -445,7 +482,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
       reset();
     }
-  }, [data, data?.choices, data?.messages, isRegenerating, answerIdToRegenerate, prompt_id, reset]);
+  }, [data, data?.choices, data?.messages, isRegenerating, answerIdToRegenerate, reset]);
 
   useEffect(() => {
     if (error) {
@@ -466,13 +503,13 @@ const ChatBox = forwardRef((props, boxRef) => {
   const onSelectParticipant = useCallback(
     (participant) => {
       stopProcessingSymbols();
-      onSelectNewParticipant(participant);
+      onSelectActiveParticipant(participant);
       setTimeout(() => {
         const symbol = query.charAt(0);
         chatInput.current?.replaceSymbolWithParticipantName(symbol, participant.name || participant.model_name);
       }, 0);
     },
-    [onSelectNewParticipant, query, stopProcessingSymbols],
+    [onSelectActiveParticipant, query, stopProcessingSymbols],
   )
 
   const onEnterDownHandler = useCallback(
@@ -552,8 +589,8 @@ const ChatBox = forwardRef((props, boxRef) => {
               </MessageList>
               :
               <NewConversationSettings
-                conversation={conversation}
-                onChangeConversation={setConversation}
+                conversation={activeConversation}
+                onChangeConversation={onChangeConversation}
               />
           }
           {
@@ -579,7 +616,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             disabledSend={isLoading || isStreaming || isProcessingSymbols || (!activeConversation.id && !isNewConversation)}
             onNormalKeyDown={onKeyDown}
             onEnterDownHandler={onEnterDownHandler}
-            disabledInput = {!activeConversation.id && !isNewConversation}
+            disabledInput={!activeConversation.id && !isNewConversation}
             shouldHandleEnter />
         </ChatBodyContainer>
       </ChatBoxContainer>
