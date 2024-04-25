@@ -371,7 +371,7 @@ const ChatPanel = ({
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                         onRegenerate={onRegenerateAnswer(message.id)}
-                        shouldDisableRegenerate={isLoading}
+                        shouldDisableRegenerate={isLoading || message.isStreaming}
                       />
                     default:
                       // eslint-disable-next-line no-console
