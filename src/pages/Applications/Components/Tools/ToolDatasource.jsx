@@ -52,13 +52,13 @@ export default function ToolDatasource({
   const onChangeDatasource = useCallback(
     (datasource) => {
       const newToolWithId = updateObjectByPath(editToolDetail, 'settings.datasource_id', datasource.value)
-      const newToolWithName = updateObjectByPath(newToolWithId, 'name', datasource.label)
-      const newToolWithDescription = updateObjectByPath(newToolWithName, 'description', datasource.description)
+      const newToolWithName = name ? newToolWithId : updateObjectByPath(newToolWithId, 'name', datasource.label)
+      const newToolWithDescription = description ? newToolWithName : updateObjectByPath(newToolWithName, 'description', datasource.description)
       setEditToolDetail(newToolWithDescription)
       onChangeTools(newToolWithDescription)
       setIsDirty(true);
     },
-    [editToolDetail, onChangeTools, setEditToolDetail],
+    [description, editToolDetail, name, onChangeTools, setEditToolDetail],
   )
 
   return (

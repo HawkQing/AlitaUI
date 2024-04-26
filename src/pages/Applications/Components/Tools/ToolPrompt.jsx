@@ -47,12 +47,12 @@ export default function ToolPrompt({
 
   const handlePromptChange = useCallback((value) => {
     const newToolWithId = updateObjectByPath(editToolDetail, 'settings.prompt_id', value.value)
-    const newToolWithName = updateObjectByPath(newToolWithId, 'name', value.label)
-    const newToolWithDescription = updateObjectByPath(newToolWithName, 'description', value.description)
+    const newToolWithName = name ? newToolWithId : updateObjectByPath(newToolWithId, 'name', value.label)
+    const newToolWithDescription = description ? newToolWithName : updateObjectByPath(newToolWithName, 'description', value.description)
     setEditToolDetail(newToolWithDescription)
     onChangeTools(newToolWithDescription)
     setIsDirty(true);
-  }, [editToolDetail, onChangeTools, setEditToolDetail]);
+  }, [description, editToolDetail, name, onChangeTools, setEditToolDetail]);
 
   const handleVersionChange = useCallback((value) => {
     const newTool = {
