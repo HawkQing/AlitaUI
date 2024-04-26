@@ -149,6 +149,7 @@ const EditApplication = () => {
                           setShowAdvancedSettings={setShowAdvancedSettings}
                           isFullScreenChat={isFullScreenChat}
                           setIsFullScreenChat={setIsFullScreenChat}
+                          applicationId={applicationId}
                         />
                       </StyledGridContainer>
                     </Form>

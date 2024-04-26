@@ -15,6 +15,7 @@ import { UserMessageContainer, Answer, ButtonsContainer, ReferenceList } from '.
 import { useTheme } from '@emotion/react';
 import ToolAction from './ToolAction';
 import { formatDistanceToNow } from 'date-fns';
+import AgentException from './AgentException';
 
 
 const ApplicationAnswer = React.forwardRef((props, ref) => {
@@ -33,6 +34,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     isStreaming,
     onStop,
     verticalMode = true,
+    exception
   } = props
   const [showActions, setShowActions] = useState(false);
   const onMouseEnter = useCallback(
@@ -80,7 +82,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             position: 'relative',
             marginTop: toolActions.length ? '8px' : '0px'
           }}>
-          {showActions && <ButtonsContainer sx={{ top: '6px', right: '6px' }}>
+          {showActions && !exception && <ButtonsContainer sx={{ top: '6px', right: '6px' }}>
             {
               isStreaming &&
               <StyledTooltip title={'Stop generating'} placement="top">
@@ -118,6 +120,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           <Markdown>
             {answer}
           </Markdown>
+          {
+            exception && <AgentException exception={exception}/>
+          }
           {isLoading && <AnimatedProgress
             sx={{
               fontWeight: "400",

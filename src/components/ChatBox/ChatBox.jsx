@@ -6,13 +6,9 @@ import {
   DEFAULT_TOP_P,
   PROMPT_PAYLOAD_KEY,
   ROLES,
-  sioEvents,
-  SocketMessageType,
-  StreamingMessageType,
   ToolActionStatus
 } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import useSocket, { useManualSocket } from "@/hooks/useSocket.jsx";
 import { ConversationStartersView } from '@/pages/Applications/Components/Applications/ConversationStarters';
 import { useProjectId } from '@/pages/hooks';
 import { actions } from '@/slices/prompts';
@@ -25,7 +21,6 @@ import ClearIcon from '../Icons/ClearIcon';
 import Toast from '../Toast';
 import AIAnswer from './AIAnswer';
 import ActionButtons from './ActionButtons';
-import { AUTO_SCROLL_KEY } from './AutoScrollToggle';
 import ChatInput from './ChatInput';
 import {
   ActionButton,
@@ -39,8 +34,9 @@ import {
 } from './StyledComponents';
 import UserMessage from './UserMessage';
 import useDeleteMessageAlert from './useDeleteMessageAlert';
-import { useStopStreaming } from './hooks';
+import { useChatSocket, useStopStreaming } from './hooks';
 import ApplicationAnswer from './ApplicationAnswer';
+import { usePredictMutation as useApplicationPredictMutation } from '@/api/applications';
 
 const USE_STREAM = true
 
@@ -50,8 +46,6 @@ export const generatePayload = ({
   variables, messages, type, name, stream = true, currentVersionId, question_id
 }) => ({
   prompt_id,
-  projectId,
-
   user_name: name,
   project_id: projectId,
   prompt_version_id: currentVersionId,
@@ -105,6 +99,59 @@ export const generateChatPayload = ({
   return payload
 }
 
+export const generateApplicationPayload = ({
+  projectId, application_id, instructions, temperature,
+  max_tokens, top_p, top_k, model_name, integration_uid,
+  variables, tools, name, currentVersionId, question_id
+}) => ({
+  application_id,
+  user_name: name,
+  project_id: projectId,
+  version_id: currentVersionId,
+  instructions,
+  llm_settings: {
+    temperature,
+    max_tokens,
+    top_p,
+    top_k,
+    model_name,
+    integration_uid,
+  },
+  variables: variables ? variables.map((item) => {
+    const { key, name: variableName, value } = item;
+    return {
+      name: variableName || key,
+      value,
+    }
+  }) : [],
+  tools,
+  question_id,
+})
+
+export const generateApplicationStreamingPayload = ({
+  projectId, application_id, instructions, temperature,
+  max_tokens, top_p, top_k, model_name, integration_uid,
+  variables, question, tools, chatHistory, name,
+  currentVersionId,
+  question_id
+}) => {
+  const payload = generateApplicationPayload({
+    projectId, application_id, instructions, temperature,
+    max_tokens, top_p, top_k, model_name, integration_uid,
+    variables, tools, name, currentVersionId, question_id
+  })
+  payload.chat_history = chatHistory ? chatHistory.map((message) => {
+    const { role, content, name: userName } = message;
+    if (userName) {
+      return { role, content, name: userName };
+    } else {
+      return { role, content }
+    }
+  }) : []
+  payload.user_input = question
+  return payload
+}
+
 
 const ChatBox = forwardRef((props, boxRef) => {
   const {
@@ -126,20 +173,16 @@ const ChatBox = forwardRef((props, boxRef) => {
     setIsFullScreenChat,
     messageListSX,
     isApplicationChat,
+    application_id,
+    instructions,
+    tools,
   } = props
   const dispatch = useDispatch();
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
+  const [applicationPredict,] = useApplicationPredictMutation();
   const { name } = useSelector(state => state.user)
   const [mode, setMode] = useState(type);
-  const [chatHistory, setChatHistory] = useState([]);
-  const [completionResult, setCompletionResult] = useState(
-    {
-      id: new Date().getTime(),
-      role: ROLES.Assistant,
-      isLoading: false,
-      content: '',
-    }
-  )
+
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastSeverity, setToastSeverity] = useState('info')
@@ -147,12 +190,40 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [answerIdToRegenerate, setAnswerIdToRegenerate] = useState('');
   const projectId = useProjectId();
   const chatInput = useRef(null);
-  const messagesEndRef = useRef();
   const [isRunning, setIsRunning] = useState(false);
   const listRefs = useRef([]);
-  const modeRef = useRef(mode);
-  const chatHistoryRef = useRef(chatHistory);
-  const completionResultRef = useRef(completionResult);
+
+  const handleError = useCallback(
+    (errorObj) => {
+      setIsRunning(false);
+      setToastMessage(buildErrorMessage(errorObj));
+      setToastSeverity('error');
+      setShowToast(true);
+      if (isRegenerating) {
+        setAnswerIdToRegenerate('');
+        setIsRegenerating(false);
+      }
+    },
+    [isRegenerating],
+  )
+
+  const {
+    chatHistory,
+    chatHistoryRef,
+    setChatHistory,
+    scrollToMessageListEnd,
+    emit,
+    manualEmit,
+    completionResult,
+    setCompletionResult,
+    messagesEndRef,
+  } = useChatSocket({
+    mode,
+    handleError,
+    setIsRunning,
+    listRefs,
+    isApplicationChat,
+  })
 
   const {
     openAlert,
@@ -176,18 +247,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     onClear: onClickClearChat,
   }));
 
-  useEffect(() => {
-    modeRef.current = mode;
-  }, [mode]);
-
-  useEffect(() => {
-    chatHistoryRef.current = chatHistory;
-  }, [chatHistory]);
-
-  useEffect(() => {
-    completionResultRef.current = completionResult;
-  }, [completionResult]);
-
   const onSelectChatMode = useCallback(
     (e) => {
       const chatMode = e?.target?.value;
@@ -203,124 +262,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     [dispatch, mode],
   );
 
-  const getMessage = useCallback((messageId) => {
-    if (modeRef.current === ChatBoxMode.Chat) {
-      const msgIdx = chatHistoryRef.current?.findIndex(i => i.id === messageId) || -1;
-      let msg
-      if (msgIdx < 0) {
-        msg = {
-          id: messageId,
-          role: ROLES.Assistant,
-          content: '',
-          isLoading: false,
-        }
-      } else {
-        msg = chatHistoryRef.current[msgIdx]
-      }
-      return [msgIdx, msg]
-    } else {
-      return completionResultRef.current.id === messageId ? [0, { ...completionResultRef.current }] : [-1, {
-        id: messageId,
-        role: ROLES.Assistant,
-        content: '',
-        isLoading: false,
-      }]
-    }
-  }, [])
-
-  const handleError = useCallback(
-    (errorObj) => {
-      setIsRunning(false);
-      setToastMessage(buildErrorMessage(errorObj));
-      setToastSeverity('error');
-      setShowToast(true);
-      if (isRegenerating) {
-        setAnswerIdToRegenerate('');
-        setIsRegenerating(false);
-      }
-    },
-    [isRegenerating],
-  )
-
-  const scrollToMessageListEnd = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ block: "end" });
-  }, [])
-
-  const handleSocketEvent = useCallback(async message => {
-    const { stream_id, type: socketMessageType, message_type, response_metadata } = message
-    const [msgIndex, msg] = getMessage(stream_id, message_type)
-
-    const scrollToMessageBottom = () => {
-      if (sessionStorage.getItem(AUTO_SCROLL_KEY) === 'true') {
-        const messageElement = listRefs.current[msgIndex]
-        if (messageElement) {
-          const parentElement = messageElement.parentElement;
-          messageElement.scrollIntoView({ block: "end" });
-          if (parentElement) {
-            parentElement.scrollTop += 12;
-          }
-        } else {
-          scrollToMessageListEnd();
-        }
-      }
-    };
-
-    switch (socketMessageType) {
-      case SocketMessageType.StartTask:
-        msg.isLoading = true
-        msg.isStreaming = false
-        msg.content = ''
-        msg.references = []
-        if (message_type !== StreamingMessageType.Freeform) {
-          msgIndex === -1 ? setChatHistory(prevState => [...prevState, msg]) : setChatHistory(prevState => {
-            prevState[msgIndex] = msg
-            return [...prevState]
-          })
-        } else {
-          setCompletionResult(msg)
-        }
-        setTimeout(scrollToMessageBottom, 0);
-        break
-      case SocketMessageType.Chunk:
-      case SocketMessageType.AIMessageChunk:
-        msg.content += message.content
-        msg.isLoading = false
-        msg.isStreaming = true
-        setTimeout(scrollToMessageBottom, 0);
-        if (response_metadata?.finish_reason) {
-          if (message_type === StreamingMessageType.Freeform) {
-            setIsRunning(false);
-          } else {
-            msg.isStreaming = false
-          }
-        }
-        break
-      case SocketMessageType.References:
-        msg.references = message.references
-        break
-      case SocketMessageType.Error:
-        msg.isStreaming = false
-        handleError({ data: message.content || [] })
-        return
-      case SocketMessageType.Freeform:
-        break
-      default:
-        // eslint-disable-next-line no-console
-        console.warn('unknown message type', socketMessageType)
-        return
-    }
-    if (message_type !== StreamingMessageType.Freeform) {
-      msgIndex > -1 && setChatHistory(prevState => {
-        prevState[msgIndex] = msg
-        return [...prevState]
-      })
-    } else {
-      msgIndex > -1 && setCompletionResult(msg)
-    }
-  }, [getMessage, handleError, scrollToMessageListEnd])
-
-  const { emit } = useSocket(sioEvents.promptlib_predict, handleSocketEvent)
-
   const onPredictStream = useCallback(question => {
     setTimeout(scrollToMessageListEnd, 0);
     setChatHistory((prevMessages) => {
@@ -331,10 +272,14 @@ const ChatBox = forwardRef((props, boxRef) => {
         content: question,
       }]
     })
-    const payload = generateChatPayload({
+    const payload = !isApplicationChat ? generateChatPayload({
       projectId, prompt_id, context, temperature, max_tokens, top_p,
       top_k, model_name, integration_uid, variables, question, messages,
       chatHistory, name, stream: true, currentVersionId
+    }) : generateApplicationStreamingPayload({
+      projectId, application_id, instructions, temperature,
+      max_tokens, top_p, top_k, model_name, integration_uid,
+      variables, question, tools, name, currentVersionId,
     })
     emit(payload)
   },
@@ -355,16 +300,24 @@ const ChatBox = forwardRef((props, boxRef) => {
       projectId,
       emit,
       currentVersionId,
-      scrollToMessageListEnd
+      scrollToMessageListEnd,
+      tools,
+      instructions,
+      application_id,
+      isApplicationChat
     ])
 
   const onClickSend = useCallback(
     async (question) => {
-      const payload = generateChatPayload({
+      const payload = !isApplicationChat ? generateChatPayload({
         projectId, prompt_id, context, temperature, max_tokens,
         top_p, top_k, model_name, integration_uid, variables,
         question, messages, chatHistory, name, stream: false,
         currentVersionId
+      }) : generateApplicationPayload({
+        projectId, application_id, instructions, temperature,
+        max_tokens, top_p, top_k, model_name, integration_uid,
+        variables, tools, name, currentVersionId
       })
       setChatHistory((prevMessages) => {
         return [...prevMessages, {
@@ -374,7 +327,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           content: question,
         }]
       });
-      askAlita(payload);
+      !isApplicationChat ? askAlita(payload) : applicationPredict(payload);
       setTimeout(scrollToMessageListEnd, 0);
     },
     [
@@ -393,10 +346,21 @@ const ChatBox = forwardRef((props, boxRef) => {
       variables,
       projectId,
       currentVersionId,
-      scrollToMessageListEnd
+      scrollToMessageListEnd,
+      setChatHistory,
+      isApplicationChat,
+      application_id,
+      tools,
+      instructions,
+      applicationPredict,
     ]);
   const onClickRun = useCallback(() => {
-    setCompletionResult('');
+    setCompletionResult([{
+      id: new Date().getTime(),
+      role: ROLES.Assistant,
+      isLoading: false,
+      content: '',
+    }]);
     const payload = generatePayload({
       projectId, prompt_id, context, temperature, max_tokens, top_p, top_k,
       model_name, integration_uid, variables, messages, type: 'freeform', name,
@@ -418,7 +382,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       projectId,
       name,
       top_k,
-      currentVersionId
+      currentVersionId,
+      setCompletionResult
     ]);
 
   const onClickRunStream = useCallback(() => {
@@ -476,7 +441,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     [chatHistory, dispatch, messages],
   );
 
-  const { emit: manualEmit } = useManualSocket(sioEvents.promptlib_leave_rooms);
   const {
     isStreaming,
     onStopAll,
@@ -502,11 +466,11 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   const onCopyCompletion = useCallback(async () => {
-    await navigator.clipboard.writeText(completionResult.content);
+    await navigator.clipboard.writeText(completionResult[0].content);
     setShowToast(true);
     setToastMessage('The message has been copied to the clipboard');
     setToastSeverity('success');
-  }, [completionResult.content])
+  }, [completionResult])
 
   const onRegenerateAnswerStream = useCallback(id => async () => {
     const questionIndex = chatHistory.findIndex(item => item.id === id) - 1;
@@ -577,7 +541,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       projectId,
       name,
       top_k,
-      currentVersionId
+      currentVersionId,
+      setChatHistory
     ],
   );
 
@@ -612,17 +577,17 @@ const ChatBox = forwardRef((props, boxRef) => {
       } else {
         setIsRunning(false);
         setCompletionResult(
-          {
+          [{
             id: new Date().getTime(),
             role: ROLES.Assistant,
             isLoading: false,
             content: answer,
-          }
+          }]
         )
       }
       reset();
     }
-  }, [data, data?.choices, data?.messages, isRegenerating, mode, answerIdToRegenerate, prompt_id, reset]);
+  }, [data, data?.choices, data?.messages, isRegenerating, mode, answerIdToRegenerate, prompt_id, setCompletionResult, setChatHistory, reset]);
 
   useEffect(() => {
     if (error) {
@@ -726,11 +691,12 @@ const ChatBox = forwardRef((props, boxRef) => {
                         onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
                         shouldDisableRegenerate={isLoading || isStreaming}
                         references={message.references}
+                        exception={message.exception}
                         toolActions={message.toolActions || [
                           { id: 1, name: 'Tool action 1', content: 'action content', status: ToolActionStatus.complete },
                           { id: 2, name: 'Tool action 2', content: 'action content', status: ToolActionStatus.error },
                           { id: 3, name: 'Tool action 3', content: 'Some description about the action', status: ToolActionStatus.actionRequired, query: '{"query": "2 + 3 = ?"}' },
-                          { id: 4, name: 'Tool action 4', content: 'action content', status: ToolActionStatus.processing},
+                          { id: 4, name: 'Tool action 4', content: 'action content', status: ToolActionStatus.processing },
                           { id: 5, name: 'Tool action 5', content: 'action content', status: ToolActionStatus.cancelled },
                         ]}
                         isLoading={Boolean(message.isLoading)}
@@ -740,12 +706,12 @@ const ChatBox = forwardRef((props, boxRef) => {
                 }) :
                   <ConversationStartersView items={conversationStarters} onSend={USE_STREAM ? onPredictStream : onClickSend} />
                 ) :
-                (completionResult.isLoading || completionResult.content) &&
+                (completionResult[0].isLoading || completionResult[0].content) &&
                 <AIAnswer
-                  answer={completionResult.content}
+                  answer={completionResult[0].content}
                   onCopy={onCopyCompletion}
-                  references={completionResult.references}
-                  isLoading={Boolean(completionResult.isLoading)}
+                  references={completionResult[0].references}
+                  isLoading={Boolean(completionResult[0].isLoading)}
                 />
             }
             <div ref={messagesEndRef} />

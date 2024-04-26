@@ -157,6 +157,7 @@ export const RoleOptions = [
 ];
 
 export const SocketMessageType = {
+  AgentException: 'agent_exception',
   References: 'references',
   Chunk: 'chunk',
   AIMessageChunk: 'AIMessageChunk',
@@ -635,6 +636,8 @@ export const APIKeyTypes = {
 }
 
 export const sioEvents = {
+  application_predict: 'application_predict',
+  application_leave_rooms: 'application_leave_rooms',
   promptlib_predict: 'promptlib_predict',
   promptlib_leave_rooms: 'promptlib_leave_rooms',
   datasource_predict: 'datasource_predict',
