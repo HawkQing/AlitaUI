@@ -710,7 +710,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                       onCopyToMessages={onCopyToMessages(message.id, ROLES.Assistant)}
                       onDelete={onDeleteAnswer(message.id)}
                       onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
-                      shouldDisableRegenerate={isLoading || message.isStreaming}
+                      shouldDisableRegenerate={isLoading || isStreaming}
                       references={message.references}
                       isLoading={Boolean(message.isLoading)}
                       isStreaming={message.isStreaming}
@@ -724,7 +724,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                         onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
-                        shouldDisableRegenerate={isLoading || message.isStreaming}
+                        shouldDisableRegenerate={isLoading || isStreaming}
                         references={message.references}
                         toolActions={message.toolActions || [
                           { id: 1, name: 'Tool action 1', content: 'action content', status: ToolActionStatus.complete },
