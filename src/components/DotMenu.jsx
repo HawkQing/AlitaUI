@@ -108,6 +108,13 @@ const ActionWithDialog = ({ icon, label, confirmText, alertTitle = 'Warning', on
 export default function DotMenu({ id, menuIcon, menuIconSX, children, onClose, onShowMenuList, anchorOrigin, transformOrigin }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = useMemo(() => Boolean(anchorEl), [anchorEl]);
+  const onClickMenu = useCallback(
+    (event) => {
+      event.stopPropagation();
+    },
+    [],
+  )
+  
   const handleClick = useCallback((event) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -129,7 +136,7 @@ export default function DotMenu({ id, menuIcon, menuIconSX, children, onClose, o
     }, [handleClose]);
 
   return (
-    <Box>
+    <Box onClick={onClickMenu}>
       <IconButton
         id={id + '-action'}
         aria-label="more"

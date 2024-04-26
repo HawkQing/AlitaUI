@@ -1,6 +1,7 @@
-import { ROLES, SocketMessageType } from '@/common/constants';
+import { ROLES, SocketMessageType, ChatBoxMode, StreamingMessageType, sioEvents } from '@/common/constants';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUTO_SCROLL_KEY } from './AutoScrollToggle';
+import useSocket, { useManualSocket } from '@/hooks/useSocket';
 
 export const useCtrlEnterKeyEventsHandler = ({ onShiftEnterPressed, onCtrlEnterDown, onEnterDown, onNormalKeyDown }) => {
   const keysPressed = useMemo(() => ({}), [])
@@ -87,43 +88,112 @@ export const useStopStreaming = ({
 }
 
 export const useChatSocket = ({
-  chatHistory,
-  setChatHistory,
+  mode,
   handleError,
+  setIsRunning,
+  listRefs,
+  isApplicationChat,
 }) => {
-  const listRefs = useRef([]);
-  const messagesEndRef = useRef();
+  const [chatHistory, setChatHistory] = useState([]);
+  const [completionResult, setCompletionResult] = useState(
+    [{
+      id: new Date().getTime(),
+      role: ROLES.Assistant,
+      isLoading: false,
+      content: '',
+    }]
+  )
+  const modeRef = useRef(mode);
   const chatHistoryRef = useRef(chatHistory);
+  const completionResultRef = useRef(completionResult);
+  const messagesEndRef = useRef();
 
-  const getChatMessage = useCallback((messageId) => {
-    const msgIdx = chatHistoryRef.current?.findIndex(i => i.id === messageId) || -1;
-    let msg
-    if (msgIdx < 0) {
-      msg = {
-        id: messageId,
-        role: ROLES.Assistant,
-        content: '',
-        isLoading: false,
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
+
+  useEffect(() => {
+    chatHistoryRef.current = chatHistory;
+  }, [chatHistory]);
+
+  useEffect(() => {
+    completionResultRef.current = completionResult;
+  }, [completionResult]);
+
+  const getMessage = useCallback((messageId) => {
+    if (modeRef.current === ChatBoxMode.Chat) {
+      const msgIdx = chatHistoryRef.current?.findIndex(i => i.id === messageId) || -1;
+      let msg
+      if (msgIdx < 0) {
+        msg = {
+          id: messageId,
+          role: ROLES.Assistant,
+          content: '',
+          isLoading: false,
+        }
+      } else {
+        msg = chatHistoryRef.current[msgIdx]
       }
+      return [msgIdx, msg]
     } else {
-      msg = chatHistoryRef.current[msgIdx]
+      const msgIdx = completionResultRef.current?.findIndex(i => i.id === messageId);
+      let msg
+      if (msgIdx < 0) {
+        msg = {
+          id: messageId,
+          role: ROLES.Assistant,
+          content: '',
+          isLoading: false,
+        }
+      } else {
+        msg = completionResultRef.current[msgIdx]
+      }
+      return [msgIdx, msg]
     }
-    return [msgIdx, msg]
   }, [])
 
-  const handleChatEvent = useCallback(async message => {
+
+  const scrollToMessageListEnd = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [])
+  
+  const handleSocketEvent = useCallback(async message => {
     const { stream_id, type: socketMessageType, message_type, response_metadata } = message
-    const [msgIndex, msg] = getChatMessage(stream_id, message_type)
+    const [msgIndex, msg] = getMessage(stream_id, message_type)
 
     const scrollToMessageBottom = () => {
       if (sessionStorage.getItem(AUTO_SCROLL_KEY) === 'true') {
-        (listRefs.current[msgIndex] || messagesEndRef?.current)?.scrollIntoView({ block: "end" });
+        const messageElement = listRefs.current[msgIndex]
+        if (messageElement) {
+          const parentElement = messageElement.parentElement;
+          messageElement.scrollIntoView({ block: "end" });
+          if (parentElement) {
+            parentElement.scrollTop += 12;
+          }
+        } else {
+          scrollToMessageListEnd();
+        }
       }
     };
 
     switch (socketMessageType) {
-      case SocketMessageType.References:
-        msg.references = message.references
+      case SocketMessageType.StartTask:
+        msg.isLoading = true
+        msg.isStreaming = false
+        msg.content = ''
+        msg.references = []
+        if (message_type !== StreamingMessageType.Freeform) {
+          msgIndex === -1 ? setChatHistory(prevState => [...prevState, msg]) : setChatHistory(prevState => {
+            prevState[msgIndex] = msg
+            return [...prevState]
+          })
+        } else {
+          msgIndex === -1 ? setCompletionResult([msg]) : setCompletionResult(prevState => {
+            prevState[msgIndex] = msg
+            return [...prevState]
+          })
+        }
+        setTimeout(scrollToMessageBottom, 0);
         break
       case SocketMessageType.Chunk:
       case SocketMessageType.AIMessageChunk:
@@ -132,24 +202,27 @@ export const useChatSocket = ({
         msg.isStreaming = true
         setTimeout(scrollToMessageBottom, 0);
         if (response_metadata?.finish_reason) {
-          msg.isStreaming = false
+          if (message_type === StreamingMessageType.Freeform) {
+            setIsRunning(false);
+          } else {
+            msg.isStreaming = false
+          }
         }
         break
-      case SocketMessageType.StartTask:
-        msg.isLoading = true
-        msg.isStreaming = false
-        msg.content = ''
-        msg.references = []
-        msgIndex === -1 ? setChatHistory(prevState => [...prevState, msg]) : setChatHistory(prevState => {
-          prevState[msgIndex] = msg
-          return [...prevState]
-        })
-        setTimeout(scrollToMessageBottom, 0);
+      case SocketMessageType.References:
+        msg.references = message.references
         break
       case SocketMessageType.Error:
+        msg.isLoading = false
         msg.isStreaming = false
         handleError({ data: message.content || [] })
         return
+      case SocketMessageType.AgentException: {
+        msg.isLoading = false
+        msg.isStreaming = false;
+        msg.exception = message.exception;
+        break;
+      }
       case SocketMessageType.Freeform:
         break
       default:
@@ -157,15 +230,35 @@ export const useChatSocket = ({
         console.warn('unknown message type', socketMessageType)
         return
     }
-    msgIndex === -1 ? setChatHistory(prevState => [...prevState, msg]) : setChatHistory(prevState => {
-      prevState[msgIndex] = msg
-      return [...prevState]
-    })
-  }, [getChatMessage, handleError, setChatHistory])
+    if (message_type !== StreamingMessageType.Freeform) {
+      msgIndex > -1 && setChatHistory(prevState => {
+        prevState[msgIndex] = msg
+        return [...prevState]
+      })
+    } else {
+      msgIndex > -1 && setCompletionResult(prevState => {
+        prevState[msgIndex] = msg
+        return [...prevState]
+      })
+    }
+  }, [getMessage, handleError, scrollToMessageListEnd, setIsRunning, listRefs])
+
+  const subscribeEvent = useMemo(() => isApplicationChat ? sioEvents.application_predict : sioEvents.promptlib_predict, [isApplicationChat])
+  const leaveEvent = useMemo(() => isApplicationChat ? sioEvents.application_leave_rooms : sioEvents.promptlib_leave_rooms, [isApplicationChat])
+
+  const { emit } = useSocket(subscribeEvent, handleSocketEvent)
+
+  const { emit: manualEmit } = useManualSocket(leaveEvent);
 
   return {
-    handleChatEvent,
-    listRefs,
-    messagesEndRef
+    chatHistory,
+    chatHistoryRef,
+    setChatHistory,
+    scrollToMessageListEnd,
+    emit,
+    manualEmit,
+    completionResult,
+    setCompletionResult,
+    messagesEndRef,
   }
 }

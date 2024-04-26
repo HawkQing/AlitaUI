@@ -19,7 +19,8 @@ export default function ApplicationRightContent({
   showAdvancedSettings,
   isFullScreenChat,
   setIsFullScreenChat,
-  modelOptions
+  modelOptions,
+  applicationId
 }) {
   const { values: formValues, initialValues, setFieldValue } = useFormikContext();
   const setFormValue = useCallback((key, value) => {
@@ -31,6 +32,9 @@ export default function ApplicationRightContent({
     messages = [],
     variables = [],
     llm_settings = {},
+    tools,
+    instructions,
+    id: currentVersionId,
     type = ChatBoxMode.Chat,
   } = formValues?.version_details || {};
 
@@ -96,6 +100,10 @@ export default function ApplicationRightContent({
     isFullScreenChat,
     setIsFullScreenChat,
     isApplicationChat: true,
+    tools,
+    instructions,
+    currentVersionId,
+    application_id: applicationId,
   }), [
     integration_uid,
     model_name,
@@ -110,6 +118,10 @@ export default function ApplicationRightContent({
     conversationStarters,
     isFullScreenChat,
     setIsFullScreenChat,
+    tools,
+    instructions,
+    currentVersionId,
+    applicationId
   ]);
 
   return (
