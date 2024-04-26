@@ -169,7 +169,7 @@ export default function ToolCard({
             <ArrowRightIcon sx={{ fontSize: '1rem' }} />
           </Box>
           {
-            ((tool.type === ToolTypes.datasource.value && !tool.settings.actions?.length) ||
+            ((tool.type === ToolTypes.datasource.value && !tool.settings.selected_tools?.length) ||
               tool.type === ToolTypes.prompt.value) &&
             <Typography
               component='div'
@@ -180,8 +180,8 @@ export default function ToolCard({
             </Typography>
           }
           {
-            ((tool.type === ToolTypes.open_api.value && tool.settings.actions) ||
-              (tool.type === ToolTypes.datasource.value && tool.settings.actions)) &&
+            ((tool.type === ToolTypes.open_api.value && tool.settings.selected_tools) ||
+              (tool.type === ToolTypes.datasource.value && tool.settings.selected_tools)) &&
             <Box sx={{ cursor: 'pointer' }} onClick={onClickShowActions}>
               <Typography variant='bodySmall'>
                 {showActions ? 'Hide Actions' : 'Show Actions'}
@@ -211,7 +211,7 @@ export default function ToolCard({
         showActions && (tool.type === ToolTypes.open_api.value || tool.type === ToolTypes.custom.value) &&
         <ActionsContainer>
           {
-            (tool.type === ToolTypes.open_api.value ? tool.settings.actions : parsedFunctions).map((item, idx) => {
+            (tool.type === ToolTypes.open_api.value ? tool.settings.selected_tools : parsedFunctions).map((item, idx) => {
               return <ActionRow key={item.name + idx}>
                 <Box sx={{ width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Typography variant='bodyMedium'>
@@ -250,7 +250,7 @@ export default function ToolCard({
         showActions && tool.type === ToolTypes.datasource.value &&
         <ActionsContainer>
           {
-            tool.settings.actions.map((item) => {
+            tool.settings.selected_tools.map((item) => {
               return (
                 <ActionRow sx={{ paddingTop: '4px' }} key={item}>
                   <Box sx={{ width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

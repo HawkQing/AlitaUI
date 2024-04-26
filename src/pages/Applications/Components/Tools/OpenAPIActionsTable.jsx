@@ -63,7 +63,7 @@ const TokenRow = ({ action }) => {
   )
 }
 
-const OpenAPIActionsTable = ({ actions }) => {
+const OpenAPIActionsTable = ({ selected_tools }) => {
 
   const [orderBy, setOrderBy] = useState('')
   const [order, setOrder] = useState(SortOrderOptions.ASC);
@@ -77,7 +77,7 @@ const OpenAPIActionsTable = ({ actions }) => {
 
   const sortedActions = useMemo(() => {
     if (orderBy) {
-      return stableSort(actions, (first, second) => {
+      return stableSort(selected_tools, (first, second) => {
         if (typeof first[orderBy] === 'string') {
           if (order === SortOrderOptions.ASC) {
             return first[orderBy].toLowerCase().localeCompare(second[orderBy].toLowerCase());
@@ -99,9 +99,9 @@ const OpenAPIActionsTable = ({ actions }) => {
         }
       })
     } else {
-      return actions;
+      return selected_tools;
     }
-  }, [order, orderBy, actions]);
+  }, [order, orderBy, selected_tools]);
 
   const onClickSortLabel = useCallback(
     (fieldName) => () => {

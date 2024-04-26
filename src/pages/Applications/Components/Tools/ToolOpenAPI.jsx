@@ -24,10 +24,10 @@ export default function ToolOpenAPI({
         type: '',
         settings: {}
       },
-      actions: []
+      selected_tools: []
     },
   } = editToolDetail;
-  const { schema_settings: schema,  authentication = { type: '', settings: {} }, actions = [] } = settings;
+  const { schema_settings: schema,  authentication = { type: '', settings: {} }, selected_tools = [] } = settings;
   const { isAdding, onChangeTools } = useChangeFormikTools({toolIndex: index})
   const { type: authentication_type, settings: authentication_settings } = authentication;
 
@@ -75,7 +75,7 @@ export default function ToolOpenAPI({
 
   const handleSchemaChange = useCallback((value) => {
     const newToolWithSchema = updateObjectByPath(editToolDetail, 'settings.schema_settings', value.schema)
-    const newToolWithActions = updateObjectByPath(newToolWithSchema, 'settings.actions', value.actions)
+    const newToolWithActions = updateObjectByPath(newToolWithSchema, 'settings.selected_tools', value.selected_tools)
     setEditToolDetail(newToolWithActions)
     onChangeTools(newToolWithActions)
     setIsDirty(true);
@@ -120,10 +120,10 @@ export default function ToolOpenAPI({
         onValueChange={(schemaText, schemaActions) => {
           handleSchemaChange({
             schema: schemaText,
-            actions: schemaActions
+            selected_tools: schemaActions
           })
         }} />
-      <OpenAPIActions actions={actions} />
+      <OpenAPIActions selected_tools={selected_tools} />
       <AuthenticationSelect
         onValueChange={handleAuthenticationChange}
         value={authentication}

@@ -18,7 +18,7 @@ export default function ToolDatasource({
     description = '',
     settings = {},
   } = editToolDetail;
-  const { actions, datasource_id } = settings;
+  const { selected_tools, datasource_id } = settings;
   const { isAdding, onChangeTools } = useChangeFormikTools({ toolIndex: index })
   const [isValidating, setIsValidating] = useState(false);
   const error = useMemo(() => {
@@ -27,9 +27,9 @@ export default function ToolDatasource({
       name: !name?.trim() ? helperText : undefined,
       description: !description?.trim() ? helperText : undefined,
       datasource: !datasource_id ? helperText : undefined,
-      actions: actions?.length < 1 ? helperText : undefined,
+      selected_tools: selected_tools?.length < 1 ? helperText : undefined,
     }
-  }, [actions?.length, datasource_id, description, name])
+  }, [selected_tools?.length, datasource_id, description, name])
 
   const [isDirty, setIsDirty] = useState(false);
 
@@ -106,12 +106,12 @@ export default function ToolDatasource({
         multiple
         label='Actions'
         emptyPlaceHolder=''
-        onValueChange={handleChange('settings.actions')}
-        value={actions}
+        onValueChange={handleChange('settings.selected_tools')}
+        value={selected_tools}
         options={ActionOptions}
         customSelectedFontSize={'0.875rem'}
-        error={isValidating && error.actions}
-        helperText={isValidating && error.actions}
+        error={isValidating && error.selected_tools}
+        helperText={isValidating && error.selected_tools}
         sx={{
           marginTop: '8px !important',
           '& .MuiInputLabel-shrink': {

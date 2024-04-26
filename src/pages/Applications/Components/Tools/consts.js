@@ -39,7 +39,7 @@ export const ToolInitialValues = {
     description: '',
     settings: {
       datasource_id: '',
-      actions: [],
+      selected_tools: [],
     },
   },
   [ToolTypes.open_api.value]: {
@@ -47,7 +47,7 @@ export const ToolInitialValues = {
     name: '',
     settings: {
       schema_settings: "",
-      actions: [],
+      selected_tools: [],
       authentication: {
           type: AuthenticationTypes.None.value,
           settings: {
