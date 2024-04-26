@@ -90,7 +90,7 @@ export default function ToolCard({
   const [showActions, setShowActions] = useState(false)
   const { setFieldValue, values } = useFormikContext();
   const tools = useMemo(() => (values?.version_details?.tools || []), [values?.version_details?.tools])
-  const [deleteTool, { isLoading, isError: isDeleteError, isSuccess: isDeleteSuccess, error: deleteError }] = useDeleteApplicationToolMutation();
+  const [deleteTool, { isLoading, isError: isDeleteError, error: deleteError, reset }] = useDeleteApplicationToolMutation();
   const parsedFunctions = useMemo(() => {
     if (tool.type === ToolTypes.custom.value) {
       return parseCustomJsonTool(tool.settings.custom_json || '');
@@ -104,13 +104,23 @@ export default function ToolCard({
 
   const onConfirmAlert = useCallback(async () => {
     setOpenAlert(false);
-    if (applicationId &&  tool?.id) {
-      await deleteTool({ projectId, toolId: tool?.id })
+    if (applicationId && tool?.id) {
+      const result = await deleteTool({ projectId, toolId: tool?.id })
+      if (!result.error) {
+        dispatch(alitaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, (details) => {
+          details.version_details.tools = details.version_details.tools.filter(item => {
+            return item.id !== tool.id;
+          });
+        }));
+        setFieldValue('version_details.tools',
+          tools.filter((_, i) => i !== index))
+        reset();
+      }
     } else {
       setFieldValue('version_details.tools',
         tools.filter((_, i) => i !== index))
     }
-  }, [applicationId, deleteTool, index, projectId, setFieldValue, tool?.id, tools]);
+  }, [applicationId, deleteTool, dispatch, index, projectId, reset, setFieldValue, tool.id, tools]);
 
   const onCloseAlert = useCallback(
     () => {
@@ -136,16 +146,6 @@ export default function ToolCard({
       toastError(buildErrorMessage(deleteError))
     }
   }, [deleteError, isDeleteError, toastError])
-
-  useEffect(() => {
-    if (isDeleteSuccess) {
-      dispatch(alitaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, (details) => {
-        details.version_details.tools = details.version_details.tools.filter(item => item.id !== tool.id);
-      }));
-      setFieldValue('version_details.tools',
-        tools.filter((_, i) => i !== index))
-    }
-  }, [applicationId, dispatch, index, isDeleteSuccess, projectId, setFieldValue, tool.id, tools])
 
   return (
     <CardContainer>
