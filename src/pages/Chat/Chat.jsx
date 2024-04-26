@@ -17,7 +17,7 @@ const Chat = () => {
   const projectId = useSelectedProjectId();
   const [conversations, setConversations] = useState([]);
   const conversationsRef = useRef(conversations)
-  const [activeConversation, setActiveConversation] = useState({ chat_history: [], participants: [] })
+  const [activeConversation, setActiveConversation] = useState({ chat_history: [], participants: [], is_public: false })
   const [activeParticipant, setActiveParticipant] = useState()
   const isCreatingConversation = useIsCreatingConversation();
   const [theParticipantEdited, setTheParticipantEdited] = useState()
@@ -123,10 +123,12 @@ const Chat = () => {
 
   const onSelectConversation = useCallback(
     (conversation) => {
-      setActiveConversation(conversation);
-      setActiveParticipant(null)
+      if (activeConversation.id !== conversation.id) {
+        setActiveConversation(conversation);
+        setActiveParticipant(null)
+      }
     },
-    [],
+    [activeConversation.id],
   )
 
   const onSelectParticipant = useCallback(
@@ -257,6 +259,18 @@ const Chat = () => {
     [activeConversation.id, getApplicationDetail, getDatasourceDetail, getPromptDetail, onSelectNewParticipant, projectId],
   )
 
+  const onEditConversation = useCallback(
+    (conversation) => {
+      if (conversation.id === activeConversation.id) {
+        setActiveConversation(conversation);
+      }
+      setConversations(prev => {
+        return prev.map(item => conversation.id === item.id ? conversation : item)
+      })
+    },
+    [activeConversation],
+  )
+
   useEffect(() => {
     conversationsRef.current = conversations
   }, [conversations])
@@ -301,6 +315,7 @@ const Chat = () => {
             selectedConversationId={activeConversation?.id}
             conversations={conversations}
             onSelectConversation={onSelectConversation}
+            onEditConversation={onEditConversation}
             collapsed={collapsedConversations}
             onCollapsed={onConversationCollapsed}
           />
