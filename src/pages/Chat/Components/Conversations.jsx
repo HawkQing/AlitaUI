@@ -5,7 +5,7 @@ import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import { useIsSmallWindow } from '@/pages/hooks';
 import { useTheme } from '@emotion/react';
 
-const Conversations = ({ conversations, onSelectConversation, selectedConversationId, collapsed, onCollapsed }) => {
+const Conversations = ({ conversations, onSelectConversation, selectedConversationId, collapsed, onCollapsed, onEditConversation }) => {
   const { isSmallWindow } = useIsSmallWindow();
   const theme = useTheme();
   return (
@@ -43,6 +43,7 @@ const Conversations = ({ conversations, onSelectConversation, selectedConversati
               conversation={conversation}
               onSelectConversation={onSelectConversation}
               collapsed={collapsed && !isSmallWindow}
+              onEdit={onEditConversation}
             />
           ))
         }
