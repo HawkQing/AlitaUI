@@ -578,7 +578,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                         onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
-                        shouldDisableRegenerate={isLoading || message.isStreaming}
+                        shouldDisableRegenerate={isLoading || isStreaming}
                         references={message.references}
                         isLoading={Boolean(message.isLoading)}
                         isStreaming={message.isStreaming}
