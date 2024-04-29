@@ -314,7 +314,7 @@ export const useChatSocket = ({
       case SocketMessageType.AgentException: {
         msg.isLoading = false
         msg.isStreaming = false;
-        msg.exception = message.exception;
+        msg.exception = message.content;
         break;
       }
       case SocketMessageType.Freeform:
