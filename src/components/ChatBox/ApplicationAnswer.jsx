@@ -16,6 +16,7 @@ import { useTheme } from '@emotion/react';
 import ToolAction from './ToolAction';
 import { formatDistanceToNow } from 'date-fns';
 import AgentException from './AgentException';
+import { getIcon } from '@/pages/Chat/Components/ParticipantItem';
 
 
 const ApplicationAnswer = React.forwardRef((props, ref) => {
@@ -33,7 +34,8 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     isLoading = false,
     isStreaming,
     onStop,
-    verticalMode = true,
+    verticalMode,
+    participant,
     exception
   } = props
   const [showActions, setShowActions] = useState(false);
@@ -56,9 +58,14 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     <UserMessageContainer sx={verticalMode ? { flexDirection: 'column', gap: '8px', padding: '12px 0px 12px 0px', background: 'transparent' } : undefined} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       {verticalMode ?
         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0px 4px 0px 4px' }}>
-          <ListItemAvatar sx={{ minWidth: '24px' }}>
-            <AlitaIcon sx={{ fontSize: 24 }} />
-          </ListItemAvatar>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px', height: '100%' }}>
+            <Box sx={{ width: '24px', height: '24px', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: '12px', background: theme.palette.background.aiParticipantIcon }}>
+              {getIcon(participant.type, true, theme, false)}
+            </Box>
+            <Typography variant='bodySmall' color='secondary'>
+              {participant.name || participant.model_name}
+            </Typography>
+          </Box>
           <Typography variant='bodySmall'>
             {formatDistanceToNow(new Date(created_at)) + ' ago'}
           </Typography>
@@ -121,7 +128,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             {answer}
           </Markdown>
           {
-            exception && <AgentException exception={exception}/>
+            exception && <AgentException exception={exception} />
           }
           {isLoading && <AnimatedProgress
             sx={{

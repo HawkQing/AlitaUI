@@ -27,7 +27,7 @@ import AdvancedChatSettings from './AdvancedChatSettings';
 import ChatSettings from './ChatSettings';
 
 const MESSAGE_REFERENCE_ROLE = 'reference'
-export const generateDatasourceChatPayload = (question, context, chatHistory, chatSettings) => {
+export const generateDatasourceChatPayload = (question, context, chatHistory, chatSettings, question_id) => {
   return {
     input: question,
     context: context,
@@ -35,7 +35,8 @@ export const generateDatasourceChatPayload = (question, context, chatHistory, ch
 
     chat_settings_ai: chatSettings.chat_settings_ai,
 
-    chat_settings_embedding: chatSettings.chat_settings_embedding
+    chat_settings_embedding: chatSettings.chat_settings_embedding,
+    question_id
   }
 }
 
@@ -371,7 +372,7 @@ const ChatPanel = ({
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                         onRegenerate={onRegenerateAnswer(message.id)}
-                        shouldDisableRegenerate={isLoading || isStreaming}
+                        shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
                       />
                     default:
                       // eslint-disable-next-line no-console

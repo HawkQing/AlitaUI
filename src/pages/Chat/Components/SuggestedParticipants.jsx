@@ -5,7 +5,7 @@ import { useTheme } from '@emotion/react';
 import { Box, Typography } from '@mui/material';
 import { useCallback, useRef, useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 
-const SuggestedParticipants = forwardRef(({ participants, participantType, onSelectParticipant }, controlRef) => {
+const SuggestedParticipants = forwardRef(({ participants, participantType, onSelectParticipant, noSearchResult }, controlRef) => {
   const theme = useTheme();
   const listRefs = useRef([]);
   const projectId = useSelectedProjectId()
@@ -20,6 +20,26 @@ const SuggestedParticipants = forwardRef(({ participants, participantType, onSel
       listRefs.current[focusedIndex + 1].focus();
     }
   }, [focusedIndex, participants.length]);
+
+  const onKeyDownRef = useRef(onKeyDown)
+
+  useEffect(() => {
+    onKeyDownRef.current = onKeyDown
+  }, [onKeyDown])
+  
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      onKeyDownRef.current(event)
+    };
+
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup: remove event listener
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []); 
 
   const onClickParticipant = useCallback(
     (participant) => () => {
@@ -46,6 +66,11 @@ const SuggestedParticipants = forwardRef(({ participants, participantType, onSel
       getModels(projectId);
     }
   }, [getModels, participantType, projectId])
+
+  useEffect(() => {
+    setFocusedIndex(0)
+  }, [participants])
+  
 
   return (
     <Box sx={{ width: '100%', paddingLeft: '8px', paddingRight: '8px' }}>
@@ -78,7 +103,6 @@ const SuggestedParticipants = forwardRef(({ participants, participantType, onSel
                 ref={(ref) => (listRefs.current[index] = ref)}
                 onClick={onClickParticipant(participant)}
                 tabIndex={0}
-                onKeyDown={onKeyDown}
                 key={participant.id}
                 sx={{
                   display: 'flex',
@@ -127,7 +151,7 @@ const SuggestedParticipants = forwardRef(({ participants, participantType, onSel
               }}
             >
               <Typography variant='bodyMedium' color='text.secondary'>
-                No matching items found
+               {noSearchResult ? 'No search results' : 'No matching items found'}
               </Typography>
             </Box>
           }

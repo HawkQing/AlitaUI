@@ -17,14 +17,14 @@ const getTypes = (participants) => {
   return types.sort();
 }
 
-const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, activeParticipantId, onSelectParticipant }) => {
+const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, activeParticipantId, onSelectParticipant, onDeleteParticipant, onUpdateParticipant }) => {
   const { isSmallWindow } = useIsSmallWindow();
   const theme = useTheme()
   const types = useMemo(() => getTypes(participants), [participants]);
 
   return (
-    <Box >
-      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: (collapsed && !isSmallWindow) ? 'center' : 'space-between' }}>
+    <Box sx={{height: '100%', position: 'relative'}} >
+      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: (collapsed && !isSmallWindow) ? 'center' : 'space-between', height: '32px', alignItems: 'center' }}>
         {
           (!collapsed || isSmallWindow) &&
           <Typography variant='subtitle'>
@@ -63,7 +63,8 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
           gap: '8px',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: (!collapsed || isSmallWindow) ? 'flex-start' : 'center'
+          alignItems: (!collapsed || isSmallWindow) ? 'flex-start' : 'center',
+          overflowY: 'scroll', maxHeight: `calc(100% - 40px)`, paddingBottom: '32px'
         }} >
         {
           types.map((type) => {
@@ -84,6 +85,8 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
                       participant={participant}
                       onShowSettings={onShowSettings}
                       isActive={activeParticipantId === participant.id}
+                      onDelete={onDeleteParticipant}
+                      onUpdateParticipant={onUpdateParticipant}
                     />
                   ))
                 }
@@ -98,8 +101,8 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
               />
           })
         }
-
       </Box>
+      <Box sx={{width: '100%', height: '40px', position: 'absolute', bottom: '0px', left: '0px', background: theme.palette.background.conversationBottomCover}} />
     </Box>
 
   )

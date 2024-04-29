@@ -2,28 +2,24 @@
 import { Grid, Box, Typography } from '@mui/material';
 import Conversations from './Components/Conversations';
 import { useCallback, useState, useRef, useMemo, useEffect } from 'react';
-import { ChatBoxMode, ChatParticipantType, ChatSearchEvents } from '@/common/constants';
+import { ChatBoxMode, ChatParticipantType, ChatSearchEvents, NAV_BAR_HEIGHT } from '@/common/constants';
 import ChatBox from './Components/ChatBox';
 import Participants from './Components/Participants';
-import { useIsCreatingConversation, useSelectedProjectId } from '../hooks';
+import { useIsCreatingConversation } from '../hooks';
 import { stableSort } from '@/common/utils';
 import ParticipantSettings from './Components/ParticipantSettings';
 import eventEmitter from '@/common/eventEmitter';
-import { useLazyGetPromptQuery } from '@/api/prompts';
-import { useLazyApplicationDetailsQuery } from '@/api/applications';
-import { useLazyDatasourceDetailsQuery } from '@/api/datasources';
+import useResetCreateFlag from './Components/useResetCreateFlag';
 
 const Chat = () => {
-  const projectId = useSelectedProjectId();
   const [conversations, setConversations] = useState([]);
   const conversationsRef = useRef(conversations)
   const [activeConversation, setActiveConversation] = useState({ chat_history: [], participants: [], is_public: false })
   const [activeParticipant, setActiveParticipant] = useState()
+  const [isStreaming, setIsStreaming] = useState(false)
   const isCreatingConversation = useIsCreatingConversation();
   const [theParticipantEdited, setTheParticipantEdited] = useState()
-  const [getPromptDetail] = useLazyGetPromptQuery();
-  const [getApplicationDetail] = useLazyApplicationDetailsQuery();
-  const [getDatasourceDetail] = useLazyDatasourceDetailsQuery();
+  const { resetCreateFlag } = useResetCreateFlag();
 
   const onChangeConversation = useCallback(
     (newConversation) => {
@@ -70,7 +66,7 @@ const Chat = () => {
       });
       setConversations(prev => {
         return prev.map(conversation => {
-          if (conversation.id === activeConversation.id) {
+          if (conversation.id === activeConversation?.id) {
             const { participants } = activeConversation;
             if (participants.find(item => item.id === participant.id && item.type === ChatParticipantType.Prompts)) {
               return activeConversation;
@@ -89,24 +85,40 @@ const Chat = () => {
     [activeConversation],
   )
 
+  const onCreateConversation = useCallback(
+    () => {
+      setConversations((prev) => {
+        const sortedConversations = stableSort([...prev, activeConversation], (first, second) => {
+          return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
+        })
+        return sortedConversations
+      });
+      resetCreateFlag();
+    },
+    [activeConversation, resetCreateFlag],
+  )
+
   const settings = useMemo(() => ({
     chatOnly: true,
     type: ChatBoxMode.Chat,
     messageListSX: { height: 'calc(100vh - 250px)' },
-    isNewConversation: isCreatingConversation,
+    isCreatingConversation,
     activeParticipant,
     onClearActiveParticipant,
     activeConversation,
     setChatHistory,
     onChangeConversation,
     onSelectActiveParticipant: setActiveParticipant,
+    setIsStreaming,
+    onCreateConversation,
   }), [
     activeConversation,
     activeParticipant,
     isCreatingConversation,
     onClearActiveParticipant,
     setChatHistory,
-    onChangeConversation
+    onChangeConversation,
+    onCreateConversation
   ]);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
   const [collapsedParticipants, setCollapsedParticipants] = useState(false);
@@ -123,12 +135,15 @@ const Chat = () => {
 
   const onSelectConversation = useCallback(
     (conversation) => {
-      if (activeConversation.id !== conversation.id) {
+      if (isCreatingConversation) {
+        resetCreateFlag();
+      }
+      if (activeConversation?.id !== conversation.id) {
         setActiveConversation(conversation);
         setActiveParticipant(null)
       }
     },
-    [activeConversation.id],
+    [activeConversation?.id, isCreatingConversation, resetCreateFlag],
   )
 
   const onSelectParticipant = useCallback(
@@ -169,9 +184,9 @@ const Chat = () => {
         }
       });
       setConversations(prev => {
-        return prev.map(conversation => conversation.id === activeConversation.id ? ({
+        return prev.map(conversation => conversation.id === activeConversation?.id ? ({
           ...activeConversation,
-          participants: activeConversation.participants?.map(participant => participant.id === editedParticipant.id ? editedParticipant : participant)
+          participants: activeConversation?.participants?.map(participant => participant.id === editedParticipant.id ? editedParticipant : participant)
         }) : conversation)
       })
       setTheParticipantEdited(undefined);
@@ -189,9 +204,9 @@ const Chat = () => {
         }
       });
       setConversations(prev => {
-        return prev.map(conversation => conversation.id === activeConversation.id ? ({
+        return prev.map(conversation => conversation.id === activeConversation?.id ? ({
           ...activeConversation,
-          participants: activeConversation.participants?.filter(participant => participant.id === id)
+          participants: activeConversation?.participants?.filter(participant => participant.id === id)
         }) : conversation)
       })
       setTheParticipantEdited(undefined);
@@ -204,64 +219,22 @@ const Chat = () => {
 
   const onSelectParticipantFromSearch = useCallback(
     async ({ type, participant }) => {
-      if (!activeConversation.id) {
+      if (!activeConversation?.id) {
         return;
       }
-      switch (type) {
-        case ChatParticipantType.Prompts:
-          {
-            const result = await getPromptDetail({ projectId, promptId: participant.id })
-            const promptDetail = result?.data || {};
-            onSelectNewParticipant({
-              type: ChatParticipantType.Prompts,
-              id: participant.id,
-              name: promptDetail.name,
-              version_id: promptDetail.version_details.id,
-              version_details: promptDetail.version_details,
-              versions: promptDetail.versions
-            })
-          }
-          break;
-        case ChatParticipantType.Applications:
-          {
-            const result = await getApplicationDetail({ projectId, applicationId: participant.id })
-            const applicationDetail = result?.data || {};
-            onSelectNewParticipant({
-              type: ChatParticipantType.Applications,
-              id: participant.id,
-              name: applicationDetail.name,
-              version_id: applicationDetail.version_details.id,
-              version_details: applicationDetail.version_details,
-              versions: applicationDetail.versions
-            })
-          }
-          break;
-        case ChatParticipantType.Datasources:
-          {
-            const result = await getDatasourceDetail({ projectId, datasourceId: participant.id })
-            const datasourceDetail = result?.data || {};
-            onSelectNewParticipant({
-              type: ChatParticipantType.Datasources,
-              id: participant.id,
-              name: datasourceDetail.name,
-              description: datasourceDetail.description,
-              version_id: datasourceDetail.version_details.id,
-              version_details: datasourceDetail.version_details,
-              versions: datasourceDetail.versions
-            })
-          }
-          break;
-        default:
-          break;
-      }
-
+      onSelectNewParticipant(type !== ChatParticipantType.Models ? {
+        type,
+        id: participant.id,
+        name: participant.name,
+        shouldUpdateDetail: true,
+      } : participant)
     },
-    [activeConversation.id, getApplicationDetail, getDatasourceDetail, getPromptDetail, onSelectNewParticipant, projectId],
+    [activeConversation?.id, onSelectNewParticipant],
   )
 
   const onEditConversation = useCallback(
     (conversation) => {
-      if (conversation.id === activeConversation.id) {
+      if (conversation.id === activeConversation?.id) {
         setActiveConversation(conversation);
       }
       setConversations(prev => {
@@ -271,12 +244,25 @@ const Chat = () => {
     [activeConversation],
   )
 
+  const onDeleteConversation = useCallback(
+    (conversation) => {
+      if (conversation.id === activeConversation?.id) {
+        setActiveConversation(null);
+        resetCreateFlag();
+      }
+      setConversations(prev => {
+        return prev.filter(item => conversation.id !== item.id)
+      })
+    },
+    [activeConversation?.id, resetCreateFlag],
+  )
+
   useEffect(() => {
     conversationsRef.current = conversations
   }, [conversations])
 
   useEffect(() => {
-    setConversations(conversationsRef.current.map(conversation => conversation.id === activeConversation.id ? { ...activeConversation } : conversation))
+    setConversations(conversationsRef.current.map(conversation => conversation.id === activeConversation?.id ? { ...activeConversation } : conversation))
   }, [activeConversation])
 
   useEffect(() => {
@@ -287,54 +273,76 @@ const Chat = () => {
   }, [onSelectParticipantFromSearch])
 
   useEffect(() => {
-    if (isCreatingConversation) {
+    if (isCreatingConversation && !isStreaming) {
       const newConversation = {
         id: new Date().getTime(),
         name: 'New Conversation',
         is_public: false,
-        participants: [{ type: ChatParticipantType.Models }],
+        participants: [],
         chat_history: [],
       }
       setActiveConversation(newConversation);
       setActiveParticipant()
-
-      setConversations((prev) => {
-        const sortedConversations = stableSort([...prev, newConversation], (first, second) => {
-          return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
-        })
-        return sortedConversations
-      });
     }
-  }, [isCreatingConversation])
+  }, [isCreatingConversation, isStreaming])
 
   return (
     <>
-      <Grid container sx={{ padding: '0.5rem 1.5rem' }} columnSpacing={'32px'}>
-        <Grid item xs={12} lg={collapsedConversations ? 0.5 : 3}>
+      <Grid container sx={{
+        padding: '0.5rem 1.5rem',
+        boxSizing: 'border-box',
+        height: `calc(100vh - ${NAV_BAR_HEIGHT})`,
+        marginLeft: 0,
+        width: '100%',
+      }}>
+        <Grid item xs={12} lg={collapsedConversations ? 0.5 : 3} sx={{
+          height: '100%',
+          boxSizing: 'border-box',
+          paddingRight: {
+            lg: '16px'
+          }
+        }}>
           <Conversations
             selectedConversationId={activeConversation?.id}
             conversations={conversations}
             onSelectConversation={onSelectConversation}
             onEditConversation={onEditConversation}
+            onDeleteConversation={onDeleteConversation}
             collapsed={collapsedConversations}
             onCollapsed={onConversationCollapsed}
           />
         </Grid>
         <Grid item xs={12} lg={chatBoxLgGridColumns} sx={{
+          height: '100%',
+          boxSizing: 'border-box',
+          paddingRight: {
+            lg: '8px'
+          },
+          paddingLeft: {
+            lg: '8px'
+          },
           paddingTop: {
             xs: '32px',
             lg: '0px'
           },
           gap: '12px'
         }}>
-          <ChatBox {...settings} ref={boxRef} />
-          <Box sx={{ marginTop: '5px' }}>
-            <Typography variant='bodySmall' color='text.button.disabled'>
-              {"Mention symbols: / - prompt, # - datasource, @ - application, > - model"}
-            </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '8px', justifyContent: 'space-between' }}>
+            <ChatBox {...settings} ref={boxRef} />
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+              <Typography variant='bodySmall' color='text.button.disabled'>
+                {"Mention symbols: / - prompt, # - datasource, @ - application, > - model"}
+              </Typography>
+            </Box>
           </Box>
         </Grid>
-        <Grid item xs={12} lg={collapsedParticipants ? 0.5 : 3}>
+        <Grid item xs={12} lg={collapsedParticipants ? 0.5 : 3} sx={{
+          height: '100%',
+          boxSizing: 'border-box',
+          paddingLeft: {
+            lg: '16px'
+          },
+        }} >
           {
             !theParticipantEdited ?
               <Participants
@@ -343,7 +351,10 @@ const Chat = () => {
                 activeParticipantId={activeParticipant?.id}
                 participants={activeConversation?.participants || []}
                 onShowSettings={onShowSettings}
-                onSelectParticipant={onSelectParticipant} />
+                onDeleteParticipant={onDeleteParticipant}
+                onSelectParticipant={onSelectParticipant} 
+                onUpdateParticipant={onFinishEditParticipant}
+                />
               :
               <ParticipantSettings
                 participant={theParticipantEdited}

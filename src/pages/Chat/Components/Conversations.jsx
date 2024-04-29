@@ -5,12 +5,12 @@ import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import { useIsSmallWindow } from '@/pages/hooks';
 import { useTheme } from '@emotion/react';
 
-const Conversations = ({ conversations, onSelectConversation, selectedConversationId, collapsed, onCollapsed, onEditConversation }) => {
+const Conversations = ({ conversations, onSelectConversation, selectedConversationId, collapsed, onCollapsed, onEditConversation, onDeleteConversation }) => {
   const { isSmallWindow } = useIsSmallWindow();
   const theme = useTheme();
   return (
-    <Box >
-      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: (collapsed && !isSmallWindow) ? 'center' : 'space-between' }}>
+    <Box sx={{ height: '100%', position: 'relative' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: (collapsed && !isSmallWindow) ? 'center' : 'space-between', height: '32px', alignItems: 'center' }}>
         {
           (!collapsed || isSmallWindow) &&
           <Typography variant='subtitle'>
@@ -34,7 +34,7 @@ const Conversations = ({ conversations, onSelectConversation, selectedConversati
           </Box>
         }
       </Box>
-      <Box sx={{ marginTop: '8px', gap: '8px', display: collapsed ? 'none' : 'flex', flexDirection: 'column' }} >
+      <Box sx={{ marginTop: '8px', gap: '8px', display: collapsed ? 'none' : 'flex', flexDirection: 'column', overflowY: 'scroll', maxHeight: `calc(100% - 40px)`, paddingBottom: '32px' }} >
         {
           conversations.map((conversation) => (
             <ConversationItem
@@ -44,6 +44,7 @@ const Conversations = ({ conversations, onSelectConversation, selectedConversati
               onSelectConversation={onSelectConversation}
               collapsed={collapsed && !isSmallWindow}
               onEdit={onEditConversation}
+              onDelete={onDeleteConversation}
             />
           ))
         }
@@ -53,6 +54,7 @@ const Conversations = ({ conversations, onSelectConversation, selectedConversati
           </Typography>
         }
       </Box>
+      <Box sx={{ width: '100%', height: '40px', position: 'absolute', bottom: '0px', left: '0px', background: theme.palette.background.conversationBottomCover }} />
     </Box>
 
   )

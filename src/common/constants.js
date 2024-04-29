@@ -557,6 +557,7 @@ export const AutoChatSuggestionTitles = {
   APPLICATIONS: 'Applications',
   PROMPTS: 'Prompts',
   DATASOURCES: 'Datasources',
+  MODELS: 'Models'
 }
 
 export const AutoSuggestionTitles = {

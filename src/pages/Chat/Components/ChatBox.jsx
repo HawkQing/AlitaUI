@@ -1,39 +1,36 @@
 /* eslint-disable react/jsx-no-bind */
 import { useAskAlitaMutation } from '@/api/prompts';
 import {
+  ChatBoxMode,
   ChatParticipantType,
   DEFAULT_MAX_TOKENS,
   DEFAULT_TEMPERATURE,
   DEFAULT_TOP_K,
   DEFAULT_TOP_P,
   ROLES,
-  sioEvents,
-  SocketMessageType,
-  StreamingMessageType
+  ToolActionStatus
 } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import useSocket, { useManualSocket } from "@/hooks/useSocket.jsx";
 import { useSelectedProjectId } from '@/pages/hooks';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import ChatInput from '@/components/ChatBox/ChatInput';
 import Toast from '@/components/Toast.jsx';
-import { useStopStreaming } from '@/components/ChatBox/hooks';
+import { useChatSocket, useStopStreaming } from '@/components/ChatBox/hooks';
 import { ChatBodyContainer, ChatBoxContainer, MessageList } from '@/components/ChatBox/StyledComponents';
 import AlertDialog from '@/components/AlertDialog';
 import UserMessage from '@/components/ChatBox/UserMessage';
 import AIAnswer from '@/components/ChatBox/AIAnswer';
-import { AUTO_SCROLL_KEY } from '@/components/ChatBox/AutoScrollToggle';
 import useDeleteMessageAlert from '@/components/ChatBox/useDeleteMessageAlert';
 import NewConversationSettings from './NewConversationSettings';
 import { useTheme } from '@emotion/react';
 import ActiveParticipantBox from './ActiveParticipantBox';
-import { generateChatPayload } from '@/components/ChatBox/ChatBox';
+import { generateApplicationStreamingPayload, generateChatPayload } from '@/components/ChatBox/ChatBox';
 import { generateDatasourceChatPayload } from '@/pages/DataSources/Components/Datasources/ChatPanel';
 import useInputKeyDownHandler from './useInputKeyDownHandler';
 import SuggestedParticipants from './SuggestedParticipants';
 import ChatBoxHeader from './ChatBoxHeader';
-import { useSearchParams } from 'react-router-dom';
+import ApplicationAnswer from '@/components/ChatBox/ApplicationAnswer';
 
 const USE_STREAM = true
 
@@ -97,15 +94,16 @@ const ChatBox = forwardRef((props, boxRef) => {
   const theme = useTheme();
   const {
     messageListSX,
-    isNewConversation,
+    isCreatingConversation,
     onChangeConversation,
     activeParticipant,
     onClearActiveParticipant,
     activeConversation,
     setChatHistory,
     onSelectActiveParticipant,
+    setIsStreaming,
+    onCreateConversation,
   } = props
-  const [, setSearchParams] = useSearchParams();
   const projectId = useSelectedProjectId();
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
   const { name, id: userId } = useSelector(state => state.user)
@@ -116,25 +114,11 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [answerIdToRegenerate, setAnswerIdToRegenerate] = useState('');
   const chatInput = useRef(null);
-  const messagesEndRef = useRef();
   const listRefs = useRef([]);
-  const activeParticipantRef = useRef();
-  const chatHistoryRef = useRef(chat_history);
-  const setChatHistoryRef = useRef(setChatHistory);
   const suggestedParticipantsRef = useRef();
 
-  const resetCreateFlag = useCallback(
-    () => {
-      const newSearchParams = new URLSearchParams({});
-      setSearchParams(newSearchParams, {
-        replace: true,
-      });
-    },
-    [setSearchParams],
-  )
-
-  const getPayload = useCallback((question, question_id, chatHistory) => {
-    const realParticipant = activeParticipant || {};
+  const getPayload = useCallback((question, question_id, chatHistory, participant) => {
+    const realParticipant = participant || activeParticipant || {};
     const {
       max_tokens = DEFAULT_MAX_TOKENS,
       top_p = DEFAULT_TOP_P,
@@ -152,7 +136,8 @@ const ChatBox = forwardRef((props, boxRef) => {
             realParticipant.version_details?.datasource_settings?.chat,
           ),
           project_id: projectId,
-          version_id: realParticipant.version_details?.id
+          version_id: realParticipant.version_details?.id,
+          question_id
         }
       case ChatParticipantType.Prompts:
         return generateChatPayload({
@@ -162,11 +147,14 @@ const ChatBox = forwardRef((props, boxRef) => {
           question_id
         })
       case ChatParticipantType.Applications:
-        return generateChatPayload({
-          projectId, context: realParticipant.version_details.context, temperature, max_tokens, top_p,
-          top_k, model_name, integration_uid, variables: realParticipant.version_details.variables, question, messages: realParticipant.version_details.messages,
-          chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId: realParticipant.versionId,
-          question_id
+        return generateApplicationStreamingPayload({
+          projectId, application_id: activeParticipant?.id,
+          instructions: activeParticipant?.version_details.instructions, temperature,
+          max_tokens, top_p, top_k, model_name, integration_uid,
+          variables: activeParticipant?.version_details.variables,
+          question, tools: activeParticipant?.version_details.tools, name,
+          currentVersionId: activeParticipant?.version_details.id,
+          question_id,
         })
       default:
         return generateChatPayload({
@@ -183,75 +171,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     projectId,
   ])
 
-  useEffect(() => {
-    activeParticipantRef.current = activeParticipant;
-  }, [activeParticipant]);
-
-  useEffect(() => {
-    chatHistoryRef.current = chat_history;
-  }, [chat_history]);
-
-  useEffect(() => {
-    setChatHistoryRef.current = setChatHistory;
-  }, [setChatHistory]);
-
-  // useEffect(() => {
-  //   if (!isNewConversation) {
-  //     setConversation({
-  //       name: 'New Conversation',
-  //       is_public: false,
-  //       participant: {
-  //         type: ChatParticipantType.Models
-  //       },
-  //       chat_history: [],
-  //     });
-  //   }
-  // }, [isNewConversation]);
-
-  const {
-    openAlert,
-    alertContent,
-    onDeleteAnswer,
-    onDeleteAll,
-    onConfirmDelete,
-    onCloseAlert
-  } = useDeleteMessageAlert({
-    setChatHistory: setChatHistoryRef.current,
-    chatInput,
-  });
-
-  const onClickClearChat = useCallback(() => {
-    if (chat_history?.length) {
-      onDeleteAll();
-    }
-  }, [chat_history?.length, onDeleteAll])
-
-  useImperativeHandle(boxRef, () => ({
-    onClear: onClickClearChat,
-  }));
-
-  useEffect(() => {
-    chatHistoryRef.current = chat_history;
-  }, [chat_history]);
-
-  const getMessage = useCallback((messageId) => {
-    const msgIdx = chatHistoryRef.current?.findIndex(i => i.id === messageId) || -1;
-    let msg
-    if (msgIdx < 0) {
-      msg = {
-        id: messageId,
-        role: ROLES.Assistant,
-        content: '',
-        isLoading: false,
-        participant: { ...(activeParticipantRef.current || {}) },
-        created_at: new Date().getTime(),
-      }
-    } else {
-      msg = chatHistoryRef.current[msgIdx]
-    }
-    return [msgIdx, msg]
-  }, [])
-
   const handleError = useCallback(
     (errorObj) => {
       setToastMessage(buildErrorMessage(errorObj));
@@ -265,94 +184,52 @@ const ChatBox = forwardRef((props, boxRef) => {
     [isRegenerating],
   )
 
-  const scrollToMessageListEnd = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ block: "end" });
-  }, [])
+  const {
+    chatHistoryRef,
+    scrollToMessageListEnd,
+    emit,
+    manualEmit,
+    messagesEndRef,
+  } = useChatSocket({
+    mode: ChatBoxMode.Chat,
+    handleError,
+    listRefs,
+    isApplicationChat: false,
+    chatHistory: chat_history,
+    setChatHistory,
+    activeParticipant,
+  })
 
-  const handleSocketEvent = useCallback(async message => {
-    const { stream_id, type: socketMessageType, message_type, response_metadata } = message
-    const [msgIndex, msg] = getMessage(stream_id, message_type)
+  const {
+    openAlert,
+    alertContent,
+    onDeleteAnswer,
+    onDeleteAll,
+    onConfirmDelete,
+    onCloseAlert
+  } = useDeleteMessageAlert({
+    setChatHistory,
+    chatInput,
+  });
 
-    const scrollToMessageBottom = () => {
-      if (sessionStorage.getItem(AUTO_SCROLL_KEY) === 'true') {
-        const messageElement = listRefs.current[msgIndex]
-        if (messageElement) {
-          const parentElement = messageElement.parentElement;
-          messageElement.scrollIntoView({ block: "end" });
-          if (parentElement) {
-            parentElement.scrollTop += 12;
-          }
-        } else {
-          scrollToMessageListEnd();
-        }
-      }
-    };
-
-    switch (socketMessageType) {
-      case SocketMessageType.StartTask:
-        msg.isLoading = true
-        msg.isStreaming = false
-        msg.content = ''
-        msg.references = []
-        msgIndex === -1 ? setChatHistoryRef.current(prevState => [...prevState, msg]) : setChatHistoryRef.current(prevState => {
-          prevState[msgIndex] = msg
-          return [...prevState]
-        })
-        setTimeout(scrollToMessageBottom, 0);
-        break
-      case SocketMessageType.Chunk:
-      case SocketMessageType.AIMessageChunk:
-        msg.content += message.content
-        msg.isLoading = false
-        msg.isStreaming = true
-        setTimeout(scrollToMessageBottom, 0);
-        if (response_metadata?.finish_reason) {
-          if (message_type === StreamingMessageType.Freeform) {
-            //
-          } else {
-            msg.isStreaming = false
-          }
-        }
-        break
-      case SocketMessageType.References:
-        msg.references = message.references
-        msg.isLoading = false
-        msg.isStreaming = true
-        setTimeout(scrollToMessageBottom, 0);
-        break
-      case SocketMessageType.Error:
-        msg.isStreaming = false
-        handleError({ data: message.content || [] })
-        return
-      case SocketMessageType.Freeform:
-        break
-      default:
-        // eslint-disable-next-line no-console
-        console.warn('unknown message type', socketMessageType)
-        return
+  const onClickClearChat = useCallback(() => {
+    if (chat_history?.length) {
+      onDeleteAll();
     }
-    msgIndex > -1 && setChatHistoryRef.current(prevState => {
-      prevState[msgIndex] = msg
-      return [...prevState]
-    })
-  }, [getMessage, handleError, scrollToMessageListEnd])
+  }, [chat_history?.length, onDeleteAll])
 
-  const streamingEvent = useMemo(() =>
-    activeParticipant?.type === ChatParticipantType.Datasources
-      ?
-      sioEvents.datasource_predict
-      :
-      sioEvents.promptlib_predict, [activeParticipant?.type])
+  useImperativeHandle(boxRef, () => ({
+    onClear: onClickClearChat,
+  }));
 
-  const { emit } = useSocket(streamingEvent, handleSocketEvent)
 
   const onPredictStream = useCallback(question => {
-    if (isNewConversation) {
-      resetCreateFlag();
+    if (isCreatingConversation) {
+      onCreateConversation();
     }
     setTimeout(scrollToMessageListEnd, 0);
     const question_id = new Date().getTime();
-    setChatHistoryRef.current((prevMessages) => {
+    setChatHistory((prevMessages) => {
       return [...prevMessages, {
         id: question_id,
         role: ROLES.User,
@@ -365,27 +242,36 @@ const ChatBox = forwardRef((props, boxRef) => {
     const payload = getPayload(question, question_id)
     emit(payload)
   },
-    [isNewConversation, scrollToMessageListEnd, getPayload, emit, resetCreateFlag, name, userId])
+    [isCreatingConversation, scrollToMessageListEnd, setChatHistory, getPayload, emit, onCreateConversation, name, userId])
 
   const onClickSend = useCallback(
     async (question) => {
-      if (isNewConversation) {
-        resetCreateFlag();
+      if (isCreatingConversation) {
+        onCreateConversation();
       }
       const question_id = new Date().getTime();
       const payload = getPayload(question, question_id)
-      setChatHistoryRef.current((prevMessages) => {
+      setChatHistory((prevMessages) => {
         return [...prevMessages, {
           id: question_id,
           role: 'user',
           name,
+          participant: activeParticipant,
           content: question,
         }]
       });
       askAlita(payload);
       setTimeout(scrollToMessageListEnd, 0);
     },
-    [isNewConversation, getPayload, askAlita, scrollToMessageListEnd, resetCreateFlag, name]);
+    [
+      isCreatingConversation,
+      getPayload,
+      setChatHistory,
+      askAlita,
+      scrollToMessageListEnd,
+      onCreateConversation,
+      name,
+      activeParticipant]);
 
 
   const onCloseToast = useCallback(
@@ -395,7 +281,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     [],
   );
 
-  const { emit: manualEmit } = useManualSocket(sioEvents.promptlib_leave_rooms);
   const {
     isStreaming,
     onStopStreaming,
@@ -406,6 +291,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     setChatHistory,
     manualEmit,
   });
+
+  useEffect(() => {
+    setIsStreaming(isStreaming)
+  }, [isStreaming, setIsStreaming])
 
   const onCopyToClipboard = useCallback(
     (id) => async () => {
@@ -434,7 +323,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     (id) => () => {
       setIsRegenerating(true);
       setAnswerIdToRegenerate(id);
-      setChatHistoryRef.current((prevMessages) => {
+      setChatHistory((prevMessages) => {
         return prevMessages.map(
           message => message.id !== id ?
             message
@@ -450,7 +339,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       payload.message_id = id
       askAlita(payload);
     },
-    [chat_history, getPayload, askAlita],
+    [setChatHistory, chat_history, getPayload, askAlita],
   );
 
   useEffect(() => {
@@ -462,7 +351,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     }
     if (answer) {
       if (!isRegenerating) {
-        setChatHistoryRef.current((prevMessages) => {
+        setChatHistory((prevMessages) => {
           return [...prevMessages, {
             id: new Date().getTime(),
             role: 'assistant',
@@ -470,7 +359,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           }];
         });
       } else {
-        setChatHistoryRef.current((prevMessages) => {
+        setChatHistory((prevMessages) => {
           return prevMessages.map(
             message => message.id !== answerIdToRegenerate ?
               message
@@ -482,7 +371,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
       reset();
     }
-  }, [data, data?.choices, data?.messages, isRegenerating, answerIdToRegenerate, reset]);
+  }, [data, data?.choices, data?.messages, isRegenerating, answerIdToRegenerate, reset, setChatHistory]);
 
   useEffect(() => {
     if (error) {
@@ -495,10 +384,11 @@ const ChatBox = forwardRef((props, boxRef) => {
     onKeyDown,
     participantType,
     suggestions,
+    noSearchResult,
     isProcessingSymbols,
     query,
     stopProcessingSymbols
-  } = useInputKeyDownHandler(activeConversation.participants)
+  } = useInputKeyDownHandler(activeConversation?.participants)
 
   const onSelectParticipant = useCallback(
     (participant) => {
@@ -523,11 +413,24 @@ const ChatBox = forwardRef((props, boxRef) => {
     [isProcessingSymbols],
   )
 
+  const onSubmitEditedMessage = useCallback(
+    (id, participant, question) => {
+      const questionIndex = chat_history.findIndex(item => item.id === id);
+      const leftChatHistory = chat_history.slice(0, questionIndex);
+      const payload = getPayload(question, id, leftChatHistory, participant)
+      payload.message_id = chat_history[questionIndex + 1]?.id
+      setChatHistory(prev => prev.map(item => item.id === id ? ({ ...item, content: question }) : item))
+      USE_STREAM ? emit(payload) : askAlita(payload);
+
+    },
+    [askAlita, chat_history, emit, getPayload, setChatHistory, ],
+  )
+
   useEffect(() => {
-    if (isNewConversation && chatInput.current) {
+    if (isCreatingConversation && chatInput.current) {
       chatInput.current.reset();
     }
-  }, [isNewConversation])
+  }, [isCreatingConversation])
 
   return (
     <>
@@ -552,60 +455,100 @@ const ChatBox = forwardRef((props, boxRef) => {
           }}
         >
           {
-            !isNewConversation ?
+            !isCreatingConversation ?
               <MessageList sx={messageListSX}>
                 {
                   chat_history.map((message, index) => {
                     return message.role === 'user' ?
                       <UserMessage
                         key={message.id}
+                        messageId={message.id}
                         verticalMode
                         ref={(ref) => (listRefs.current[index] = ref)}
                         content={message.content}
                         created_at={message.created_at}
+                        participant={message.participant}
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
+                        onSubmit={onSubmitEditedMessage}
                       />
                       :
-                      <AIAnswer
-                        key={message.id}
-                        verticalMode
-                        ref={(ref) => (listRefs.current[index] = ref)}
-                        answer={message.content}
-                        created_at={message.created_at}
-                        participant={message.participant}
-                        onStop={onStopStreaming(message.id)}
-                        onCopy={onCopyToClipboard(message.id)}
-                        onDelete={onDeleteAnswer(message.id)}
-                        onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
-                        shouldDisableRegenerate={isLoading || isStreaming}
-                        references={message.references}
-                        isLoading={Boolean(message.isLoading)}
-                        isStreaming={message.isStreaming}
-                      />
+                      message.participant?.type !== ChatParticipantType.Applications ?
+                        <AIAnswer
+                          key={message.id}
+                          verticalMode
+                          ref={(ref) => (listRefs.current[index] = ref)}
+                          answer={message.content}
+                          created_at={message.created_at}
+                          participant={message.participant}
+                          onStop={onStopStreaming(message.id)}
+                          onCopy={onCopyToClipboard(message.id)}
+                          onDelete={onDeleteAnswer(message.id)}
+                          onRegenerate={
+                            chat_history.length - 1 === index ?
+                              USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)
+                              :
+                              undefined}
+                          shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
+                          references={message.references}
+                          isLoading={Boolean(message.isLoading)}
+                          isStreaming={message.isStreaming}
+                        />
+                        :
+                        <ApplicationAnswer
+                          key={message.id}
+                          verticalMode
+                          ref={(ref) => (listRefs.current[index] = ref)}
+                          answer={message.content}
+                          onStop={onStopStreaming(message.id)}
+                          onCopy={onCopyToClipboard(message.id)}
+                          onDelete={onDeleteAnswer(message.id)}
+                          participant={message.participant}
+                          onRegenerate={
+                            chat_history.length - 1 === index ?
+                              USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)
+                              :
+                              undefined}
+                          shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
+                          references={message.references}
+                          exception={message.exception}
+                          toolActions={message.toolActions || [
+                            { id: 1, name: 'Tool action 1', content: 'action content', status: ToolActionStatus.complete },
+                            { id: 2, name: 'Tool action 2', content: 'action content', status: ToolActionStatus.error },
+                            { id: 3, name: 'Tool action 3', content: 'Some description about the action', status: ToolActionStatus.actionRequired, query: '{"query": "2 + 3 = ?"}' },
+                            { id: 4, name: 'Tool action 4', content: 'action content', status: ToolActionStatus.processing },
+                            { id: 5, name: 'Tool action 5', content: 'action content', status: ToolActionStatus.cancelled },
+                          ]}
+                          isLoading={Boolean(message.isLoading)}
+                          isStreaming={message.isStreaming}
+                          created_at={message.created_at}
+                        />
                   })
                 }
                 <div ref={messagesEndRef} />
               </MessageList>
               :
-              <NewConversationSettings
-                conversation={activeConversation}
-                onChangeConversation={onChangeConversation}
-              />
+              activeConversation ?
+                <NewConversationSettings
+                  conversation={activeConversation}
+                  onChangeConversation={onChangeConversation}
+                />
+                : null
           }
           {
-            !isNewConversation && activeConversation.id && !isProcessingSymbols &&
+            !isCreatingConversation && activeConversation?.id && !isProcessingSymbols &&
             <ActiveParticipantBox
               activeParticipant={activeParticipant}
               onClearActiveParticipant={onClearActiveParticipant}
             />
           }
           {
-            !isNewConversation && isProcessingSymbols &&
+            !isCreatingConversation && isProcessingSymbols &&
             <SuggestedParticipants
               ref={suggestedParticipantsRef}
               participants={suggestions || []}
               participantType={participantType}
+              noSearchResult={noSearchResult}
               onSelectParticipant={onSelectParticipant}
             />
           }
@@ -613,10 +556,10 @@ const ChatBox = forwardRef((props, boxRef) => {
             ref={chatInput}
             onSend={USE_STREAM ? onPredictStream : onClickSend}
             isLoading={isLoading || isStreaming}
-            disabledSend={isLoading || isStreaming || isProcessingSymbols || (!activeConversation.id && !isNewConversation)}
+            disabledSend={isLoading || isStreaming || isProcessingSymbols || (!activeConversation?.id && !isCreatingConversation)}
             onNormalKeyDown={onKeyDown}
             onEnterDownHandler={onEnterDownHandler}
-            disabledInput={!activeConversation.id && !isNewConversation}
+            disabledInput={!activeConversation?.id && !isCreatingConversation}
             shouldHandleEnter />
         </ChatBodyContainer>
       </ChatBoxContainer>

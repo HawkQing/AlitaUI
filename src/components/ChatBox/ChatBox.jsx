@@ -96,6 +96,7 @@ export const generateChatPayload = ({
     }
   }) : []
   payload.user_input = question
+  payload.question_id = question_id
   return payload
 }
 
@@ -149,6 +150,7 @@ export const generateApplicationStreamingPayload = ({
     }
   }) : []
   payload.user_input = question
+  payload.question_id = question_id
   return payload
 }
 
@@ -188,6 +190,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [toastSeverity, setToastSeverity] = useState('info')
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [answerIdToRegenerate, setAnswerIdToRegenerate] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
   const projectId = useProjectId();
   const chatInput = useRef(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -208,9 +211,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   )
 
   const {
-    chatHistory,
     chatHistoryRef,
-    setChatHistory,
     scrollToMessageListEnd,
     emit,
     manualEmit,
@@ -223,6 +224,8 @@ const ChatBox = forwardRef((props, boxRef) => {
     setIsRunning,
     listRefs,
     isApplicationChat,
+    setChatHistory,
+    chatHistory,
   })
 
   const {
@@ -675,7 +678,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                       onCopyToMessages={onCopyToMessages(message.id, ROLES.Assistant)}
                       onDelete={onDeleteAnswer(message.id)}
                       onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
-                      shouldDisableRegenerate={isLoading || isStreaming}
+                      shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
                       references={message.references}
                       isLoading={Boolean(message.isLoading)}
                       isStreaming={message.isStreaming}
@@ -689,7 +692,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                         onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
-                        shouldDisableRegenerate={isLoading || isStreaming}
+                        shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
                         references={message.references}
                         exception={message.exception}
                         toolActions={message.toolActions || [
