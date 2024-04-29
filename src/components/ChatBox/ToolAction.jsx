@@ -16,6 +16,7 @@ import { ToolActionStatus } from '@/common/constants';
 import StyledTooltip from '../Tooltip';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import useToast from '../useToast';
+import Markdown from "@/components/Markdown.jsx";
 
 export const StyledExpandMoreIcon = styled(KeyboardArrowDownIcon)(({ theme }) => ({
   color: theme.palette.icon.fill.default,
@@ -129,9 +130,9 @@ export default function ToolAction({ showMode = AccordionShowMode.RightMode, def
           gap: '12px'
         }}
       >
-        <Typography variant='bodyMedium' sx={{ color: theme.palette.text.secondary }}>
+        <Markdown>
           {action.content}
-        </Typography>
+        </Markdown>
         {
           action.status === 'action_required' &&
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

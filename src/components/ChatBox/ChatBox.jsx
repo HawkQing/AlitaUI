@@ -282,6 +282,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       projectId, application_id, instructions, temperature,
       max_tokens, top_p, top_k, model_name, integration_uid,
       variables, question, tools, name, currentVersionId,
+      chatHistory
     })
     emit(payload)
   },
