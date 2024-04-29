@@ -81,6 +81,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             return <ToolAction action={action} key={action.id} />
           })
         }
+        {
+          exception && <AgentException exception={exception} />
+        }
         <Answer
           sx={{
             background: theme.palette.background.icon.default, width: '100%',
@@ -89,7 +92,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             position: 'relative',
             marginTop: toolActions.length ? '8px' : '0px'
           }}>
-          {showActions && !exception && <ButtonsContainer sx={{ top: '6px', right: '6px' }}>
+          {showActions && <ButtonsContainer sx={{ top: '6px', right: '6px' }}>
             {
               isStreaming &&
               <StyledTooltip title={'Stop generating'} placement="top">
@@ -125,11 +128,8 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             }
           </ButtonsContainer>}
           <Markdown>
-            {answer}
+            {!exception ? answer : 'Agent exception!'}
           </Markdown>
-          {
-            exception && <AgentException exception={exception} />
-          }
           {isLoading && <AnimatedProgress
             sx={{
               fontWeight: "400",

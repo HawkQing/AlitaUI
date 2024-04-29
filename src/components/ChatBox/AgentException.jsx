@@ -31,7 +31,8 @@ export default function AgentException({ exception, defaultExpanded = false }) {
         '&.Mui-expanded': {
           margin: '0px 0;'
         },
-        background: `transparent !important`
+        background: `transparent !important`,
+        borderBottom: `1px solid ${theme.palette.border.lines}`,
       }}
     >
       <StyledAccordionSummary
