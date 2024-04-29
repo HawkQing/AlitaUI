@@ -3,21 +3,22 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 
 const SpecialSymbolsString = '/#@>'
 
-const useInputKeyDownHandler = (participants) => {
+const useInputKeyDownHandler = (participants = []) => {
   const [isProcessingSymbols, setIsProcessingSymbols] = useState(false)
   const [participantType, setParticipantType] = useState('')
   const [query, setQuery] = useState('')
   const realQuery = useMemo(() => query.slice(1), [query])
   const [notMatchedCount, setNotMatchedCount] = useState(0)
   const theSelectedParticipants = useMemo(() => participants?.filter(participant => participant.type === participantType) || [], [participantType, participants])
+  const noSearchResult = useMemo(() => !theSelectedParticipants.length, [theSelectedParticipants.length])
 
   const suggestions = useMemo(() => {
     if (isProcessingSymbols) {
       return !realQuery ?
-        theSelectedParticipants :
+        theSelectedParticipants.slice(0, 5) :
         theSelectedParticipants.filter(
           participant => (participant.name || participant.model_name).startsWith(realQuery)
-        )
+        ).slice(0, 5)
     }
     return []
   }, [isProcessingSymbols, theSelectedParticipants, realQuery])
@@ -50,7 +51,7 @@ const useInputKeyDownHandler = (participants) => {
 
   useEffect(() => {
     if (realQuery) {
-      if (!participants.filter(
+      if (!theSelectedParticipants.filter(
         participant => (participant.name || participant.model_name).startsWith(realQuery)
       ).length) {
         setNotMatchedCount(prev => prev + 1);
@@ -60,7 +61,7 @@ const useInputKeyDownHandler = (participants) => {
     } else {
       setNotMatchedCount(0);
     }
-  }, [participants, realQuery])
+  }, [theSelectedParticipants, realQuery])
 
   useEffect(() => {
     if (notMatchedCount > 1 || !query || (!theSelectedParticipants.length && notMatchedCount)) {
@@ -71,6 +72,7 @@ const useInputKeyDownHandler = (participants) => {
   return {
     onKeyDown,
     suggestions,
+    noSearchResult,
     participantType,
     isProcessingSymbols,
     query,

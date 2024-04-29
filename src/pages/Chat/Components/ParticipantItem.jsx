@@ -6,7 +6,13 @@ import EmojiIcon from '@/components/Icons/EmojiIcon';
 import ModelIcon from '@/components/Icons/ModelIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import { Box, Tooltip, Typography, useTheme } from '@mui/material';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import DeleteParticipantButton from './DeleteParticipantButton';
+import { useLazyGetPromptQuery } from '@/api/prompts';
+import { useLazyApplicationDetailsQuery } from '@/api/applications';
+import { useLazyDatasourceDetailsQuery } from '@/api/datasources';
+import { useSelectedProjectId } from '@/pages/hooks';
+import { StyledCircleProgress } from '@/components/ChatBox/StyledComponents';
 
 export const getIcon = (type, isActive, theme, showBigIcon = false) => {
   switch (type) {
@@ -23,8 +29,13 @@ export const getIcon = (type, isActive, theme, showBigIcon = false) => {
   }
 }
 
-const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, onShowSettings }) => {
-  const { type, name, model_name } = participant
+const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, onShowSettings, onDelete, onUpdateParticipant }) => {
+  const { id, type, name, model_name, shouldUpdateDetail } = participant
+  const projectId = useSelectedProjectId()
+  const [getPromptDetail, { isFetching: isFetchingPrompt }] = useLazyGetPromptQuery()
+  const [getApplicationDetail, { isFetching: isFetchingApplication }] = useLazyApplicationDetailsQuery()
+  const [getDatasourceDetail, { isFetching: isFetchingDatasource }] = useLazyDatasourceDetailsQuery()
+  const isFetching = useMemo(() => isFetchingPrompt || isFetchingApplication || isFetchingDatasource, [isFetchingApplication, isFetchingDatasource, isFetchingPrompt])
   const theme = useTheme();
   const onClickSettings = useCallback(
     (event) => {
@@ -39,6 +50,70 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
     },
     [isActive, onClickItem, participant],
   )
+
+  const getDetails = useCallback(
+    async () => {
+      switch (type) {
+        case ChatParticipantType.Prompts:
+          {
+            const result = await getPromptDetail({ projectId, promptId: id })
+            const promptDetail = result?.data || {};
+            onUpdateParticipant({
+              ...participant,
+              shouldUpdateDetail: undefined,
+              version_id: promptDetail.version_details.id,
+              version_details: promptDetail.version_details,
+              versions: promptDetail.versions
+            })
+          }
+          break;
+        case ChatParticipantType.Applications:
+          {
+            const result = await getApplicationDetail({ projectId, applicationId: id })
+            const applicationDetail = result?.data || {};
+            onUpdateParticipant({
+              ...participant,
+              shouldUpdateDetail: undefined,
+              version_id: applicationDetail.version_details.id,
+              version_details: applicationDetail.version_details,
+              versions: applicationDetail.versions
+            })
+          }
+          break;
+        case ChatParticipantType.Datasources:
+          {
+            const result = await getDatasourceDetail({ projectId, datasourceId: id })
+            const datasourceDetail = result?.data || {};
+            onUpdateParticipant({
+              ...participant,
+              shouldUpdateDetail: undefined,
+              description: datasourceDetail.description,
+              version_id: datasourceDetail.version_details.id,
+              version_details: datasourceDetail.version_details,
+              versions: datasourceDetail.versions
+            })
+          }
+          break;
+        default:
+          break;
+      }
+    },
+    [
+      type,
+      getPromptDetail,
+      projectId,
+      id,
+      onUpdateParticipant,
+      participant,
+      getApplicationDetail,
+      getDatasourceDetail],
+  )
+
+  useEffect(() => {
+    if (shouldUpdateDetail) {
+      getDetails()
+    }
+  }, [getDetails, shouldUpdateDetail])
 
   return (
     <Tooltip title={participant.name || participant.model_name} placement="top">
@@ -64,6 +139,9 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
           '&:hover #SettingButton': {
             visibility: 'visible',
           },
+          '&:hover #DeleteButton': {
+            visibility: 'visible',
+          },
         }}
       >
         <Box sx={{ width: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -71,13 +149,34 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
             getIcon(type, isActive, theme)
           }
         </Box>
-        {!collapsed && <Box sx={{ flex: 1, display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
-          <Typography variant='bodyMedium' color='text.secondary'>
+        {!collapsed &&
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+            <Typography variant='bodyMedium' color='text.secondary'>
+              {
+                name || model_name || 'Participant Name'
+              }
+            </Typography>
             {
-              name || model_name || 'Participant Name'
+              isFetching &&
+              <Box sx={{ position: 'relative', height: '40px', width: '40px' }}>
+                <StyledCircleProgress sx={{top: '10px', left: '5px'}} size={18}/>
+              </Box>
             }
-          </Typography>
-        </Box>}
+          </Box>
+        }
+        {
+          !collapsed &&
+          <DeleteParticipantButton
+            id='DeleteButton'
+            sx={{
+              visibility: 'hidden',
+              flex: undefined,
+            }}
+            participant={participant}
+            onDelete={onDelete}
+          />
+
+        }
         {!collapsed && <Box
           id='SettingButton'
           sx={{

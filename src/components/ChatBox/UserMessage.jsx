@@ -13,6 +13,10 @@ import CopyMoveIcon from '../Icons/CopyMoveIcon';
 import IconButton from '@mui/material/IconButton';
 import { useTheme } from '@emotion/react';
 import { formatDistanceToNow } from 'date-fns';
+import EditIcon from '../Icons/EditIcon';
+import { ChatInputContainer, StyledTextField } from './StyledComponents';
+import { SaveButton } from '@/pages/Prompts/Components/Common';
+import NormalRoundButton from '../NormalRoundButton';
 
 const UserMessageContainer = styled(ListItem)(() => `
   flex: 1 0 0
@@ -45,7 +49,9 @@ background: ${theme.palette.background.userMessageActions};
 
 const UserMessage = React.forwardRef((props, ref) => {
   const theme = useTheme()
-  const { content, created_at, onCopy, onCopyToMessages, onDelete, verticalMode } = props;
+  const { content, created_at, onCopy, onCopyToMessages, onDelete, verticalMode, onSubmit, shouldDisableEdit, messageId, participant } = props;
+  const [value, setValue] = useState(content);
+  const [isEditing, setIsEditing] = useState(false)
   const avatar = useSelector((state) => state.user?.avatar);
   const userName = useSelector((state) => state.user?.name);
   const [showActions, setShowActions] = useState(false);
@@ -60,6 +66,32 @@ const UserMessage = React.forwardRef((props, ref) => {
       setShowActions(false);
     },
     [],
+  )
+  const onEdit = useCallback(
+    () => {
+      setIsEditing(true);
+    },
+    [],
+  )
+
+  const onCancel = useCallback(() => {
+    setIsEditing(false);
+    setValue(content);
+  }, [content])
+
+  const onChange = useCallback(
+    (event) => {
+      setValue(event.target.value)
+    },
+    [],
+  )
+
+  const onClickSubmit = useCallback(
+    () => {
+      onSubmit(messageId, participant, value);
+      setIsEditing(false);
+    },
+    [messageId, onSubmit, participant, value],
   )
 
   return (
@@ -78,7 +110,7 @@ const UserMessage = React.forwardRef((props, ref) => {
           <UserAvatar name={userName} avatar={avatar} size={24} />
         </ListItemAvatar>
       }
-      <Message sx={verticalMode ? {
+      {!isEditing ? <Message sx={verticalMode ? {
         background: theme.palette.background.aiAnswerBkg,
         width: '100%',
         borderRadius: '8px',
@@ -116,6 +148,14 @@ const UserMessage = React.forwardRef((props, ref) => {
             </StyledTooltip>
           }
           {
+            verticalMode && onSubmit &&
+            <StyledTooltip title={'Edit the message and regenerate answer'} placement="top">
+              <IconButton disabled={shouldDisableEdit} onClick={onEdit}>
+                <EditIcon sx={{ fontSize: '1.13rem' }} />
+              </IconButton>
+            </StyledTooltip>
+          }
+          {
             onDelete &&
             <StyledTooltip title={'Delete'} placement="top">
               <IconButton onClick={onDelete}>
@@ -124,7 +164,46 @@ const UserMessage = React.forwardRef((props, ref) => {
             </StyledTooltip>
           }
         </ButtonsContainer>}
-      </Message>
+      </Message> :
+        <Box sx={{ width: '100%' }}>
+          <ChatInputContainer
+            sx={{
+              borderRadius: '8px',
+              border: `1px solid ${theme.palette.border.userMessageEditor}`,
+              background: theme.palette.background.userInputBackground,
+            }}>
+            <StyledTextField
+              value={value}
+              fullWidth
+              id="standard-multiline-static"
+              label=""
+              multiline
+              maxRows={15}
+              variant="standard"
+              onChange={onChange}
+              placeholder=''
+              InputProps={{
+                style: { color: theme.palette.text.secondary },
+                disableUnderline: true,
+                endAdornment: null
+              }}
+            />
+          </ChatInputContainer>
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'row-reverse',
+            alignItems: 'center',
+            marginTop: '8px'
+          }}>
+            <SaveButton sx={{ marginRight: '0px' }} disabled={value === content} onClick={onClickSubmit} >
+              Submit
+            </SaveButton>
+            <NormalRoundButton variant='contained' color='secondary' onClick={onCancel}>
+              Cancel
+            </NormalRoundButton>
+          </Box>
+        </Box>
+      }
     </UserMessageContainer>
   )
 })

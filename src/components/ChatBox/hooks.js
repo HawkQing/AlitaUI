@@ -1,7 +1,8 @@
-import { ROLES, SocketMessageType, ChatBoxMode, StreamingMessageType, sioEvents } from '@/common/constants';
+import { ROLES, SocketMessageType, ChatBoxMode, StreamingMessageType, sioEvents, ChatParticipantType } from '@/common/constants';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUTO_SCROLL_KEY } from './AutoScrollToggle';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
+import { useIsFromChat } from '@/pages/hooks';
 
 export const useCtrlEnterKeyEventsHandler = ({ onShiftEnterPressed, onCtrlEnterDown, onEnterDown, onNormalKeyDown }) => {
   const keysPressed = useMemo(() => ({}), [])
@@ -87,14 +88,59 @@ export const useStopStreaming = ({
   }
 }
 
+export const useSocketEvents = (isApplicationChat, participantType) => {
+  const isFromChat = useIsFromChat();
+  const { subscribeEvent, leaveEvent } = useMemo(() => {
+    if (!isFromChat) {
+      return isApplicationChat ? {
+        subscribeEvent: sioEvents.application_predict,
+        leaveEvent: sioEvents.application_leave_rooms
+      } : {
+        subscribeEvent: sioEvents.promptlib_predict,
+        leaveEvent: sioEvents.promptlib_leave_rooms
+      }
+    } else {
+      switch (participantType) {
+        case ChatParticipantType.Models:
+        case ChatParticipantType.Prompts:
+          return {
+            subscribeEvent: sioEvents.promptlib_predict,
+            leaveEvent: sioEvents.promptlib_leave_rooms
+          }
+        case ChatParticipantType.Applications:
+          return {
+            subscribeEvent: sioEvents.application_predict,
+            leaveEvent: sioEvents.application_leave_rooms
+          }
+        case ChatParticipantType.Datasources: {
+          return {
+            subscribeEvent: sioEvents.datasource_predict,
+            leaveEvent: sioEvents.datasource_leave_rooms
+          }
+        }
+        default:
+          return {
+            subscribeEvent: '',
+            leaveEvent: ''
+          }
+      }
+    }
+
+  }, [isApplicationChat, isFromChat, participantType])
+
+  return { subscribeEvent, leaveEvent }
+}
+
 export const useChatSocket = ({
   mode,
   handleError,
   setIsRunning,
   listRefs,
   isApplicationChat,
+  chatHistory,
+  setChatHistory,
+  activeParticipant,
 }) => {
-  const [chatHistory, setChatHistory] = useState([]);
   const [completionResult, setCompletionResult] = useState(
     [{
       id: new Date().getTime(),
@@ -107,6 +153,11 @@ export const useChatSocket = ({
   const chatHistoryRef = useRef(chatHistory);
   const completionResultRef = useRef(completionResult);
   const messagesEndRef = useRef();
+  const activeParticipantRef = useRef();
+
+  useEffect(() => {
+    activeParticipantRef.current = activeParticipant;
+  }, [activeParticipant]);
 
   useEffect(() => {
     modeRef.current = mode;
@@ -129,7 +180,9 @@ export const useChatSocket = ({
           id: messageId,
           role: ROLES.Assistant,
           content: '',
+          participant: activeParticipantRef ? { ...(activeParticipantRef.current || {}) } : undefined,
           isLoading: false,
+          created_at: new Date().getTime()
         }
       } else {
         msg = chatHistoryRef.current[msgIdx]
@@ -150,7 +203,7 @@ export const useChatSocket = ({
       }
       return [msgIdx, msg]
     }
-  }, [])
+  }, [activeParticipantRef])
 
 
   const scrollToMessageListEnd = useCallback(() => {
@@ -241,19 +294,16 @@ export const useChatSocket = ({
         return [...prevState]
       })
     }
-  }, [getMessage, handleError, scrollToMessageListEnd, setIsRunning, listRefs])
+  }, [getMessage, listRefs, scrollToMessageListEnd, handleError, setChatHistory, setIsRunning])
 
-  const subscribeEvent = useMemo(() => isApplicationChat ? sioEvents.application_predict : sioEvents.promptlib_predict, [isApplicationChat])
-  const leaveEvent = useMemo(() => isApplicationChat ? sioEvents.application_leave_rooms : sioEvents.promptlib_leave_rooms, [isApplicationChat])
+  const { subscribeEvent, leaveEvent } = useSocketEvents(isApplicationChat, activeParticipant?.type)
 
   const { emit } = useSocket(subscribeEvent, handleSocketEvent)
 
   const { emit: manualEmit } = useManualSocket(leaveEvent);
 
   return {
-    chatHistory,
     chatHistoryRef,
-    setChatHistory,
     scrollToMessageListEnd,
     emit,
     manualEmit,

@@ -4,9 +4,10 @@ import {
   SortFields,
   SortOrderOptions
 } from '@/common/constants';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ListSection, StyledList, StyledListItem } from './SearchBarComponents';
 import useChatSearch from './useChatSearch';
+import { Typography } from '@mui/material';
 
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -46,8 +47,10 @@ export default function ChatSuggestionList({
     clearApplications,
     isFetchingApplications,
     applicationResult,
-    applicationTotal
+    applicationTotal,
+    modelList
   } = useChatSearch();
+  const filterModelsList = useMemo(() => modelList.filter(model => model.model_name.toLowerCase().includes(searchString.toLowerCase())) , [modelList, searchString])
 
   const [promptPage, setPromptPage] = useState(0);
   const getPrompts = useCallback((inputValue, page) => {
@@ -128,8 +131,7 @@ export default function ChatSuggestionList({
 
   useEffect(() => {
     resetSearchResultRef.current = resetSearchResult;
-  }, [resetSearchResult])
-  
+  }, [resetSearchResult])  
 
   const debouncedInputValue = useDebounce(searchString, 500);
   useEffect(() => {
@@ -190,6 +192,26 @@ export default function ChatSuggestionList({
     </StyledListItem>
   }, [clickOneItem]);
 
+  const renderModelItem = useCallback((item) => {
+    return <StyledListItem
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}
+      key={item.id}
+      onClick={clickOneItem(ChatParticipantType.Models, item)}
+    >
+      <Typography variant='bodyMedium' color='text.default'>
+        {item.model_name}
+      </Typography>
+      <Typography variant='bodySmall' color='text.default'>
+        {item.integration_name}
+      </Typography>
+    </StyledListItem>
+  }, [clickOneItem]);
+
   useEffect(() => {
     return () => {
       resetSearchResultRef.current()
@@ -221,6 +243,13 @@ export default function ChatSuggestionList({
         isFetching={isFetchingApplications}
         renderItem={renderApplicationItem}
         fetchMoreData={fetchMoreApplicationData}
+      />
+      <ListSection
+        sectionTitle={AutoChatSuggestionTitles.MODELS}
+        data={filterModelsList}
+        total={filterModelsList.length}
+        isFetching={false}
+        renderItem={renderModelItem}
       />
       <ApiToast />
     </StyledList>

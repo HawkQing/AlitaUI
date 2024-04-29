@@ -5,7 +5,7 @@ import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 
 const ChatBoxHeader = ({ conversationName, isStreaming, onStopStreaming, onClear }) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginBottom: '12px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
       <Typography variant='bodyMedium' color='secondary'>
         {
           conversationName

@@ -29,6 +29,7 @@ import VariableList from '@/pages/Prompts/Components/Form/VariableList';
 import useQueryApplicationDetail from './useQueryApplicationDetail';
 import useQueryDataSourceDetail from './useQueryDataSourceDetail';
 import { useSelectedProjectId } from '@/pages/hooks';
+import { StyledCircleProgress } from '@/components/ChatBox/StyledComponents';
 
 const DialogTitleDiv = styled('div')(() => ({
   width: '100%',
@@ -73,10 +74,10 @@ const NewConversationSettings = ({
   }, [conversation])
 
   useEffect(() => {
-    setCurrentSettingType(conversation.participants[0]?.type || ChatParticipantType.Models);
-  }, [conversation.participants])
+    setCurrentSettingType(conversation?.participants[0]?.type || ChatParticipantType.Models);
+  }, [conversation?.participants])
 
-  const selectedChatModel = useMemo(() => conversation.participants[0] || {}, [conversation.participants])
+  const selectedChatModel = useMemo(() => conversation?.participants[0] || {}, [conversation?.participants])
   const chatModelValue = useMemo(() =>
   (
     selectedChatModel.integration_uid &&
@@ -86,8 +87,9 @@ const NewConversationSettings = ({
         getIntegrationNameByUid(selectedChatModel.integration_uid, modelOptions))
       : ''),
     [modelOptions, selectedChatModel.integration_uid, selectedChatModel.model_name]);
-  const { getApplicationDetail, applicationDetail } = useQueryApplicationDetail();
-  const { getDatasourceDetail, datasourceDetail } = useQueryDataSourceDetail();
+  const { getApplicationDetail, applicationDetail, isFetching: isFetchingApplicationDetail } = useQueryApplicationDetail();
+  const { getDatasourceDetail, datasourceDetail, isFetching: isFetchingDatasourceDetail } = useQueryDataSourceDetail();
+  const isFetching = useMemo(() => isFetchingApplicationDetail || isFetchingDatasourceDetail, [isFetchingApplicationDetail, isFetchingDatasourceDetail])
   const variables = useMemo(() => conversation?.participants[0]?.version_details?.variables || [], [conversation?.participants])
 
   useEffect(() => {
@@ -129,7 +131,7 @@ const NewConversationSettings = ({
   const onSelectParticipantType = useCallback(
     (e) => {
       const newType = e?.target?.value;
-      if (newType !== conversation.participants[0]?.type) {
+      if (newType !== conversation?.participants[0]?.type) {
         onChangeConversation({
           ...conversation,
           participants: [{
@@ -152,7 +154,8 @@ const NewConversationSettings = ({
     onChangeConversation({
       ...conversation,
       participants: [{
-        ...conversation.participants[0],
+        ...conversation?.participants[0],
+        type: ChatParticipantType.Models,
         id: integrationUid + '_' + modelName,
         integration_uid: integrationUid,
         model_name: modelName,
@@ -170,7 +173,7 @@ const NewConversationSettings = ({
       onChangeConversation({
         ...conversation,
         participants: [{
-          ...conversation.participants[0],
+          ...conversation?.participants[0],
           [field]: value
         }],
       })
@@ -182,7 +185,7 @@ const NewConversationSettings = ({
     onChangeConversation({
       ...conversation,
       participants: [{
-        ...conversation.participants[0],
+        ...conversation?.participants[0],
         name: datasource.label,
         id: datasource.value,
         description: datasource.description,
@@ -195,9 +198,9 @@ const NewConversationSettings = ({
     onChangeConversation({
       ...conversation,
       participants: [{
-        ...conversation.participants[0],
+        ...conversation?.participants[0],
         name: application.label,
-        id: application.value,
+        id: +application.value,
         description: application.description,
         variables: [],
       }],
@@ -209,10 +212,10 @@ const NewConversationSettings = ({
     onChangeConversation({
       ...conversation,
       participants: [{
-        ...conversation.participants[0],
+        ...conversation?.participants[0],
         version_details: {
-          ...conversation.participants[0]?.version_details,
-          variables: conversation.participants[0]?.version_details.variables.map((v) => v.name === label ? ({ name: label, value: newValue }) : v)
+          ...conversation?.participants[0]?.version_details,
+          variables: conversation?.participants[0]?.version_details.variables.map((v) => v.name === label ? ({ name: label, value: newValue }) : v)
         }
       }],
     })
@@ -242,7 +245,7 @@ const NewConversationSettings = ({
       }}>
         <DialogTitleDiv>
           <StyledInputEnhancer
-            value={conversation.name || ''}
+            value={conversation?.name || ''}
             autoComplete="off"
             variant='standard'
             onChange={onChangeName}
@@ -254,7 +257,7 @@ const NewConversationSettings = ({
             aria-labelledby="private-public-radio-buttons-group-label"
             name="private-public-radio-buttons-group"
             sx={{ gap: '24px' }}
-            value={conversation.is_public}
+            value={conversation?.is_public}
             onChange={onSelectType}
           >
             <FormControlLabel
@@ -303,7 +306,7 @@ const NewConversationSettings = ({
             <DatasourceSelect
               required
               onValueChange={onChangeChatDatasource}
-              value={conversation.participants[0]?.id || ''}
+              value={conversation?.participants[0]?.id || ''}
               error={false}
               helperText={''}
               shouldUseSelectedProject
@@ -314,7 +317,7 @@ const NewConversationSettings = ({
             <ApplicationSelect
               required
               onValueChange={onChangeChatApplication}
-              value={conversation.participants[0]?.id || ''}
+              value={conversation?.participants[0]?.id || ''}
               error={false}
               helperText={''}
               shouldUseSelectedProject
@@ -326,8 +329,28 @@ const NewConversationSettings = ({
           <LLMSettings llmSettings={selectedChatModel} onChangeLLMSettings={onChangeLLMSettings} />
         }
         {
-          currentSettingType === ChatParticipantType.Applications && !!variables.length &&
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+          isFetching &&
+          <Box sx={{ position: 'relative', width: '100%', height: '30px' }}>
+            <StyledCircleProgress size={24} />
+          </Box>
+        }
+        {
+          currentSettingType === ChatParticipantType.Applications && !!variables.length && !isFetching &&
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            width: '100%',
+            maxHeight: '220px',
+            overflowY: 'scroll',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+              width: '0 !important;',
+              height: '0;',
+            },
+            scrollbarWidth: 'none', // For Firefox
+            msOverflowStyle: 'none',  // For Internet Explorer and Edge
+          }}>
             <Typography sx={{ marginLeft: '12px' }} variant='bodySmall' >
               Application variables
             </Typography>

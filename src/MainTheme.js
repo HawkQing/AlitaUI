@@ -334,7 +334,9 @@ const getDesignTokens = mode => ({
         default: purple20,
         hover: purple40
       },
-      conversationEditor: gray40
+      conversationEditor: gray40,
+      conversationTopCover: 'linear-gradient(360deg, rgba(16, 23, 33, 0) 0%, #0E131D 100%)',
+      conversationBottomCover: 'linear-gradient(180deg, rgba(16, 23, 33, 0) 0%, #0E131D 100%)',
     },
     border: {
       lines: gray30,
@@ -346,6 +348,7 @@ const getDesignTokens = mode => ({
       tips: blue40,
       attention: orangeOutline40,
       table: gray40,
+      userMessageEditor: primaryPressed,
     },
     text: {
       default: gray10,

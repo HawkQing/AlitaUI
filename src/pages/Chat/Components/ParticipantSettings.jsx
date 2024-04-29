@@ -6,15 +6,13 @@ import { useTheme } from '@emotion/react';
 import { getIcon } from '@/pages/Chat/Components/ParticipantItem';
 import RestoreIcon from '@/components/Icons/RestoreIcon';
 import VariableList from '@/pages/Prompts/Components/Form/VariableList';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
-import AlertDialog from '@/components/AlertDialog';
 import { ChatParticipantType } from '@/common/constants';
+import DeleteParticipantButton from './DeleteParticipantButton';
 
 const ParticipantSettings = ({ onBackAndSave, participant, isActive, onDelete }) => {
   const theme = useTheme()
   const [forceRenderCounter, setForceRenderCounter] = useState(0)
   const [editedParticipant, setEditedParticipant] = useState({ ...participant })
-  const [openAlert, setOpenAlert] = useState(false);
 
   const onClickBack = useCallback(() => {
     onBackAndSave(editedParticipant)
@@ -67,27 +65,6 @@ const ParticipantSettings = ({ onBackAndSave, participant, isActive, onDelete })
     [participant],
   )
 
-  const onClickDelete = useCallback(
-    () => {
-      setOpenAlert(true);
-    },
-    [],
-  )
-
-  const onCloseAlert = useCallback(
-    () => {
-      setOpenAlert(false);
-    },
-    [],
-  )
-
-  const onConfirmAlert = useCallback(
-    () => {
-      onDelete(participant.id);
-    },
-    [onDelete, participant.id],
-  )
-
   return (
     <Box >
       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -135,15 +112,7 @@ const ParticipantSettings = ({ onBackAndSave, participant, isActive, onDelete })
               }
             </Typography>
           </Box>
-          <Box
-            onClick={onClickDelete}
-            id='DeleteButton'
-            sx={{
-              flex: 1, display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center'
-            }}
-          >
-            <DeleteIcon fontSize='16px' />
-          </Box>
+          <DeleteParticipantButton participant={participant} onDelete={onDelete} />
         </Box>
         {
           participant.type === ChatParticipantType.Models &&
@@ -171,14 +140,6 @@ const ParticipantSettings = ({ onBackAndSave, participant, isActive, onDelete })
 
         }
       </Box>
-      <AlertDialog
-        title={'Warning'}
-        alertContent={`Are you sure to remove this participant ${participant.name || participant.model_name} from the conversation?`}
-        open={openAlert}
-        onClose={onCloseAlert}
-        onCancel={onCloseAlert}
-        onConfirm={onConfirmAlert}
-      />
     </Box>
 
   )

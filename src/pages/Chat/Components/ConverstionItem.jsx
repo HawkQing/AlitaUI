@@ -12,7 +12,7 @@ import CancelIcon from '@/components/Icons/CancelIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 
-const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = false, onDelete, onExport, onEdit, onMakePublic }) => {
+const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = false, onDelete, onExport, onEdit }) => {
   const { name, participants, is_public, chat_history = [] } = conversation
   const [conversationName, setConversationName] = useState(name)
   const [isHovering, setIsHovering] = useState(false)
@@ -34,6 +34,12 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
   const handleEdit = useCallback(() => {
     setIsEditing(true)
   }, [])
+
+  const handleMakePublic = useCallback(() => {
+    if (!is_public) {
+      onEdit({ ...conversation, is_public: true })
+    }
+  }, [conversation, is_public, onEdit])
 
   const menuItems = useMemo(() => {
     const items = [
@@ -76,11 +82,11 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
           background: `${theme.palette.background.button.primary.default} !important`,
           color: `${theme.palette.text.button.primary} !important`
         },
-        onConfirm: onMakePublic
+        onConfirm: handleMakePublic
       }
     ]
     return items
-  }, [handleDelete, handleEdit, onExport, onMakePublic, theme.palette.background.button.primary.default, theme.palette.text.button.primary]);
+  }, [handleDelete, handleEdit, onExport, handleMakePublic, theme.palette.background.button.primary.default, theme.palette.text.button.primary]);
 
   const onMouseEnter = useCallback(
     () => {
