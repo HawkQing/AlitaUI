@@ -1,4 +1,12 @@
-import { ROLES, SocketMessageType, ChatBoxMode, StreamingMessageType, sioEvents, ChatParticipantType } from '@/common/constants';
+import {
+  ROLES,
+  SocketMessageType,
+  ChatBoxMode,
+  StreamingMessageType,
+  sioEvents,
+  ChatParticipantType,
+  ToolActionStatus
+} from '@/common/constants';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUTO_SCROLL_KEY } from './AutoScrollToggle';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
@@ -228,9 +236,11 @@ export const useChatSocket = ({
         }
       }
     };
+    let t
 
     switch (socketMessageType) {
       case SocketMessageType.StartTask:
+      // case 'agent_start':
         msg.isLoading = true
         msg.isStreaming = false
         msg.content = ''
@@ -250,6 +260,7 @@ export const useChatSocket = ({
         break
       case SocketMessageType.Chunk:
       case SocketMessageType.AIMessageChunk:
+      case SocketMessageType.AgentResponse:
         msg.content += message.content
         msg.isLoading = false
         msg.isStreaming = true
@@ -260,6 +271,36 @@ export const useChatSocket = ({
           } else {
             msg.isStreaming = false
           }
+        }
+        break
+      case SocketMessageType.AgentToolStart:
+        if (msg.toolActions === undefined) {
+          msg.toolActions = []
+        }
+        if (!msg.toolActions.find(i => i.id === message?.response_metadata?.tool_run_id)) {
+          msg.toolActions.push({
+            name: message?.response_metadata?.tool_name,
+            id: message?.response_metadata?.tool_run_id,
+            status: ToolActionStatus.processing
+          })
+        }
+        break
+      case SocketMessageType.AgentToolEnd:
+        t = msg.toolActions.find(i => i.id === message?.response_metadata?.tool_run_id)
+        if (t) {
+          Object.assign(t, {
+            content: message?.content,
+            status: ToolActionStatus.complete
+          })
+        }
+        break
+      case SocketMessageType.AgentToolError:
+        t = msg.toolActions.find(i => i.id === message?.response_metadata?.tool_run_id)
+        if (t) {
+          Object.assign(t, {
+            content: message?.content,
+            status: ToolActionStatus.error
+          })
         }
         break
       case SocketMessageType.References:

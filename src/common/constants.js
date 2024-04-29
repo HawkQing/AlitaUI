@@ -157,7 +157,11 @@ export const RoleOptions = [
 ];
 
 export const SocketMessageType = {
+  AgentResponse: 'agent_response',
   AgentException: 'agent_exception',
+  AgentToolStart: 'agent_tool_start',
+  AgentToolEnd: 'agent_tool_end',
+  AgentToolError: 'agent_tool_error',
   References: 'references',
   Chunk: 'chunk',
   AIMessageChunk: 'AIMessageChunk',
