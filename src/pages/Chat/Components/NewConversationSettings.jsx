@@ -30,6 +30,8 @@ import useQueryApplicationDetail from './useQueryApplicationDetail';
 import useQueryDataSourceDetail from './useQueryDataSourceDetail';
 import { useSelectedProjectId } from '@/pages/hooks';
 import { StyledCircleProgress } from '@/components/ChatBox/StyledComponents';
+import DatasourceSettings from './DatasourceSettings';
+import { updateObjectByPath } from '@/common/utils.jsx';
 
 const DialogTitleDiv = styled('div')(() => ({
   width: '100%',
@@ -77,7 +79,7 @@ const NewConversationSettings = ({
     setCurrentSettingType(conversation?.participants[0]?.type || ChatParticipantType.Models);
   }, [conversation?.participants])
 
-  const selectedChatModel = useMemo(() => conversation?.participants[0] || {}, [conversation?.participants])
+  const selectedChatModel = useMemo(() => conversation?.participants[0]?.type ===ChatParticipantType.Models ? conversation?.participants[0] || {} : {}, [conversation?.participants])
   const chatModelValue = useMemo(() =>
   (
     selectedChatModel.integration_uid &&
@@ -121,7 +123,7 @@ const NewConversationSettings = ({
   ])
 
 
-  const onSelectType = useCallback((event) => {
+  const onSwitchPublicPrivate = useCallback((event) => {
     onChangeConversation({
       ...conversation,
       is_public: event.target.value
@@ -132,15 +134,10 @@ const NewConversationSettings = ({
     (e) => {
       const newType = e?.target?.value;
       if (newType !== conversation?.participants[0]?.type) {
-        onChangeConversation({
-          ...conversation,
-          participants: [{
-            type: newType,
-          }]
-        })
+        setCurrentSettingType(newType);
       }
     },
-    [conversation, onChangeConversation],
+    [conversation],
   );
 
   const onChangeName = useCallback((event) => {
@@ -181,11 +178,24 @@ const NewConversationSettings = ({
     [conversation, onChangeConversation],
   )
 
+  const onDatasourceSettings = useCallback(
+    (field) => (value) => {
+      const newDatasource = updateObjectByPath(conversation?.participants[0], field, value)
+      onChangeConversation({
+        ...conversation,
+        type: ChatParticipantType.Datasources,
+        participants: [newDatasource],
+      })
+    },
+    [conversation, onChangeConversation],
+  )
+
   const onChangeChatDatasource = useCallback((datasource) => {
     onChangeConversation({
       ...conversation,
       participants: [{
         ...conversation?.participants[0],
+        type: ChatParticipantType.Datasources,
         name: datasource.label,
         id: datasource.value,
         description: datasource.description,
@@ -199,6 +209,7 @@ const NewConversationSettings = ({
       ...conversation,
       participants: [{
         ...conversation?.participants[0],
+        type: ChatParticipantType.Applications,
         name: application.label,
         id: +application.value,
         description: application.description,
@@ -258,7 +269,7 @@ const NewConversationSettings = ({
             name="private-public-radio-buttons-group"
             sx={{ gap: '24px' }}
             value={conversation?.is_public}
-            onChange={onSelectType}
+            onChange={onSwitchPublicPrivate}
           >
             <FormControlLabel
               value={false}
@@ -306,7 +317,12 @@ const NewConversationSettings = ({
             <DatasourceSelect
               required
               onValueChange={onChangeChatDatasource}
-              value={conversation?.participants[0]?.id || ''}
+              value={
+                conversation?.participants[0]?.type === ChatParticipantType.Datasources
+                  ?
+                  conversation?.participants[0]?.id || ''
+                  :
+                  ''}
               error={false}
               helperText={''}
               shouldUseSelectedProject
@@ -317,7 +333,12 @@ const NewConversationSettings = ({
             <ApplicationSelect
               required
               onValueChange={onChangeChatApplication}
-              value={conversation?.participants[0]?.id || ''}
+              value={
+                conversation?.participants[0]?.type === ChatParticipantType.Applications
+                  ?
+                  conversation?.participants[0]?.id || ''
+                  :
+                  ''}
               error={false}
               helperText={''}
               shouldUseSelectedProject
@@ -327,6 +348,17 @@ const NewConversationSettings = ({
         {
           currentSettingType === ChatParticipantType.Models && selectedChatModel.model_name &&
           <LLMSettings llmSettings={selectedChatModel} onChangeLLMSettings={onChangeLLMSettings} />
+        }
+        {
+          conversation?.participants[0]?.type === ChatParticipantType.Datasources &&
+          currentSettingType === ChatParticipantType.Datasources &&
+          conversation?.participants[0]?.id &&
+          !isFetching &&
+          <DatasourceSettings
+            chat_settings_ai={conversation?.participants[0]?.version_details?.chat_settings_ai}
+            chat_settings_embedding={conversation?.participants[0]?.version_details?.chat_settings_embedding}
+            onDatasourceSettings={onDatasourceSettings}
+          />
         }
         {
           isFetching &&

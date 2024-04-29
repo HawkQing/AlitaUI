@@ -80,7 +80,7 @@ const PlaceHolder = styled('div')(() => ({
   flex: 1,
 }));
 
-export default function StyledTabs({ tabs = [], extraHeaders, tabSX }) {
+export default function StyledTabs({ tabs = [], extraHeaders, containerStyle={}, tabSX, panelStyle={} }) {
   const theme = useTheme();
   const [value, setValue] = React.useState(0);
   const tabBarItems = React.useMemo(() => tabs[value].tabBarItems, [tabs, value])
@@ -91,8 +91,8 @@ export default function StyledTabs({ tabs = [], extraHeaders, tabSX }) {
   }, []);
 
   return (
-    <div style={{ height: 'calc(100vh - 95px)', display: 'flex', flexDirection: 'column'}}>
-      <StyledTabBar sx={{...tabSX, boxSizing: 'border-box', padding: '0 1.5rem', paddingBottom: '12px', borderBottom: `1px solid ${theme.palette.border.table}`}}>
+    <div style={{ height: 'calc(100vh - 95px)', display: 'flex', flexDirection: 'column', ...containerStyle}}>
+      <StyledTabBar sx={{boxSizing: 'border-box', padding: '0 1.5rem', paddingBottom: '12px', borderBottom: `1px solid ${theme.palette.border.table}`, ...tabSX}}>
         {
           extraHeaders
         }
@@ -111,7 +111,7 @@ export default function StyledTabs({ tabs = [], extraHeaders, tabSX }) {
       </StyledTabBar>
       {tabs.map((tab, index) => (
         <CustomTabPanel
-          style={{ display: tab.display, backgroundColor: theme.palette.background.tabPanel, padding: '0 1.5rem', flex: 1 }}
+          style={{ display: tab.display, backgroundColor: theme.palette.background.tabPanel, padding: '0 1.5rem', flex: 1, ...panelStyle }}
           value={value}
           index={index}
           key={index}
