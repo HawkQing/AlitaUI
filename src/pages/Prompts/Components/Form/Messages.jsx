@@ -24,6 +24,7 @@ import MessageInput from './MessageInput';
 import { useUpdateVariableList } from '../../../hooks';
 import { getFileFormat } from '@/common/utils';
 import YAML from 'js-yaml';
+import { v4 as uuidv4 } from 'uuid';
 
 export const AddButton = styled(IconButton)(({ theme }) => (`
   width: 2rem;
@@ -96,7 +97,7 @@ const Messages = () => {
           {
             role: ROLES.System,
             content: '',
-            id: new Date().getTime() + '',
+            id: uuidv4(),
           }]
       }));
       if (!open) {
@@ -145,7 +146,7 @@ const Messages = () => {
   const onCopy = useCallback(
     (message, index) => async () => {
       const newMessages = [...messages];
-      newMessages.splice(index, 0, { ...message, id: new Date().getTime() + '', });
+      newMessages.splice(index, 0, { ...message, id: uuidv4(), });
       dispatch(actions.updateCurrentPromptData({
         key: PROMPT_PAYLOAD_KEY.messages,
         data: newMessages,

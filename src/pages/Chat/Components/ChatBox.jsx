@@ -31,6 +31,7 @@ import useInputKeyDownHandler from './useInputKeyDownHandler';
 import SuggestedParticipants from './SuggestedParticipants';
 import ChatBoxHeader from './ChatBoxHeader';
 import ApplicationAnswer from '@/components/ChatBox/ApplicationAnswer';
+import { v4 as uuidv4 } from 'uuid';
 
 const USE_STREAM = true
 
@@ -228,7 +229,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       onCreateConversation();
     }
     setTimeout(scrollToMessageListEnd, 0);
-    const question_id = new Date().getTime();
+    const question_id = uuidv4();
     setChatHistory((prevMessages) => {
       return [...prevMessages, {
         id: question_id,
@@ -249,7 +250,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       if (isCreatingConversation) {
         onCreateConversation();
       }
-      const question_id = new Date().getTime();
+      const question_id = uuidv4();
       const payload = getPayload(question, question_id)
       setChatHistory((prevMessages) => {
         return [...prevMessages, {
@@ -353,7 +354,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       if (!isRegenerating) {
         setChatHistory((prevMessages) => {
           return [...prevMessages, {
-            id: new Date().getTime(),
+            id: uuidv4(),
             role: 'assistant',
             content: answer,
           }];

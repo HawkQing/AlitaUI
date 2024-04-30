@@ -4,13 +4,13 @@ import {
   ChatBoxMode,
   StreamingMessageType,
   sioEvents,
-  ChatParticipantType,
   ToolActionStatus
 } from '@/common/constants';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUTO_SCROLL_KEY } from './AutoScrollToggle';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
 import { useIsFromChat } from '@/pages/hooks';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useCtrlEnterKeyEventsHandler = ({ onShiftEnterPressed, onCtrlEnterDown, onEnterDown, onNormalKeyDown }) => {
   const keysPressed = useMemo(() => ({}), [])
@@ -96,7 +96,7 @@ export const useStopStreaming = ({
   }
 }
 
-export const useSocketEvents = (isApplicationChat, participantType) => {
+export const useSocketEvents = (isApplicationChat) => {
   const isFromChat = useIsFromChat();
   const { subscribeEvent, leaveEvent } = useMemo(() => {
     if (!isFromChat) {
@@ -108,33 +108,12 @@ export const useSocketEvents = (isApplicationChat, participantType) => {
         leaveEvent: sioEvents.promptlib_leave_rooms
       }
     } else {
-      switch (participantType) {
-        case ChatParticipantType.Models:
-        case ChatParticipantType.Prompts:
-          return {
-            subscribeEvent: sioEvents.promptlib_predict,
-            leaveEvent: sioEvents.promptlib_leave_rooms
-          }
-        case ChatParticipantType.Applications:
-          return {
-            subscribeEvent: sioEvents.application_predict,
-            leaveEvent: sioEvents.application_leave_rooms
-          }
-        case ChatParticipantType.Datasources: {
-          return {
-            subscribeEvent: sioEvents.datasource_predict,
-            leaveEvent: sioEvents.datasource_leave_rooms
-          }
-        }
-        default:
-          return {
-            subscribeEvent: '',
-            leaveEvent: ''
-          }
+      return {
+        subscribeEvent: sioEvents.chat_predict,
+        leaveEvent: sioEvents.chat_leave_rooms
       }
     }
-
-  }, [isApplicationChat, isFromChat, participantType])
+  }, [isApplicationChat, isFromChat])
 
   return { subscribeEvent, leaveEvent }
 }
@@ -151,7 +130,7 @@ export const useChatSocket = ({
 }) => {
   const [completionResult, setCompletionResult] = useState(
     [{
-      id: new Date().getTime(),
+      id: uuidv4(),
       role: ROLES.Assistant,
       isLoading: false,
       content: '',
@@ -337,7 +316,7 @@ export const useChatSocket = ({
     }
   }, [getMessage, listRefs, scrollToMessageListEnd, handleError, setChatHistory, setIsRunning])
 
-  const { subscribeEvent, leaveEvent } = useSocketEvents(isApplicationChat, activeParticipant?.type)
+  const { subscribeEvent, leaveEvent } = useSocketEvents(isApplicationChat)
 
   const { emit } = useSocket(subscribeEvent, handleSocketEvent)
 

@@ -10,6 +10,7 @@ import { stableSort } from '@/common/utils';
 import ParticipantSettings from './Components/ParticipantSettings';
 import eventEmitter from '@/common/eventEmitter';
 import useResetCreateFlag from './Components/useResetCreateFlag';
+import { v4 as uuidv4 } from 'uuid';
 
 const Chat = () => {
   const [conversations, setConversations] = useState([]);
@@ -277,7 +278,7 @@ const Chat = () => {
   useEffect(() => {
     if (isCreatingConversation && !isStreaming) {
       const newConversation = {
-        id: new Date().getTime(),
+        id: uuidv4(),
         name: 'New Conversation',
         is_public: false,
         participants: [],

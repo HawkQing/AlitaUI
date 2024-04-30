@@ -641,6 +641,8 @@ export const APIKeyTypes = {
 }
 
 export const sioEvents = {
+  chat_predict: 'chat_predict',
+  chat_leave_rooms: 'chat_leave_rooms',
   application_predict: 'application_predict',
   application_leave_rooms: 'application_leave_rooms',
   promptlib_predict: 'promptlib_predict',
