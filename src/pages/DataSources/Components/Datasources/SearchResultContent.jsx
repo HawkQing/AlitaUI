@@ -11,7 +11,7 @@ const CardPrettyContent = ({data}) => {
       <Box mr={2}>
         <ArticleIcon/>
       </Box>
-      <Box flexGrow={1}>
+      <Box flexGrow={1} sx={{overflow: 'scroll'}}>
         <Typography variant="bodyMedium" component="pre" color="text.secondary" sx={{wordWrap: 'break-word', overflowWrap: 'break-word', wordBreak: 'normal', hyphens: 'auto', whiteSpace: 'normal'}}>
           <Markdown>
             {data.page_content}
