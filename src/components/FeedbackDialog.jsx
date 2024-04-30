@@ -28,15 +28,17 @@ const HeartIcon = styled(FavoriteIcon)(({theme}) => (`
 const FeedbackDialog = () => {
   const [open, setOpen] = useState(false)
   const [feedbackText, setFeedbackText] = useState('')
-  const [rating, setRating] = useState(0)
+  const [rating, setRating] = useState(null)
   const [thanks, setThanks] = useState(false)
   const location = useLocation()
   const [sendFeedback, {isSuccess, isError}] = useFeedbackMutation()
+  const [ratingError, setRatingError] = useState('')
 
   const setInitialState = () => {
     setOpen(false)
     setFeedbackText('')
-    setRating(0)
+    setRating(null)
+    setRatingError('')
   }
 
   useEffect(() => {
@@ -54,7 +56,9 @@ const FeedbackDialog = () => {
 
   const handleSubmit = async e => {
     e.preventDefault()
-    await sendFeedback({description: feedbackText, rating, location: decodeURI(location.pathname)})
+    rating === null ? 
+      setRatingError('Please rate the application') : 
+      await sendFeedback({description: feedbackText, rating, location: decodeURI(location.pathname)})
   }
   useEffect(() => {
     isSuccess && setThanks(true)
@@ -108,6 +112,7 @@ const FeedbackDialog = () => {
                 setRating(newValue)
               }}
             />
+            <Typography component="legend" fontSize={"small"} color={'error'}>{ratingError}</Typography>
             <TextField
               autoFocus
               required
