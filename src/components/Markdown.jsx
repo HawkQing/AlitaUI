@@ -70,7 +70,7 @@ const Markdown = ({ children }) => {
       key={index}
       theme={themes.vsDark}
       code={markedToken.text}
-      language={markedToken.lang}
+      language={markedToken.lang || 'python'}
     >
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <pre className={className} style={style}>
