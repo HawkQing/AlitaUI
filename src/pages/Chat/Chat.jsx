@@ -49,38 +49,40 @@ const Chat = () => {
 
   const onSelectNewParticipant = useCallback(
     (participant) => {
-      setActiveConversation(prev => {
-        const { participants, id } = prev;
-        if (id) {
-          if (participants.find(item => item.id === participant.id && item.type === ChatParticipantType.Prompts)) {
-            return prev;
-          } else {
-            return {
-              ...prev,
-              participants: [...participants, participant]
-            }
-          }
-        } else {
-          return prev
-        }
-      });
-      setConversations(prev => {
-        return prev.map(conversation => {
-          if (conversation.id === activeConversation?.id) {
-            const { participants } = activeConversation;
+      if (!activeConversation?.participants.find(item => item.id === participant.id)) {
+        setActiveConversation(prev => {
+          const { participants, id } = prev;
+          if (id) {
             if (participants.find(item => item.id === participant.id && item.type === ChatParticipantType.Prompts)) {
-              return activeConversation;
+              return prev;
             } else {
               return {
-                ...activeConversation,
+                ...prev,
                 participants: [...participants, participant]
               }
             }
           } else {
-            return conversation
+            return prev
           }
+        });
+        setConversations(prev => {
+          return prev.map(conversation => {
+            if (conversation.id === activeConversation?.id) {
+              const { participants } = activeConversation;
+              if (participants.find(item => item.id === participant.id && item.type === ChatParticipantType.Prompts)) {
+                return activeConversation;
+              } else {
+                return {
+                  ...activeConversation,
+                  participants: [...participants, participant]
+                }
+              }
+            } else {
+              return conversation
+            }
+          })
         })
-      })
+      }
     },
     [activeConversation],
   )
@@ -352,9 +354,9 @@ const Chat = () => {
                 participants={activeConversation?.participants || []}
                 onShowSettings={onShowSettings}
                 onDeleteParticipant={onDeleteParticipant}
-                onSelectParticipant={onSelectParticipant} 
+                onSelectParticipant={onSelectParticipant}
                 onUpdateParticipant={onFinishEditParticipant}
-                />
+              />
               :
               <ParticipantSettings
                 participant={theParticipantEdited}

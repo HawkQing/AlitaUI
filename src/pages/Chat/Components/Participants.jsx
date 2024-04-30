@@ -23,7 +23,7 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
   const types = useMemo(() => getTypes(participants), [participants]);
 
   return (
-    <Box sx={{height: '100%', position: 'relative'}} >
+    <Box sx={{ height: '100%', position: 'relative' }} >
       <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: (collapsed && !isSmallWindow) ? 'center' : 'space-between', height: '32px', alignItems: 'center' }}>
         {
           (!collapsed || isSmallWindow) &&
@@ -64,7 +64,14 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
           display: 'flex',
           flexDirection: 'column',
           alignItems: (!collapsed || isSmallWindow) ? 'flex-start' : 'center',
-          overflowY: 'scroll', maxHeight: `calc(100% - 40px)`, paddingBottom: '32px'
+          overflowY: 'scroll',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          '::-webkit-scrollbar': {
+            display: 'none',
+          },
+          maxHeight: `calc(100% - 40px)`,
+          paddingBottom: '32px'
         }} >
         {
           types.map((type) => {
@@ -102,7 +109,7 @@ const Participants = ({ participants, onShowSettings, collapsed, onCollapsed, ac
           })
         }
       </Box>
-      <Box sx={{width: '100%', height: '40px', position: 'absolute', bottom: '0px', left: '0px', background: theme.palette.background.conversationBottomCover}} />
+      <Box sx={{ width: '100%', height: '40px', position: 'absolute', bottom: '0px', left: '0px', background: theme.palette.background.conversationBottomCover }} />
     </Box>
 
   )

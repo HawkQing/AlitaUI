@@ -181,6 +181,7 @@ export default function InputVersionDialog({
             fullWidth
             variant='standard'
             label='Name'
+            autoComplete='off'
             value={versionName}
             onKeyDown={onKeyDown}
             onKeyUp={onKeyUp}

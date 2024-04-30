@@ -85,8 +85,8 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
         onConfirm: handleMakePublic
       }
     ]
-    return items
-  }, [handleDelete, handleEdit, onExport, handleMakePublic, theme.palette.background.button.primary.default, theme.palette.text.button.primary]);
+    return is_public ? items.filter(item => item.label !== 'Make public') : items;
+  }, [handleDelete, handleEdit, onExport, theme.palette.background.button.primary.default, theme.palette.text.button.primary, handleMakePublic, is_public]);
 
   const onMouseEnter = useCallback(
     () => {
