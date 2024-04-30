@@ -317,6 +317,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     const payload = getPayload(theQuestion, id, leftChatHistory)
     payload.message_id = id
+    payload.stream_id = id
     emit(payload)
   }, [chat_history, getPayload, emit]);
 
@@ -338,6 +339,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       const payload = getPayload(theQuestion, id, leftChatHistory)
       payload.message_id = id
+      payload.stream_id = id
       askAlita(payload);
     },
     [setChatHistory, chat_history, getPayload, askAlita],
