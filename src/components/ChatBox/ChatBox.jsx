@@ -36,6 +36,7 @@ import useDeleteMessageAlert from './useDeleteMessageAlert';
 import { useChatSocket, useStopStreaming } from './hooks';
 import ApplicationAnswer from './ApplicationAnswer';
 import { usePredictMutation as useApplicationPredictMutation } from '@/api/applications';
+import { v4 as uuidv4 } from 'uuid';
 
 const USE_STREAM = true
 
@@ -268,7 +269,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     setTimeout(scrollToMessageListEnd, 0);
     setChatHistory((prevMessages) => {
       return [...prevMessages, {
-        id: new Date().getTime(),
+        id: uuidv4(),
         role: ROLES.User,
         name,
         content: question,
@@ -324,7 +325,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       })
       setChatHistory((prevMessages) => {
         return [...prevMessages, {
-          id: new Date().getTime(),
+          id: uuidv4(),
           role: 'user',
           name,
           content: question,
@@ -359,7 +360,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     ]);
   const onClickRun = useCallback(() => {
     setCompletionResult([{
-      id: new Date().getTime(),
+      id: uuidv4(),
       role: ROLES.Assistant,
       isLoading: false,
       content: '',
@@ -433,7 +434,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             {
               role,
               content: message.content,
-              id: new Date().getTime() + '',
+              id: uuidv4(),
             }]
         }));
         setShowToast(true);
@@ -561,7 +562,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         if (!isRegenerating) {
           setChatHistory((prevMessages) => {
             return [...prevMessages, {
-              id: new Date().getTime(),
+              id: uuidv4(),
               role: 'assistant',
               content: answer,
             }];
@@ -581,7 +582,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         setIsRunning(false);
         setCompletionResult(
           [{
-            id: new Date().getTime(),
+            id: uuidv4(),
             role: ROLES.Assistant,
             isLoading: false,
             content: answer,

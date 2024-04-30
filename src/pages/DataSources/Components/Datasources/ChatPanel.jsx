@@ -25,6 +25,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import AdvancedChatSettings from './AdvancedChatSettings';
 import ChatSettings from './ChatSettings';
+import { v4 as uuidv4 } from 'uuid';
 
 const MESSAGE_REFERENCE_ROLE = 'reference'
 export const generateDatasourceChatPayload = (question, context, chatHistory, chatSettings, question_id) => {
@@ -210,7 +211,7 @@ const ChatPanel = ({
     setIsLoading(true);
     setChatHistory((prevMessages) => {
       return [...prevMessages, {
-        id: new Date().getTime(),
+        id: uuidv4(),
         role: ROLES.User,
         name,
         content: question,
