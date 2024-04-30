@@ -66,11 +66,11 @@ const StyledDiv = styled('div')(() => `
 const Markdown = ({ children }) => {
   const markedTokens = marked.lexer(children || '')
   return markedTokens.map(
-    (markedToken, index) => markedToken.type === 'code' ? <Highlight
+    (markedToken, index) => (markedToken.type === 'code' && !!markedToken.lang) ? <Highlight
       key={index}
       theme={themes.vsDark}
       code={markedToken.text}
-      language={markedToken.lang || 'python'}
+      language={markedToken.lang}
     >
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <pre className={className} style={style}>
