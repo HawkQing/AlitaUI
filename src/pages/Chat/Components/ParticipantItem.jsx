@@ -6,7 +6,7 @@ import EmojiIcon from '@/components/Icons/EmojiIcon';
 import ModelIcon from '@/components/Icons/ModelIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import { Box, Tooltip, Typography, useTheme } from '@mui/material';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import DeleteParticipantButton from './DeleteParticipantButton';
 import { useLazyGetPromptQuery } from '@/api/prompts';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
@@ -32,6 +32,7 @@ export const getIcon = (type, isActive, theme, showBigIcon = false) => {
 const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, onShowSettings, onDelete, onUpdateParticipant }) => {
   const { id, type, name, model_name, shouldUpdateDetail } = participant
   const projectId = useSelectedProjectId()
+  const [isHovering, setIsHovering] = useState(false)
   const [getPromptDetail, { isFetching: isFetchingPrompt }] = useLazyGetPromptQuery()
   const [getApplicationDetail, { isFetching: isFetchingApplication }] = useLazyApplicationDetailsQuery()
   const [getDatasourceDetail, { isFetching: isFetchingDatasource }] = useLazyDatasourceDetailsQuery()
@@ -109,6 +110,20 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
       getDatasourceDetail],
   )
 
+  const onMouseEnter = useCallback(
+    () => {
+      setIsHovering(true)
+    },
+    [],
+  )
+
+  const onMouseLeave = useCallback(
+    () => {
+      setIsHovering(false);
+    },
+    [],
+  )
+
   useEffect(() => {
     if (shouldUpdateDetail) {
       getDetails()
@@ -119,6 +134,8 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
     <Tooltip title={participant.name || participant.model_name} placement="top">
       <Box
         onClick={onClickHandler}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
         sx={{
           cursor: 'pointer',
           padding: collapsed ? '0 0' : '8px 16px',
@@ -150,8 +167,15 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
           }
         </Box>
         {!collapsed &&
-          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
-            <Typography variant='bodyMedium' color='text.secondary'>
+          <Box sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            maxWidth: `calc(100% - ${isFetching ? (isHovering ? '144px' : '112px') : (isHovering ? '104px' : '40px')})`,
+          }}>
+            <Typography variant='bodyMedium' color='text.secondary' sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {
                 name || model_name || 'Participant Name'
               }
@@ -159,7 +183,7 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
             {
               isFetching &&
               <Box sx={{ position: 'relative', height: '40px', width: '40px' }}>
-                <StyledCircleProgress sx={{top: '10px', left: '5px'}} size={18}/>
+                <StyledCircleProgress sx={{ top: '10px', left: '5px' }} size={18} />
               </Box>
             }
           </Box>
@@ -171,6 +195,8 @@ const ParticipantItem = ({ participant = {}, collapsed, isActive, onClickItem, o
             sx={{
               visibility: 'hidden',
               flex: undefined,
+              width: '24px',
+              height: '100%',
             }}
             participant={participant}
             onDelete={onDelete}

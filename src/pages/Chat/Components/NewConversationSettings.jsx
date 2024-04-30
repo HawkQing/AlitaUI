@@ -60,6 +60,7 @@ const buttonItems = [{
   label: 'Application',
   value: ChatParticipantType.Applications,
 }]
+const datasourcePrefixPath = 'version_details.datasource_settings.chat.'
 
 const NewConversationSettings = ({
   conversation,
@@ -101,10 +102,11 @@ const NewConversationSettings = ({
         participants: [{
           ...conversationRef.current.participants[0],
           version_details: applicationDetail.version_details,
+          versions: applicationDetail.versions,
         }],
       })
     }
-  }, [applicationDetail?.version_details, applicationDetail?.version_details.variables, onChangeConversation])
+  }, [applicationDetail?.version_details, applicationDetail?.version_details.variables, applicationDetail?.versions, onChangeConversation])
 
   useEffect(() => {
     if (datasourceDetail?.version_details) {
@@ -112,13 +114,14 @@ const NewConversationSettings = ({
         ...conversationRef.current,
         participants: [{
           ...conversationRef.current.participants[0],
-          version_details: datasourceDetail?.version_details,
-          versions: datasourceDetail?.version_details,
+          version_details: datasourceDetail.version_details,
+          versions: datasourceDetail.versions,
         }],
       })
     }
   }, [
     datasourceDetail?.version_details,
+    datasourceDetail?.versions,
     onChangeConversation
   ])
 
@@ -133,11 +136,9 @@ const NewConversationSettings = ({
   const onSelectParticipantType = useCallback(
     (e) => {
       const newType = e?.target?.value;
-      if (newType !== conversation?.participants[0]?.type) {
-        setCurrentSettingType(newType);
-      }
+      setCurrentSettingType(newType);
     },
-    [conversation],
+    [],
   );
 
   const onChangeName = useCallback((event) => {
@@ -180,7 +181,7 @@ const NewConversationSettings = ({
 
   const onDatasourceSettings = useCallback(
     (field) => (value) => {
-      const newDatasource = updateObjectByPath(conversation?.participants[0], field, value)
+      const newDatasource = updateObjectByPath(conversation?.participants[0], datasourcePrefixPath + field, value)
       onChangeConversation({
         ...conversation,
         type: ChatParticipantType.Datasources,
@@ -355,8 +356,8 @@ const NewConversationSettings = ({
           conversation?.participants[0]?.id &&
           !isFetching &&
           <DatasourceSettings
-            chat_settings_ai={conversation?.participants[0]?.version_details?.chat_settings_ai}
-            chat_settings_embedding={conversation?.participants[0]?.version_details?.chat_settings_embedding}
+            chat_settings_ai={conversation?.participants[0]?.version_details?.datasource_settings?.chat?.chat_settings_ai}
+            chat_settings_embedding={conversation?.participants[0]?.version_details?.datasource_settings?.chat?.chat_settings_embedding}
             onDatasourceSettings={onDatasourceSettings}
           />
         }
