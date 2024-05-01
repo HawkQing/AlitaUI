@@ -7,6 +7,7 @@ import ToolOpenAPI from './ToolOpenAPI';
 import ToolCustom from './ToolCustom';
 import ToolPrompt from "./ToolPrompt";
 
+
 export default function ToolForm({
   editToolDetail,
   setEditToolDetail,
@@ -22,28 +23,47 @@ export default function ToolForm({
     }
     setEditToolDetail(null);
   }, [editToolDetail, setEditToolDetail, setFieldValue]);
+  const ToolComponent = useMemo(() => {
+    switch (toolType) {
+      case undefined:
+        return
+      case ToolTypes.datasource.value:
+        return ToolDatasource
+      case ToolTypes.open_api.value:
+        return ToolOpenAPI
+      case ToolTypes.prompt.value:
+        return ToolPrompt
+      default:
+        return ToolCustom
+    }
+  }, [toolType])
   return (
     <Box sx={{ padding: '12px 12px 12px 24px', ...sx}}>
-      {toolType === ToolTypes.datasource.value &&
-        <ToolDatasource
-          editToolDetail={editToolDetail}
-          setEditToolDetail={setEditToolDetail}
-          handleGoBack={handleGoBack} />}
-      {toolType === ToolTypes.open_api.value &&
-        <ToolOpenAPI
-          editToolDetail={editToolDetail}
-          setEditToolDetail={setEditToolDetail}
-          handleGoBack={handleGoBack} />}
-      {toolType === ToolTypes.prompt.value &&
-        <ToolPrompt
-          editToolDetail={editToolDetail}
-          setEditToolDetail={setEditToolDetail}
-          handleGoBack={handleGoBack} />}
-      {toolType === ToolTypes.custom.value &&
-        <ToolCustom
-          editToolDetail={editToolDetail}
-          setEditToolDetail={setEditToolDetail}
-          handleGoBack={handleGoBack} />}
+      {ToolComponent && <ToolComponent
+        editToolDetail={editToolDetail}
+        setEditToolDetail={setEditToolDetail}
+        handleGoBack={handleGoBack}
+      />}
+      {/*{toolType === ToolTypes.datasource.value &&*/}
+      {/*  <ToolDatasource*/}
+      {/*    editToolDetail={editToolDetail}*/}
+      {/*    setEditToolDetail={setEditToolDetail}*/}
+      {/*    handleGoBack={handleGoBack} />}*/}
+      {/*{toolType === ToolTypes.open_api.value &&*/}
+      {/*  <ToolOpenAPI*/}
+      {/*    editToolDetail={editToolDetail}*/}
+      {/*    setEditToolDetail={setEditToolDetail}*/}
+      {/*    handleGoBack={handleGoBack} />}*/}
+      {/*{toolType === ToolTypes.prompt.value &&*/}
+      {/*  <ToolPrompt*/}
+      {/*    editToolDetail={editToolDetail}*/}
+      {/*    setEditToolDetail={setEditToolDetail}*/}
+      {/*    handleGoBack={handleGoBack} />}*/}
+      {/*{toolType === ToolTypes.custom.value &&*/}
+      {/*  <ToolCustom*/}
+      {/*    editToolDetail={editToolDetail}*/}
+      {/*    setEditToolDetail={setEditToolDetail}*/}
+      {/*    handleGoBack={handleGoBack} />}*/}
     </Box>
   )
 }

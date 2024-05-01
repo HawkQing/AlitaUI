@@ -6,7 +6,7 @@ import { Box, IconButton, Typography } from "@mui/material";
 import { ToolTypes } from "./consts";
 import FileCodeIcon from '@/components/Icons/FileCodeIcon';
 import { useCallback, useState, useMemo, useEffect } from 'react'
-import { buildErrorMessage, filterProps, parseCustomJsonTool } from '@/common/utils';
+import { buildErrorMessage, filterProps } from '@/common/utils';
 import JsonIcon from '@/components/Icons/JsonIcon';
 import CommandIcon from "@/components/Icons/CommandIcon";
 import { StyledCircleProgress } from '@/components/ChatBox/StyledComponents';
@@ -70,10 +70,8 @@ const ToolIcon = ({ type }) => {
       return <CommandIcon sx={{ fontSize: '1.13rem' }} />
     case ToolTypes.open_api.value:
       return <FileCodeIcon sx={{ fontSize: '1.13rem' }} />
-    case ToolTypes.custom.value:
-      return <JsonIcon sx={{ fontSize: '1.13rem' }} />
     default:
-      return null
+      return <JsonIcon sx={{ fontSize: '1.13rem' }} />
   }
 };
 
@@ -91,12 +89,13 @@ export default function ToolCard({
   const { setFieldValue, values } = useFormikContext();
   const tools = useMemo(() => (values?.version_details?.tools || []), [values?.version_details?.tools])
   const [deleteTool, { isLoading, isError: isDeleteError, error: deleteError, reset }] = useDeleteApplicationToolMutation();
-  const parsedFunctions = useMemo(() => {
-    if (tool.type === ToolTypes.custom.value) {
-      return parseCustomJsonTool(tool.settings.custom_json || '');
-    }
-    return [];
-  }, [tool.settings.custom_json, tool.type])
+  const parsedFunctions = []
+  // const parsedFunctions = useMemo(() => {
+  //   if (tool.type === ToolTypes.custom.value) {
+  //     return parseCustomJsonTool(tool.settings.custom_json || '');
+  //   }
+  //   return [];
+  // }, [tool.settings.custom_json, tool.type])
 
   const onDelete = useCallback(async () => {
     setOpenAlert(true);

@@ -1,55 +1,52 @@
-import { useCallback, useState, useMemo } from "react";
+import {useCallback, useState, useMemo} from "react";
 import ToolFormBackButton from "./ToolFormBackButton";
 import CustomInput from './CustomInput';
-import NormalRoundButton from '@/components/NormalRoundButton';
 import useChangeFormikTools from './useChangeFormikTools';
 
 export default function ToolCustom({
-  editToolDetail = {},
-  setEditToolDetail = () => { },
-  handleGoBack
-}) {
+                                     editToolDetail = {},
+// eslint-disable-next-line no-unused-vars
+                                     setEditToolDetail = (value) => {
+                                     },
+                                     handleGoBack
+                                   }) {
   const {
-    settings: {
-      custom_json = ''
-    },
+    name,
+    description,
+    settings,
+    type,
     index,
   } = editToolDetail;
-  const { isAdding, onChangeTools } = useChangeFormikTools({toolIndex: index})
+  const {isAdding, onChangeTools} = useChangeFormikTools({toolIndex: index})
   const [isDirty, setIsDirty] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+
+  const [jsonString, setJsonString] = useState(JSON.stringify({name, description, settings, type}, null, 2))
 
   const error = useMemo(() => {
     const result = {};
     try {
-      const jsonObject = JSON.parse(custom_json);
-      if (Array.isArray(jsonObject)) {
-        jsonObject.forEach((functionCall) => {
-          if (!functionCall.name || !functionCall.description || !functionCall.settings) {
-            throw 'Wrong format'
-          }
-        })
-      } else {
-        if (!jsonObject.name || !jsonObject.description || !jsonObject.settings) {
-          throw 'Wrong format'
-        }
-      }
-    } catch(_) {
+      JSON.parse(jsonString)
+    } catch (_) {
       result['format'] = 'Invalid json, name, description and settings are required for every function'
-    } 
+    }
     return result;
-  }, [custom_json])
+  }, [jsonString])
 
   const handleChange = useCallback((value) => {
-    const newTool = {
-      ...editToolDetail,
-      settings: {
-        custom_json: value,
-      },
+    setJsonString(value)
+    setIsDirty(true)
+    try {
+      const obj = {
+        ...editToolDetail,
+        ...JSON.parse(value)
+      }
+      setEditToolDetail(obj)
+      onChangeTools(obj)
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log('Invalid json')
     }
-    setEditToolDetail(newTool)
-    onChangeTools(newTool)
-    setIsDirty(true);
   }, [editToolDetail, onChangeTools, setEditToolDetail]);
 
   const validate = useCallback(() => {
@@ -57,12 +54,12 @@ export default function ToolCustom({
     return Object.values(error).some(item => !!item)
   }, [error]);
 
-  const onTest = useCallback(
-    () => {
-      //TODO
-    },
-    [],
-  )
+  // const onTest = useCallback(
+  //   () => {
+  //     //TODO
+  //   },
+  //   [],
+  // )
 
   return (
     <>
@@ -74,14 +71,14 @@ export default function ToolCustom({
         handleGoBack={handleGoBack}
       />
       <CustomInput
-        value={custom_json}
+        value={jsonString}
         onValueChange={handleChange}
         error={isValidating && error.format}
         helperText={isValidating && error.format}
       />
-      <NormalRoundButton sx={{ marginTop: isValidating && error.format ? '34px' : '24px' }} onClick={onTest} variant='contained' color='secondary'>
-        Test
-      </NormalRoundButton>
+      {/*<NormalRoundButton sx={{ marginTop: isValidating && error.format ? '34px' : '24px' }} onClick={onTest} variant='contained' color='secondary'>*/}
+      {/*  Test*/}
+      {/*</NormalRoundButton>*/}
     </>
   )
 }

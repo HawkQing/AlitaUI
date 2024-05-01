@@ -68,8 +68,7 @@ export const ToolInitialValues = {
   [ToolTypes.custom.value]: {
     type: ToolTypes.custom.value,
     name: 'Custom tool',
-    settings: {
-      custom_json: '',
-    },
+    description: '',
+    settings: {},
   }
 }
