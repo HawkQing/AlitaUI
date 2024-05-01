@@ -25,17 +25,17 @@ export default function ToolCustom({
       const jsonObject = JSON.parse(custom_json);
       if (Array.isArray(jsonObject)) {
         jsonObject.forEach((functionCall) => {
-          if (!functionCall.name || !functionCall.description || !functionCall.parameters) {
+          if (!functionCall.name || !functionCall.description || !functionCall.settings) {
             throw 'Wrong format'
           }
         })
       } else {
-        if (!jsonObject.name || !jsonObject.description || !jsonObject.parameters) {
+        if (!jsonObject.name || !jsonObject.description || !jsonObject.settings) {
           throw 'Wrong format'
         }
       }
     } catch(_) {
-      result['format'] = 'Invalid json, name, description and parameters are required for every function'
+      result['format'] = 'Invalid json, name, description and settings are required for every function'
     } 
     return result;
   }, [custom_json])
