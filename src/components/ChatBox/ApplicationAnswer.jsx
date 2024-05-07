@@ -86,7 +86,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
         }
         <Answer
           sx={{
-            background: theme.palette.background.icon.default, width: '100%',
+            background: theme.palette.background.aiAnswerBkg, width: '100%',
             borderRadius: '4px',
             padding: '12px 16px 12px 16px',
             position: 'relative',

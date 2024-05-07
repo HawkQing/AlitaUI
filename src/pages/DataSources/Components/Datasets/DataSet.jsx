@@ -235,11 +235,15 @@ export const ViewEditDataset = ({ data, datasourceVersionId, datasourceVersionUU
 
   const { emit } = useSocket(sioEvents.datasource_dataset_status, onStreamingEvent);
   useEffect(() => {
-    datasourceVersionUUID && emit({ version_uuid: datasourceVersionUUID })
-    return () => {
-      datasourceVersionUUID && emit({ version_uuid: datasourceVersionUUID, unsubscribe: true })
+    if (status === datasetStatus.preparing.value ||
+      status === datasetStatus.pending.value ||
+      status === datasetStatus.running.value) {
+      datasourceVersionUUID && emit({ version_uuid: datasourceVersionUUID })
+      return () => {
+        datasourceVersionUUID && emit({ version_uuid: datasourceVersionUUID, unsubscribe: true })
+      }
     }
-  }, [emit, datasourceVersionUUID])
+  }, [emit, datasourceVersionUUID, status])
 
   const onStopTask = useCallback(
     () => {
