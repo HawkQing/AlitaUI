@@ -665,10 +665,10 @@ export const ChatSearchEvents = {
 }
 
 export const ChatParticipantType = {
-  Applications: 'applications',
-  Datasources: 'datasources',
-  Models: 'models',
-  Prompts: 'prompts',
+  Applications: 'application',
+  Datasources: 'datasource',
+  Models: 'model',
+  Prompts: 'prompt',
 }
 
 export const ChatParticipantTypeLabel = {

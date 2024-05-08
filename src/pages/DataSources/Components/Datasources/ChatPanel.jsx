@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { ROLES, sioEvents, SocketMessageType } from '@/common/constants';
+import { ChatParticipantType, ROLES, sioEvents, SocketMessageType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
 import AIAnswer from '@/components/ChatBox/AIAnswer';
@@ -67,8 +67,6 @@ const ChatPanel = ({
   const listRefs = useRef([]);
   const chatHistoryRef = useRef(chatHistory);
 
-
-
   const {
     openAlert,
     alertContent,
@@ -94,6 +92,7 @@ const ChatPanel = ({
         role: ROLES.Assistant,
         content: '',
         isLoading: false,
+        participant: { type: ChatParticipantType.Datasources }
       }
     } else {
       msg = chatHistoryRef.current[msgIdx]
@@ -108,6 +107,7 @@ const ChatPanel = ({
 
   const handleSocketEvent = useCallback(async message => {
     const { stream_id, type, response_metadata } = message
+    const { task_id } = message.content instanceof Object ? message.content : {}
 
     const [msgIndex, msg] = getMessage(stream_id)
 
@@ -130,13 +130,13 @@ const ChatPanel = ({
       case SocketMessageType.StartTask:
         msg.content = ''
         msg.isLoading = true
-        msg.isStreaming = false
+        msg.isStreaming = true
         msg.references = []
+        msg.task_id = task_id
         break
       case SocketMessageType.Chunk:
         msg.content += message.content
         msg.isLoading = false
-        msg.isStreaming = true
         setIsLoading(false)
         setTimeout(scrollToMessageBottom, 0);
         if (response_metadata?.finish_reason) {
@@ -146,7 +146,6 @@ const ChatPanel = ({
       case SocketMessageType.References:
         msg.references = message.references
         msg.isLoading = false
-        msg.isStreaming = true
         setTimeout(scrollToMessageBottom, 0);
         break
       case SocketMessageType.Error:
@@ -369,7 +368,7 @@ const ChatPanel = ({
                         references={message.references}
                         isLoading={Boolean(message.isLoading)}
                         isStreaming={message.isStreaming}
-                        onStop={onStopStreaming(message.id)}
+                        onStop={onStopStreaming(message)}
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                         onRegenerate={onRegenerateAnswer(message.id)}

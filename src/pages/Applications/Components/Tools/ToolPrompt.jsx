@@ -75,7 +75,7 @@ export default function ToolPrompt({
         prompt_id,
         prompt_version_id,
         variables: newValues.map(item => ({
-          key: item.key || item.name,
+          name: item.key || item.name,
           value: item.value
         }))
       }
@@ -94,6 +94,7 @@ export default function ToolPrompt({
         if (i === updateIndex) {
           return {
             ...item,
+            name: item.key || item.name,
             value: newValue
           }
         }

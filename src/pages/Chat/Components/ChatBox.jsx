@@ -144,7 +144,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         return generateChatPayload({
           projectId, prompt_id: realParticipant.id, context: realParticipant.version_details.context, temperature, max_tokens, top_p,
           top_k, model_name, integration_uid, variables: realParticipant.version_details.variables, question,
-          chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId: realParticipant.versionId,
+          chatHistory: chatHistory || chat_history, name, stream: true, currentVersionId: realParticipant.version_id,
           question_id
         })
       case ChatParticipantType.Applications:
@@ -255,10 +255,12 @@ const ChatBox = forwardRef((props, boxRef) => {
       setChatHistory((prevMessages) => {
         return [...prevMessages, {
           id: question_id,
-          role: 'user',
+          role: ROLES.User,
           name,
           participant: activeParticipant,
           content: question,
+          created_at: new Date().getTime(),
+          user_id: userId,
         }]
       });
       askAlita(payload);
@@ -272,6 +274,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       scrollToMessageListEnd,
       onCreateConversation,
       name,
+      userId,
       activeParticipant]);
 
 
@@ -426,7 +429,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       USE_STREAM ? emit(payload) : askAlita(payload);
 
     },
-    [askAlita, chat_history, emit, getPayload, setChatHistory, ],
+    [askAlita, chat_history, emit, getPayload, setChatHistory,],
   )
 
   useEffect(() => {
@@ -484,7 +487,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                           answer={message.content}
                           created_at={message.created_at}
                           participant={message.participant}
-                          onStop={onStopStreaming(message.id)}
+                          onStop={onStopStreaming(message)}
                           onCopy={onCopyToClipboard(message.id)}
                           onDelete={onDeleteAnswer(message.id)}
                           onRegenerate={
@@ -503,7 +506,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                           verticalMode
                           ref={(ref) => (listRefs.current[index] = ref)}
                           answer={message.content}
-                          onStop={onStopStreaming(message.id)}
+                          onStop={onStopStreaming(message)}
                           onCopy={onCopyToClipboard(message.id)}
                           onDelete={onDeleteAnswer(message.id)}
                           participant={message.participant}

@@ -5,21 +5,25 @@ import { useCallback, useState, useRef, useMemo, useEffect } from 'react';
 import { ChatBoxMode, ChatParticipantType, ChatSearchEvents, NAV_BAR_HEIGHT } from '@/common/constants';
 import ChatBox from './Components/ChatBox';
 import Participants from './Components/Participants';
-import { useIsCreatingConversation } from '../hooks';
+import { useIsCreatingConversation, useSelectedProjectId } from '../hooks';
 import { stableSort } from '@/common/utils';
 import ParticipantSettings from './Components/ParticipantSettings';
 import eventEmitter from '@/common/eventEmitter';
 import useResetCreateFlag from './Components/useResetCreateFlag';
 import { v4 as uuidv4 } from 'uuid';
+import { useConversationCreateMutation } from '@/api/chat';
 
 const Chat = () => {
   const [conversations, setConversations] = useState([]);
   const conversationsRef = useRef(conversations)
-  const [activeConversation, setActiveConversation] = useState({ chat_history: [], participants: [], is_public: false })
+  const [activeConversation, setActiveConversation] = useState({name: '', chat_history: [], participants: [], is_private: true })
   const [activeParticipant, setActiveParticipant] = useState()
   const [isStreaming, setIsStreaming] = useState(false)
   const isCreatingConversation = useIsCreatingConversation();
   const [theParticipantEdited, setTheParticipantEdited] = useState()
+  const projectId = useSelectedProjectId()
+  // eslint-disable-next-line no-unused-vars
+  const [createConversation, { isError, isSuccess, isLoading }] = useConversationCreateMutation()
   const { resetCreateFlag } = useResetCreateFlag();
 
   const onChangeConversation = useCallback(
@@ -89,7 +93,12 @@ const Chat = () => {
   )
 
   const onCreateConversation = useCallback(
-    () => {
+   async () => {
+      // eslint-disable-next-line no-unused-vars
+      const result = await createConversation({
+        ...activeConversation,
+        projectId,
+      })
       setConversations((prev) => {
         const sortedConversations = stableSort([...prev, activeConversation], (first, second) => {
           return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
@@ -98,7 +107,7 @@ const Chat = () => {
       });
       resetCreateFlag();
     },
-    [activeConversation, resetCreateFlag],
+    [activeConversation, createConversation, projectId, resetCreateFlag],
   )
 
   const settings = useMemo(() => ({
@@ -280,7 +289,7 @@ const Chat = () => {
       const newConversation = {
         id: uuidv4(),
         name: 'New Conversation',
-        is_public: false,
+        is_private: true,
         participants: [],
         chat_history: [],
       }
