@@ -5,26 +5,59 @@ import { useCallback, useState, useRef, useMemo, useEffect } from 'react';
 import { ChatBoxMode, ChatParticipantType, ChatSearchEvents, NAV_BAR_HEIGHT } from '@/common/constants';
 import ChatBox from './Components/ChatBox';
 import Participants from './Components/Participants';
-import { useIsCreatingConversation, useSelectedProjectId } from '../hooks';
-import { stableSort } from '@/common/utils';
+import { useIsCreatingConversation, useSelectedProjectId, useSortQueryParamsFromUrl } from '../hooks';
+import { buildErrorMessage, stableSort } from '@/common/utils';
 import ParticipantSettings from './Components/ParticipantSettings';
 import eventEmitter from '@/common/eventEmitter';
 import useResetCreateFlag from './Components/useResetCreateFlag';
 import { v4 as uuidv4 } from 'uuid';
-import { useConversationCreateMutation } from '@/api/chat';
+import { useConversationCreateMutation, useConversationListQuery } from '@/api/chat';
+import useToast from '@/components/useToast';
 
 const Chat = () => {
+  const projectId = useSelectedProjectId()
+  const { ToastComponent: ApiToast, toastError } = useToast({ topPosition: '10px' });
+  const { sort_by: sortBy, sort_order: sortOrder } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
+  const [page, setPage] = useState(0);
+  const { data, isSuccess } = useConversationListQuery({
+    projectId,
+    page,
+    params: {
+      sort_by: sortBy,
+      sort_order: sortOrder,
+    }
+  }, { skip: !projectId })
   const [conversations, setConversations] = useState([]);
   const conversationsRef = useRef(conversations)
-  const [activeConversation, setActiveConversation] = useState({name: '', chat_history: [], participants: [], is_private: true })
+  const [activeConversation, setActiveConversation] = useState({ name: '', chat_history: [], participants: [], is_private: true })
   const [activeParticipant, setActiveParticipant] = useState()
   const [isStreaming, setIsStreaming] = useState(false)
   const isCreatingConversation = useIsCreatingConversation();
   const [theParticipantEdited, setTheParticipantEdited] = useState()
-  const projectId = useSelectedProjectId()
-  // eslint-disable-next-line no-unused-vars
-  const [createConversation, { isError, isSuccess, isLoading }] = useConversationCreateMutation()
+  const [createConversation, { isError: isCreateError, error: createError }] = useConversationCreateMutation()
   const { resetCreateFlag } = useResetCreateFlag();
+
+  const onLoadMoreConversations = useCallback(
+    () => {
+      if (data?.rows?.length && data?.total && data?.rows?.length < data?.total) {
+        setPage(prev => prev + 1)
+      }
+    },
+    [data?.rows?.length, data?.total],
+  )
+
+  useEffect(() => {
+    if (isSuccess) {
+      setConversations(data?.rows || []);
+    }
+  }, [data?.rows, isSuccess])
+
+  useEffect(() => {
+    if (isCreateError) {
+      toastError(buildErrorMessage(createError));
+    }
+  }, [createError, isCreateError, toastError])
+
 
   const onChangeConversation = useCallback(
     (newConversation) => {
@@ -44,7 +77,7 @@ const Chat = () => {
   const setChatHistory = useCallback(
     (chat_history) => {
       if (typeof chat_history === 'function') {
-        setActiveConversation(prev => ({ ...prev, chat_history: chat_history(prev.chat_history) }));
+        setActiveConversation(prev => ({ ...prev, chat_history: chat_history(prev?.chat_history || []) }));
       } else {
         setActiveConversation(prev => ({ ...prev, chat_history }));
       }
@@ -93,12 +126,13 @@ const Chat = () => {
   )
 
   const onCreateConversation = useCallback(
-   async () => {
-      // eslint-disable-next-line no-unused-vars
+    async () => {
       const result = await createConversation({
-        ...activeConversation,
+        is_private: activeConversation.is_private,
+        name: activeConversation.name,
         projectId,
       })
+      setActiveConversation(result.data);
       setConversations((prev) => {
         const sortedConversations = stableSort([...prev, activeConversation], (first, second) => {
           return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
@@ -322,7 +356,9 @@ const Chat = () => {
             onDeleteConversation={onDeleteConversation}
             collapsed={collapsedConversations}
             onCollapsed={onConversationCollapsed}
+            onLoadMore={onLoadMoreConversations}
           />
+          <ApiToast />
         </Grid>
         <Grid item xs={12} lg={chatBoxLgGridColumns} sx={{
           height: '100%',

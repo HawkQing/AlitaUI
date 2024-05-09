@@ -3,8 +3,7 @@ import { ViewMode } from '@/common/constants';
 import { useAuthorIdFromUrl, usePageQuery, useProjectId } from '@/pages/hooks';
 import { useCallback } from 'react';
 import { getQueryStatuses } from './useLoadPrompts';
-import { usePublicDataSourcesListQuery } from '@/api/datasources';
-import { useApplicationListQuery } from '@/api/applications';
+import { useApplicationListQuery, usePublicApplicationsListQuery } from '@/api/applications';
 
 export const useLoadApplications = (viewMode, sortBy, sortOrder, statuses, forceSkip=false) => {
   const { query, page, pageSize, setPage, tagList, selectedTagIds } = usePageQuery();
@@ -16,7 +15,7 @@ export const useLoadApplications = (viewMode, sortBy, sortOrder, statuses, force
     isError: isPublicApplicationError,
     isLoading: isPublicApplicationLoading,
     isFetching: isPublicApplicationFetching,
-  } = usePublicDataSourcesListQuery({
+  } = usePublicApplicationsListQuery({
     page,
     pageSize,
     params: {
