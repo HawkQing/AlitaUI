@@ -98,6 +98,7 @@ const AIAnswer = React.forwardRef((props, ref) => {
     onCopyToMessages,
     onDelete,
     onRegenerate,
+    hasBeenStopped,
     shouldDisableRegenerate,
     references = [],
     isLoading = false,
@@ -163,14 +164,14 @@ const AIAnswer = React.forwardRef((props, ref) => {
             </StyledTooltip>
           }
           {
-            onCopy && <StyledTooltip title={'Copy to clipboard'} placement="top">
+            onCopy && !!answer &&  <StyledTooltip title={'Copy to clipboard'} placement="top">
               <IconButton onClick={onCopy}>
                 <CopyIcon sx={{ fontSize: '1.13rem' }} />
               </IconButton>
             </StyledTooltip>
           }
           {
-            onCopyToMessages &&
+            onCopyToMessages && !!answer && 
             <StyledTooltip title={'Copy to Messages'} placement="top">
               <IconButton onClick={onCopyToMessages}>
                 <CopyMoveIcon sx={{ fontSize: '1.13rem' }} />
@@ -197,7 +198,7 @@ const AIAnswer = React.forwardRef((props, ref) => {
           }
         </ButtonsContainer>}
         <Markdown>
-          {answer}
+        {!hasBeenStopped ? answer : 'Has been stopped'}
         </Markdown>
         {isLoading && <AnimatedProgress
           sx={{

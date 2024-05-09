@@ -36,6 +36,7 @@ import { ActionButton } from '@/components/ChatBox/StyledComponents';
 import ClearIcon from '@/components/Icons/ClearIcon';
 import { Box } from '@mui/material';
 import FullScreenToggle from '@/components/ChatBox/FullScreenToggle';
+import AutoScrollToggle from '@/components/ChatBox/AutoScrollToggle';
 
 const LeftContent = ({ isCreateMode, onChangePrompt, currentVersionId }) => {
   const theme = useTheme();
@@ -273,6 +274,7 @@ export const RightContent = ({
         }
         {
           showClearChatOnSettings && <>
+            <AutoScrollToggle />
             <FullScreenToggle
               isFullScreenChat={settings?.isFullScreenChat}
               setIsFullScreenChat={settings?.setIsFullScreenChat}
