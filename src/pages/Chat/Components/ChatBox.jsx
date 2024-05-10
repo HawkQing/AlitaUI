@@ -487,7 +487,6 @@ const ChatBox = forwardRef((props, boxRef) => {
                           answer={message.content}
                           created_at={message.created_at}
                           participant={message.participant}
-                          hasBeenStopped={message.hasBeenStopped}
                           onStop={onStopStreaming(message)}
                           onCopy={onCopyToClipboard(message.id)}
                           onDelete={onDeleteAnswer(message.id)}
@@ -507,7 +506,6 @@ const ChatBox = forwardRef((props, boxRef) => {
                           verticalMode
                           ref={(ref) => (listRefs.current[index] = ref)}
                           answer={message.content}
-                          hasBeenStopped={message.hasBeenStopped}
                           onStop={onStopStreaming(message)}
                           onCopy={onCopyToClipboard(message.id)}
                           onDelete={onDeleteAnswer(message.id)}

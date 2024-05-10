@@ -510,7 +510,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         message => message.id !== id ?
           message
           :
-          ({ ...message, content: '', exception: undefined, task_id: undefined, hasBeenStopped: false }));
+          ({ ...message, content: '', exception: undefined, task_id: undefined }));
     });
     emit(payload)
   }, [
@@ -716,7 +716,6 @@ const ChatBox = forwardRef((props, boxRef) => {
                       onCopy={onCopyToClipboard(message.id)}
                       onCopyToMessages={onCopyToMessages(message.id, ROLES.Assistant)}
                       onDelete={onDeleteAnswer(message.id)}
-                      hasBeenStopped={message.hasBeenStopped}
                       onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
                       shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
                       references={message.references}
@@ -731,7 +730,6 @@ const ChatBox = forwardRef((props, boxRef) => {
                         onStop={onStopStreaming(message)}
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
-                        hasBeenStopped={message.hasBeenStopped}
                         onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
                         shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
                         references={message.references}

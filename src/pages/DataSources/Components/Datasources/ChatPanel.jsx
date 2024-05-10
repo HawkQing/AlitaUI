@@ -248,7 +248,7 @@ const ChatPanel = ({
         message => message.id !== id ?
           message
           :
-          ({ ...message, content: '', task_id: undefined, hasBeenStopped: undefined }));
+          ({ ...message, content: '', task_id: undefined }));
     });
     emit({ ...payload, project_id: currentProjectId, version_id: versionId, message_id: id })
   }, [
@@ -381,7 +381,6 @@ const ChatPanel = ({
                         references={message.references}
                         isLoading={Boolean(message.isLoading)}
                         isStreaming={message.isStreaming}
-                        hasBeenStopped={message.hasBeenStopped}
                         onStop={onStopStreaming(message)}
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}

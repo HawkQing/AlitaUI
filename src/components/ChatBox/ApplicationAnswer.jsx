@@ -29,7 +29,6 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     onDelete,
     onRegenerate,
     shouldDisableRegenerate,
-    hasBeenStopped,
     references = [],
     toolActions = [],
     isLoading = false,
@@ -130,7 +129,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             }
           </ButtonsContainer>}
           <Markdown>
-            {!exception ? !hasBeenStopped ? answer : 'Has been stopped' : 'Agent exception!'}
+            {!exception ? answer : 'Agent exception!'}
           </Markdown>
           {isLoading && <AnimatedProgress
             sx={{

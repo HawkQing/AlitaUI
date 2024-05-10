@@ -98,7 +98,6 @@ const AIAnswer = React.forwardRef((props, ref) => {
     onCopyToMessages,
     onDelete,
     onRegenerate,
-    hasBeenStopped,
     shouldDisableRegenerate,
     references = [],
     isLoading = false,
@@ -198,7 +197,7 @@ const AIAnswer = React.forwardRef((props, ref) => {
           }
         </ButtonsContainer>}
         <Markdown>
-        {!hasBeenStopped ? answer : 'Has been stopped'}
+        {answer}
         </Markdown>
         {isLoading && <AnimatedProgress
           sx={{

@@ -85,7 +85,6 @@ export const useStopStreaming = ({
           isStreaming: msg.id === streamId ? false : msg.isStreaming,
           isLoading: msg.id === streamId ? false : msg.isLoading,
           task_id: undefined,
-          hasBeenStopped: true,
         }))
       ), 200);
     },
@@ -105,7 +104,7 @@ export const useStopStreaming = ({
     });
     manualEmit(streamIds);
     setTimeout(() => setChatHistory(prevState =>
-      prevState.map(msg => ({ ...msg, isStreaming: false, isLoading: false, task_id: undefined, hasBeenStopped: true }))
+      prevState.map(msg => ({ ...msg, isStreaming: false, isLoading: false, task_id: undefined }))
     ), 200);
   }, [chatHistoryRef, manualEmit, projectId, setChatHistory, stopApplicationTask, stopDatasourceTask]);
 
