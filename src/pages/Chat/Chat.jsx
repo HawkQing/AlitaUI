@@ -11,7 +11,7 @@ import ParticipantSettings from './Components/ParticipantSettings';
 import eventEmitter from '@/common/eventEmitter';
 import useResetCreateFlag from './Components/useResetCreateFlag';
 import { v4 as uuidv4 } from 'uuid';
-import { useConversationCreateMutation, useConversationListQuery } from '@/api/chat';
+import { useConversationCreateMutation, useConversationListQuery, useLazyConversationDetailsQuery } from '@/api/chat';
 import useToast from '@/components/useToast';
 
 const Chat = () => {
@@ -19,7 +19,14 @@ const Chat = () => {
   const { ToastComponent: ApiToast, toastError } = useToast({ topPosition: '10px' });
   const { sort_by: sortBy, sort_order: sortOrder } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
   const [page, setPage] = useState(0);
-  const { data, isSuccess } = useConversationListQuery({
+  const {
+    data,
+    isSuccess,
+    isError: isLoadConversationListError,
+    error: loadConversationListError,
+    isLoading: isLoadConversations,
+    isFetching: isLoadMoreConversations
+  } = useConversationListQuery({
     projectId,
     page,
     params: {
@@ -27,6 +34,13 @@ const Chat = () => {
       sort_order: sortOrder,
     }
   }, { skip: !projectId })
+  const [
+    getConversationDetail,
+    {
+      isError: isQueryDetailError,
+      error: queryDetailError,
+      isFetching: isLoadingConversation
+    }] = useLazyConversationDetailsQuery();
   const [conversations, setConversations] = useState([]);
   const conversationsRef = useRef(conversations)
   const [activeConversation, setActiveConversation] = useState({ name: '', chat_history: [], participants: [], is_private: true })
@@ -50,7 +64,13 @@ const Chat = () => {
     if (isSuccess) {
       setConversations(data?.rows || []);
     }
-  }, [data?.rows, isSuccess])
+  }, [data, data?.rows, isSuccess])
+
+  useEffect(() => {
+    if (isLoadConversationListError) {
+      toastError(buildErrorMessage(loadConversationListError));
+    }
+  }, [loadConversationListError, isLoadConversationListError, toastError])
 
   useEffect(() => {
     if (isCreateError) {
@@ -58,6 +78,11 @@ const Chat = () => {
     }
   }, [createError, isCreateError, toastError])
 
+  useEffect(() => {
+    if (isQueryDetailError) {
+      toastError(buildErrorMessage(queryDetailError));
+    }
+  }, [queryDetailError, isQueryDetailError, toastError])
 
   const onChangeConversation = useCallback(
     (newConversation) => {
@@ -132,7 +157,10 @@ const Chat = () => {
         name: activeConversation.name,
         projectId,
       })
-      setActiveConversation(result.data);
+      setActiveConversation({
+        ...activeConversation,
+        ...result.data,
+      });
       setConversations((prev) => {
         const sortedConversations = stableSort([...prev, activeConversation], (first, second) => {
           return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
@@ -157,6 +185,7 @@ const Chat = () => {
     onSelectActiveParticipant: setActiveParticipant,
     setIsStreaming,
     onCreateConversation,
+    isLoadingConversation,
   }), [
     activeConversation,
     activeParticipant,
@@ -164,7 +193,8 @@ const Chat = () => {
     onClearActiveParticipant,
     setChatHistory,
     onChangeConversation,
-    onCreateConversation
+    onCreateConversation,
+    isLoadingConversation
   ]);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
   const [collapsedParticipants, setCollapsedParticipants] = useState(false);
@@ -180,16 +210,23 @@ const Chat = () => {
   const boxRef = useRef();
 
   const onSelectConversation = useCallback(
-    (conversation) => {
+    async (conversation) => {
       if (isCreatingConversation) {
         resetCreateFlag();
       }
+      const result = await getConversationDetail({
+        projectId,
+        id: conversation.id
+      })
       if (activeConversation?.id !== conversation.id) {
-        setActiveConversation(conversation);
+        setActiveConversation({
+          ...conversation,
+          ...result.data
+        });
         setActiveParticipant(null)
       }
     },
-    [activeConversation?.id, isCreatingConversation, resetCreateFlag],
+    [activeConversation?.id, getConversationDetail, isCreatingConversation, projectId, resetCreateFlag],
   )
 
   const onSelectParticipant = useCallback(
@@ -349,6 +386,8 @@ const Chat = () => {
           }
         }}>
           <Conversations
+            isLoadConversations={isLoadConversations}
+            isLoadMoreConversations={isLoadMoreConversations}
             selectedConversationId={activeConversation?.id}
             conversations={conversations}
             onSelectConversation={onSelectConversation}

@@ -104,6 +104,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     onSelectActiveParticipant,
     setIsStreaming,
     onCreateConversation,
+    isLoadingConversation,
   } = props
   const projectId = useSelectedProjectId();
   const [askAlita, { isLoading, data, error, reset }] = useAskAlitaMutation();
@@ -561,8 +562,8 @@ const ChatBox = forwardRef((props, boxRef) => {
           <ChatInput
             ref={chatInput}
             onSend={USE_STREAM ? onPredictStream : onClickSend}
-            isLoading={isLoading || isStreaming}
-            disabledSend={isLoading || isStreaming || isProcessingSymbols || (!activeConversation?.id && !isCreatingConversation)}
+            isLoading={isLoadingConversation || isLoading || isStreaming}
+            disabledSend={isLoadingConversation || isLoading || isStreaming || isProcessingSymbols || (!activeConversation?.id && !isCreatingConversation)}
             onNormalKeyDown={onKeyDown}
             onEnterDownHandler={onEnterDownHandler}
             disabledInput={!activeConversation?.id && !isCreatingConversation}

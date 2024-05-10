@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Skeleton, Typography } from '@mui/material';
 import ConversationItem from './ConverstionItem';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
@@ -16,6 +16,8 @@ const Conversations = ({
   onEditConversation,
   onDeleteConversation,
   onLoadMore,
+  isLoadConversations,
+  isLoadMoreConversations
 }) => {
   const { isSmallWindow } = useIsSmallWindow();
   const theme = useTheme();
@@ -70,36 +72,50 @@ const Conversations = ({
           </Box>
         }
       </Box>
-      <Box
-        ref={listRef}
-        sx={{
-          marginTop: '8px',
-          gap: '8px',
-          display: collapsed ? 'none' : 'flex',
-          flexDirection: 'column',
-          overflowY: 'scroll',
-          maxHeight: `calc(100% - 40px)`,
-          paddingBottom: '32px'
-        }} >
-        {
-          conversations.map((conversation) => (
-            <ConversationItem
-              isActive={selectedConversationId === conversation.id}
-              key={conversation.id}
-              conversation={conversation}
-              onSelectConversation={onSelectConversation}
-              collapsed={collapsed && !isSmallWindow}
-              onEdit={onEditConversation}
-              onDelete={onDeleteConversation}
-            />
-          ))
-        }
-        {
-          !conversations.length && <Typography variant='bodyMedium' color='text.button.disabled'>
-            Still no conversations created
-          </Typography>
-        }
-      </Box>
+      {
+        isLoadConversations ?
+          Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton key={index} animation="wave" variant="rectangular" width='100%' height='74px' sx={{ marginBottom: '8px' }} />
+          )) :
+          <Box
+            ref={listRef}
+            sx={{
+              marginTop: '8px',
+              gap: '8px',
+              display: collapsed ? 'none' : 'flex',
+              flexDirection: 'column',
+              overflowY: 'scroll',
+              maxHeight: `calc(100% - 40px)`,
+              paddingBottom: '32px'
+            }} >
+            {
+              conversations.map((conversation) => (
+                <ConversationItem
+                  isActive={selectedConversationId === conversation.id}
+                  key={conversation.id}
+                  conversation={conversation}
+                  onSelectConversation={onSelectConversation}
+                  collapsed={collapsed && !isSmallWindow}
+                  onEdit={onEditConversation}
+                  onDelete={onDeleteConversation}
+                />
+              ))
+            }
+            {
+              !conversations.length && <Typography variant='bodyMedium' color='text.button.disabled'>
+                Still no conversations created
+              </Typography>
+            }
+            {
+              isLoadMoreConversations &&
+              Array.from({ length: 4 }).map((_, index) => (
+                <Box sx={{ marginBottom: '8px', minHeight: '74px', width: '100%' }}  key={index} >
+                  <Skeleton animation="wave" variant="rectangular" width='100%' height='74px'/>
+                </Box>
+              ))
+            }
+          </Box>
+      }
       <Box sx={{ width: '100%', height: '40px', position: 'absolute', bottom: '0px', left: '0px', background: theme.palette.background.conversationBottomCover }} />
     </Box>
 

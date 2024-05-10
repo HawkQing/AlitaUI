@@ -10,7 +10,7 @@ import ParticipantsDropdown from './ParticipantsDropdown';
 const getTypes = (participants) => {
   const types = []
   participants.forEach(participant => {
-    if (!types.includes(participant.type)) {
+    if (!types.includes(participant.type) && participant.type) {
       types.push(participant.type)
     }
   })

@@ -672,10 +672,10 @@ export const ChatParticipantType = {
 }
 
 export const ChatParticipantTypeLabel = {
-  applications: 'Applications',
-  datasources: 'Datasources',
-  models: 'Models',
-  prompts: 'Prompts',
+  application: 'Applications',
+  datasource: 'Datasources',
+  model: 'Models',
+  prompt: 'Prompts',
 }
 
 

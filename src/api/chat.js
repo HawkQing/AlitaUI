@@ -25,7 +25,10 @@ export const apiSlice = alitaApi.enhanceEndpoints({
       }),
       providesTags: [TAG_TYPE_CONVERSATIONS],
       transformResponse: (response, meta, args) => {
-        return {
+        return Array.isArray(response) ? {
+          rows: [...response],
+          isLoadMore: args.page > 0,
+        }: {
           ...response,
           isLoadMore: args.page > 0,
         };
@@ -43,11 +46,11 @@ export const apiSlice = alitaApi.enhanceEndpoints({
       // merge new page data into existing cache
       merge: (currentCache, newItems) => {
         if (newItems.isLoadMore) {
-          currentCache.rows.push(...newItems.rows);
+          currentCache.rows.push(...(newItems.rows ? newItems.rows : newItems));
         } else {
           // isLoadMore means whether it's starting to fetch page 0, 
           // clear cache to avoid duplicate records
-          currentCache.rows = newItems.rows;
+          currentCache.rows = newItems.rows ? newItems.rows : newItems;
           currentCache.total = newItems.total;
         }
       },

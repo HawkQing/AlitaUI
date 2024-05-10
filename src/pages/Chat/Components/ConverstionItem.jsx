@@ -13,7 +13,7 @@ import ExportIcon from '@/components/Icons/ExportIcon';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 
 const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = false, onDelete, onExport, onEdit }) => {
-  const { name, participants, is_private, chat_history = [] } = conversation
+  const { name, participants_count, is_private, chat_history = [] } = conversation
   const [conversationName, setConversationName] = useState(name)
   const [isHovering, setIsHovering] = useState(false)
   const theme = useTheme();
@@ -193,7 +193,7 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
           <UsersIcon />
           <Typography>
-            {participants.length}
+            {participants_count}
           </Typography>
         </Box>
       </Box>
