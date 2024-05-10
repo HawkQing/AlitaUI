@@ -18,8 +18,12 @@ import { useLikeDataSourceCard } from '@/components/useCardLike';
 import StarActiveIcon from '@/components/Icons/StarActiveIcon';
 import StarIcon from '@/components/Icons/StarIcon';
 import { Typography } from '@mui/material';
+import BookmarkIcon from '@/components/Icons/BookmarkIcon';
+import AddToCollectionDialog from '@/pages/Prompts/Components/AddToCollectionDialog';
 
-export default function ApplicationDetailToolbar({ name, versions, id, is_liked, likes }) {
+const ADD_TO_COLLECTION_API_IS_READY = false
+
+export default function ApplicationDetailToolbar({ name, versions, id, owner_id, is_liked, likes }) {
   const [openAlert, setOpenAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('Warning');
   const [alertContent, setAlertContent] = useState('');
@@ -41,7 +45,12 @@ export default function ApplicationDetailToolbar({ name, versions, id, is_liked,
     }
   }, [isError, isSuccess, navigate, reset, setBlockNav]);
 
-  const { ToastComponent: Toast, toastInfo, toastError } = useToast({onCloseToast});
+  const { ToastComponent: Toast, toastInfo, toastError } = useToast({ onCloseToast });
+
+  const [openDialog, setOpenDialog] = useState(false);
+  const onBookMark = useCallback(() => {
+    setOpenDialog(true);
+  }, [setOpenDialog]);
 
   const onDelete = useCallback(() => {
     setOpenAlert(true);
@@ -79,6 +88,27 @@ export default function ApplicationDetailToolbar({ name, versions, id, is_liked,
     }
   }, [error, isError, isSuccess, reset, toastError, toastInfo]);
 
+  const {
+    fetchCollectionParams,
+    disableFetchingCollectionCondition,
+    patchBody,
+    fieldForAlreadyAdded } = useMemo(() => {
+      return {
+        fetchCollectionParams: {
+          application_id: id,
+          application_owner_id: owner_id,
+        },
+        disableFetchingCollectionCondition: false,
+        patchBody: {
+          application: {
+            id,
+            owner_id,
+          }
+        },
+        fieldForAlreadyAdded: 'includes_application'
+      }
+    }, [id, owner_id])
+
   return <>
     <HeaderContainer >
       {
@@ -99,6 +129,28 @@ export default function ApplicationDetailToolbar({ name, versions, id, is_liked,
         })
       }
       {viewMode === ViewMode.Public && <HeaderItemDivider />}
+      {canDelete &&
+        <Tooltip title='Delete application' placement='top'>
+          <IconButton
+            aria-label='delete data source'
+            onClick={onDelete}
+            disabled={isLoading}
+          >
+            <DeleteIcon sx={{ fontSize: '1rem' }} fill='white' />
+            {isLoading && <StyledCircleProgress size={16} />}
+          </IconButton>
+        </Tooltip>
+      }
+      {ADD_TO_COLLECTION_API_IS_READY &&
+        <Tooltip title="Add to collection" placement="top">
+          <IconButton
+            aria-label='Add to collection'
+            onClick={onBookMark}
+          >
+            <BookmarkIcon sx={{ fontSize: '1rem' }} fill='white' />
+          </IconButton>
+        </Tooltip>
+      }
       {viewMode === ViewMode.Public &&
         <LongIconButton
           aria-label='Add to collection'
@@ -117,19 +169,15 @@ export default function ApplicationDetailToolbar({ name, versions, id, is_liked,
           </Typography>
           {isLiking && <StyledCircleProgress size={20} />}
         </LongIconButton>}
-      {canDelete &&
-        <Tooltip title='Delete application' placement='top'>
-          <IconButton
-            aria-label='delete data source'
-            onClick={onDelete}
-            disabled={isLoading}
-          >
-            <DeleteIcon sx={{ fontSize: '1rem' }} fill='white' />
-            {isLoading && <StyledCircleProgress size={16} />}
-          </IconButton>
-        </Tooltip>
-      }
     </HeaderContainer>
+    <AddToCollectionDialog
+      open={openDialog}
+      setOpen={setOpenDialog}
+      fetchCollectionParams={fetchCollectionParams}
+      disableFetchingCollectionCondition={disableFetchingCollectionCondition}
+      patchBody={patchBody}
+      fieldForAlreadyAdded={fieldForAlreadyAdded}
+    />
     <AlertDialog
       title={alertTitle}
       alertContent={alertContent}

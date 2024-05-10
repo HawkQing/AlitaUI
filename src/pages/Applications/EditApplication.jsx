@@ -101,6 +101,7 @@ const EditApplication = () => {
                 versions={initialValues?.version_details ? [initialValues?.version_details] : []}
                 id={initialValues?.id}
                 is_liked={initialValues?.is_liked}
+                owner_id={initialValues?.owner_id}
                 likes={initialValues?.likes || 0}
               />,
               content:
