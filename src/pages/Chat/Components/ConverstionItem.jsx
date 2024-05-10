@@ -13,7 +13,7 @@ import ExportIcon from '@/components/Icons/ExportIcon';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 
 const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = false, onDelete, onExport, onEdit }) => {
-  const { name, participants, is_public, chat_history = [] } = conversation
+  const { name, participants_count, is_private, chat_history = [] } = conversation
   const [conversationName, setConversationName] = useState(name)
   const [isHovering, setIsHovering] = useState(false)
   const theme = useTheme();
@@ -36,10 +36,10 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
   }, [])
 
   const handleMakePublic = useCallback(() => {
-    if (!is_public) {
-      onEdit({ ...conversation, is_public: true })
+    if (is_private) {
+      onEdit({ ...conversation, is_private: false })
     }
-  }, [conversation, is_public, onEdit])
+  }, [conversation, is_private, onEdit])
 
   const menuItems = useMemo(() => {
     const items = [
@@ -85,8 +85,8 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
         onConfirm: handleMakePublic
       }
     ]
-    return is_public ? items.filter(item => item.label !== 'Make public') : items;
-  }, [handleDelete, handleEdit, onExport, theme.palette.background.button.primary.default, theme.palette.text.button.primary, handleMakePublic, is_public]);
+    return !is_private ? items.filter(item => item.label !== 'Make public') : items;
+  }, [handleDelete, handleEdit, onExport, theme.palette.background.button.primary.default, theme.palette.text.button.primary, handleMakePublic, is_private]);
 
   const onMouseEnter = useCallback(
     () => {
@@ -174,7 +174,7 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
       onMouseLeave={onMouseLeave}
     >
       <Box sx={{ width: '16px' }}>
-        <StatusDot size='10px' status={is_public ? PromptStatus.Published : PromptStatus.Draft} />
+        <StatusDot size='10px' status={!is_private ? PromptStatus.Published : PromptStatus.Draft} />
       </Box>
       <Box sx={{ width: mainBodyWidth }}>
         <Box sx={{ width: '100%', overflow: 'hidden' }}>
@@ -193,7 +193,7 @@ const ConversationItem = ({ conversation = {}, onSelectConversation, isActive = 
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
           <UsersIcon />
           <Typography>
-            {participants.length}
+            {participants_count}
           </Typography>
         </Box>
       </Box>

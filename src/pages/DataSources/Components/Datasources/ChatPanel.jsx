@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { ROLES, sioEvents, SocketMessageType } from '@/common/constants';
+import { ChatParticipantType, ROLES, sioEvents, SocketMessageType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
 import AIAnswer from '@/components/ChatBox/AIAnswer';
@@ -60,14 +60,11 @@ const ChatPanel = ({
   const [toastMessage, setToastMessage] = useState('');
   const [toastSeverity, setToastSeverity] = useState('info')
 
-  const [isLoading, setIsLoading] = useState(false);
   const chatInput = useRef(null);
   const { isSmallWindow } = useIsSmallWindow();
   const messagesEndRef = useRef();
   const listRefs = useRef([]);
   const chatHistoryRef = useRef(chatHistory);
-
-
 
   const {
     openAlert,
@@ -94,6 +91,7 @@ const ChatPanel = ({
         role: ROLES.Assistant,
         content: '',
         isLoading: false,
+        participant: { type: ChatParticipantType.Datasources }
       }
     } else {
       msg = chatHistoryRef.current[msgIdx]
@@ -107,9 +105,10 @@ const ChatPanel = ({
   }, [])
 
   const handleSocketEvent = useCallback(async message => {
-    const { stream_id, type, response_metadata } = message
+    const { stream_id, message_id, type, response_metadata } = message
+    const { task_id } = message.content instanceof Object ? message.content : {}
 
-    const [msgIndex, msg] = getMessage(stream_id)
+    const [msgIndex, msg] = getMessage(stream_id || message_id)
 
     const scrollToMessageBottom = () => {
       if (sessionStorage.getItem(AUTO_SCROLL_KEY) === 'true') {
@@ -130,14 +129,13 @@ const ChatPanel = ({
       case SocketMessageType.StartTask:
         msg.content = ''
         msg.isLoading = true
-        msg.isStreaming = false
+        msg.isStreaming = true
         msg.references = []
+        msg.task_id = task_id
         break
       case SocketMessageType.Chunk:
         msg.content += message.content
         msg.isLoading = false
-        msg.isStreaming = true
-        setIsLoading(false)
         setTimeout(scrollToMessageBottom, 0);
         if (response_metadata?.finish_reason) {
           msg.isStreaming = false
@@ -146,14 +144,12 @@ const ChatPanel = ({
       case SocketMessageType.References:
         msg.references = message.references
         msg.isLoading = false
-        msg.isStreaming = true
         setTimeout(scrollToMessageBottom, 0);
         break
       case SocketMessageType.Error:
         setShowToast(true);
         setToastMessage(buildErrorMessage({ data: message.content || [] }));
         setToastSeverity('error');
-        setIsLoading(false)
         msg.isStreaming = false
         return
       default:
@@ -185,13 +181,23 @@ const ChatPanel = ({
   const {
     isStreaming,
     onStopAll,
-    onStopStreaming
+    onStopStreaming,
+    isStopError,
+    stopError
   } = useStopStreaming({
     chatHistoryRef,
     chatHistory,
     setChatHistory,
     manualEmit
   });
+
+  useEffect(() => {
+    if (isStopError) {
+      setToastMessage(buildErrorMessage(stopError));
+      setToastSeverity('error');
+      setShowToast(true);
+    }
+  }, [isStopError, stopError])
 
   const onCopyToClipboard = useCallback(
     (id) => async () => {
@@ -208,7 +214,6 @@ const ChatPanel = ({
 
   const onPredict = useCallback(async question => {
     setTimeout(scrollToMessageListEnd, 0);
-    setIsLoading(true);
     setChatHistory((prevMessages) => {
       return [...prevMessages, {
         id: uuidv4(),
@@ -232,16 +237,22 @@ const ChatPanel = ({
   ])
 
   const onRegenerateAnswer = useCallback(id => async () => {
-    setIsLoading(true);
     chatInput.current?.reset();
     const questionIndex = chatHistory.findIndex(item => item.id === id) - 1;
     const theQuestion = chatHistory[questionIndex].content;
     const leftChatHistory = chatHistory.slice(0, questionIndex);
     const payload = generateDatasourceChatPayload(theQuestion, context, leftChatHistory, chatSettings)
-
+    setChatHistory((prevMessages) => {
+      return prevMessages.map(
+        message => message.id !== id ?
+          message
+          :
+          ({ ...message, content: '', task_id: undefined }));
+    });
     emit({ ...payload, project_id: currentProjectId, version_id: versionId, message_id: id })
   }, [
     chatHistory,
+    setChatHistory,
     context,
     chatSettings,
     currentProjectId,
@@ -275,7 +286,7 @@ const ChatPanel = ({
             </ActionButton>}
           <ActionButton
             aria-label="clear the chat"
-            disabled={isLoading}
+            disabled={isStreaming}
             onClick={onDeleteAll}
             sx={{ height: '28px', width: '28px' }}
           >
@@ -369,11 +380,11 @@ const ChatPanel = ({
                         references={message.references}
                         isLoading={Boolean(message.isLoading)}
                         isStreaming={message.isStreaming}
-                        onStop={onStopStreaming(message.id)}
+                        onStop={onStopStreaming(message)}
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                         onRegenerate={onRegenerateAnswer(message.id)}
-                        shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
+                        shouldDisableRegenerate={isStreaming || Boolean(message.isLoading)}
                       />
                     default:
                       // eslint-disable-next-line no-console
@@ -387,8 +398,8 @@ const ChatPanel = ({
             <ChatInput
               ref={chatInput}
               onSend={onPredict}
-              isLoading={isLoading}
-              disabledSend={isLoading || !chatSettings?.chat_settings_ai?.model_name || !chatSettings?.chat_settings_embedding?.model_name}
+              isLoading={isStreaming}
+              disabledSend={isStreaming || !chatSettings?.chat_settings_ai?.model_name || !chatSettings?.chat_settings_embedding?.model_name}
               shouldHandleEnter
             />
           </ChatBodyContainer>

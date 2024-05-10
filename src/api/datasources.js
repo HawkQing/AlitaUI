@@ -261,7 +261,18 @@ export const apiSlice = alitaApi.enhanceEndpoints({
         });
       }
     }),
-
+    stopDatasourceTask: build.mutation({
+      query: ({ projectId, task_id }) => {
+        return ({
+          url: apiSlicePath + '/task/prompt_lib/' + projectId + '/' + task_id,
+          method: 'DELETE',
+        });
+      },
+      invalidatesTags: (result, error) => {
+        if (error) return []
+        return []
+      }
+    }),
     datasetUpdate: build.mutation({
       query: ({ projectId, datasetId, ...body }) => {
         return ({
@@ -339,5 +350,6 @@ export const {
   useUnpublishDatasourceMutation,
   useLikeDataSourceMutation,
   useUnlikeDataSourceMutation,
+  useStopDatasourceTaskMutation,
 } = apiSlice
 

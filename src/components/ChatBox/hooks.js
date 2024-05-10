@@ -9,8 +9,10 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUTO_SCROLL_KEY } from './AutoScrollToggle';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
-import { useIsFromChat } from '@/pages/hooks';
+import { useIsFromChat, useProjectId } from '@/pages/hooks';
 import { v4 as uuidv4 } from 'uuid';
+import { useStopDatasourceTaskMutation } from '@/api/datasources';
+import { useStopApplicationTaskMutation } from '@/api/applications';
 
 export const useCtrlEnterKeyEventsHandler = ({ onShiftEnterPressed, onCtrlEnterDown, onEnterDown, onNormalKeyDown }) => {
   const keysPressed = useMemo(() => ({}), [])
@@ -60,39 +62,70 @@ export const useStopStreaming = ({
   manualEmit,
 }) => {
   const isStreaming = useMemo(() => chatHistory.some(msg => msg.isStreaming), [chatHistory]);
-
+  const [stopDatasourceTask, { isError: isStopDatasourceTaskError, error: stopDatasourceError }] = useStopDatasourceTaskMutation();
+  const [stopApplicationTask, { isError: isStopApplicationTaskError, error: stopApplicationError } ] = useStopApplicationTaskMutation();
+  const isStopError = useMemo(() => isStopApplicationTaskError || isStopDatasourceTaskError, [isStopApplicationTaskError, isStopDatasourceTaskError])
+  const stopError = useMemo(() => stopApplicationError || stopDatasourceError, [stopApplicationError, stopDatasourceError])
+  const projectId = useProjectId();
   const onStopStreaming = useCallback(
-    (streamId) => () => {
+    (message) => async () => {
+      const { id: streamId, task_id, participant } = message
+      const { type } = participant
+      if (task_id) {
+        if (type == 'datasource') {
+          await stopDatasourceTask({ projectId, task_id })
+        } else if (type === 'application') {
+          await stopApplicationTask({ projectId, task_id })
+        }
+      }
       manualEmit([streamId]);
       setTimeout(() => setChatHistory(prevState =>
         prevState.map(msg => ({
           ...msg,
-          isStreaming: msg.id === streamId ? false : msg.isStreaming
+          isStreaming: msg.id === streamId ? false : msg.isStreaming,
+          isLoading: msg.id === streamId ? false : msg.isLoading,
+          task_id: undefined,
         }))
       ), 200);
     },
-    [manualEmit, setChatHistory],
+    [manualEmit, projectId, setChatHistory, stopApplicationTask, stopDatasourceTask],
   );
 
-  const onStopAll = useCallback(() => {
-    const streamIds = chatHistoryRef.current.filter(message => message.role !== ROLES.User).map(message => message.id);
+  const onStopAll = useCallback(async () => {
+    const streamIds = chatHistoryRef.current.filter(message => message.role !== ROLES.User && message.isStreaming).map(message => message.id);
+    const messagesWithTaskId = chatHistoryRef.current.filter(message => message.role !== ROLES.User && message.task_id && message.isStreaming)
+    messagesWithTaskId.forEach(async (message) => {
+      const { participant: { type }, task_id } = message;
+      if (type == 'datasource') {
+        await stopDatasourceTask({ projectId, task_id })
+      } else if (type === 'application') {
+        await stopApplicationTask({ projectId, task_id })
+      }
+    });
     manualEmit(streamIds);
     setTimeout(() => setChatHistory(prevState =>
-      prevState.map(msg => ({ ...msg, isStreaming: false }))
+      prevState.map(msg => ({ ...msg, isStreaming: false, isLoading: false, task_id: undefined }))
     ), 200);
-  }, [chatHistoryRef, manualEmit, setChatHistory]);
+  }, [chatHistoryRef, manualEmit, projectId, setChatHistory, stopApplicationTask, stopDatasourceTask]);
 
+  const stopAllRef = useRef(onStopAll);
 
   useEffect(() => {
-    return () => {
-      onStopAll();
-    };
+    stopAllRef.current = onStopAll
   }, [onStopAll])
+  
+  useEffect(() => {
+    return () => {
+      stopAllRef.current?.();
+    };
+  }, [])
 
   return {
     isStreaming,
     onStopAll,
-    onStopStreaming
+    onStopStreaming,
+    isStopError,
+    stopError,
   }
 }
 
@@ -167,7 +200,7 @@ export const useChatSocket = ({
           id: messageId,
           role: ROLES.Assistant,
           content: '',
-          participant: activeParticipantRef ? { ...(activeParticipantRef.current || {}) } : undefined,
+          participant: activeParticipantRef.current ? { ...activeParticipantRef.current } : undefined,
           isLoading: false,
           created_at: new Date().getTime()
         }
@@ -198,8 +231,9 @@ export const useChatSocket = ({
   }, [])
   
   const handleSocketEvent = useCallback(async message => {
-    const { stream_id, type: socketMessageType, message_type, response_metadata } = message
-    const [msgIndex, msg] = getMessage(stream_id, message_type)
+    const { stream_id, message_id, type: socketMessageType, message_type, response_metadata } = message
+    const { task_id } = message.content instanceof Object ? message.content : {}
+    const [msgIndex, msg] = getMessage(stream_id || message_id, message_type)
 
     const scrollToMessageBottom = () => {
       if (sessionStorage.getItem(AUTO_SCROLL_KEY) === 'true') {
@@ -219,11 +253,11 @@ export const useChatSocket = ({
 
     switch (socketMessageType) {
       case SocketMessageType.StartTask:
-      // case 'agent_start':
         msg.isLoading = true
-        msg.isStreaming = false
+        msg.isStreaming = true
         msg.content = ''
         msg.references = []
+        msg.task_id = task_id
         if (message_type !== StreamingMessageType.Freeform) {
           msgIndex === -1 ? setChatHistory(prevState => [...prevState, msg]) : setChatHistory(prevState => {
             prevState[msgIndex] = msg
@@ -242,7 +276,6 @@ export const useChatSocket = ({
       case SocketMessageType.AgentResponse:
         msg.content += message.content
         msg.isLoading = false
-        msg.isStreaming = true
         setTimeout(scrollToMessageBottom, 0);
         if (response_metadata?.finish_reason) {
           if (message_type === StreamingMessageType.Freeform) {

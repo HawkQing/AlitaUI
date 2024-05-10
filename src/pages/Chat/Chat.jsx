@@ -5,22 +5,87 @@ import { useCallback, useState, useRef, useMemo, useEffect } from 'react';
 import { ChatBoxMode, ChatParticipantType, ChatSearchEvents, NAV_BAR_HEIGHT } from '@/common/constants';
 import ChatBox from './Components/ChatBox';
 import Participants from './Components/Participants';
-import { useIsCreatingConversation } from '../hooks';
-import { stableSort } from '@/common/utils';
+import { useIsCreatingConversation, useSelectedProjectId, useSortQueryParamsFromUrl } from '../hooks';
+import { buildErrorMessage, stableSort } from '@/common/utils';
 import ParticipantSettings from './Components/ParticipantSettings';
 import eventEmitter from '@/common/eventEmitter';
 import useResetCreateFlag from './Components/useResetCreateFlag';
 import { v4 as uuidv4 } from 'uuid';
+import { useConversationCreateMutation, useConversationListQuery, useLazyConversationDetailsQuery } from '@/api/chat';
+import useToast from '@/components/useToast';
 
 const Chat = () => {
+  const projectId = useSelectedProjectId()
+  const { ToastComponent: ApiToast, toastError } = useToast({ topPosition: '10px' });
+  const { sort_by: sortBy, sort_order: sortOrder } = useSortQueryParamsFromUrl({ defaultSortOrder: 'desc', defaultSortBy: 'created_at' })
+  const [page, setPage] = useState(0);
+  const {
+    data,
+    isSuccess,
+    isError: isLoadConversationListError,
+    error: loadConversationListError,
+    isLoading: isLoadConversations,
+    isFetching: isLoadMoreConversations
+  } = useConversationListQuery({
+    projectId,
+    page,
+    params: {
+      sort_by: sortBy,
+      sort_order: sortOrder,
+    }
+  }, { skip: !projectId })
+  const [
+    getConversationDetail,
+    {
+      isError: isQueryDetailError,
+      error: queryDetailError,
+      isFetching: isLoadingConversation
+    }] = useLazyConversationDetailsQuery();
   const [conversations, setConversations] = useState([]);
   const conversationsRef = useRef(conversations)
-  const [activeConversation, setActiveConversation] = useState({ chat_history: [], participants: [], is_public: false })
+  const [activeConversation, setActiveConversation] = useState({ name: '', chat_history: [], participants: [], is_private: true })
   const [activeParticipant, setActiveParticipant] = useState()
   const [isStreaming, setIsStreaming] = useState(false)
   const isCreatingConversation = useIsCreatingConversation();
   const [theParticipantEdited, setTheParticipantEdited] = useState()
+  const [createConversation, { isError: isCreateError, error: createError }] = useConversationCreateMutation()
   const { resetCreateFlag } = useResetCreateFlag();
+
+  const onLoadMoreConversations = useCallback(
+    () => {
+      if (data?.rows?.length && data?.total && data?.rows?.length < data?.total) {
+        setPage(prev => prev + 1)
+      }
+    },
+    [data?.rows?.length, data?.total],
+  )
+
+  useEffect(() => {
+    if (isSuccess) {
+      const sortedData = stableSort(data?.rows || [], (first, second) => {
+        return -1 * first.created_at.toLowerCase().localeCompare(second.created_at.toLowerCase());
+      });
+      setConversations(sortedData);
+    }
+  }, [data, data?.rows, isSuccess])
+
+  useEffect(() => {
+    if (isLoadConversationListError) {
+      toastError(buildErrorMessage(loadConversationListError));
+    }
+  }, [loadConversationListError, isLoadConversationListError, toastError])
+
+  useEffect(() => {
+    if (isCreateError) {
+      toastError(buildErrorMessage(createError));
+    }
+  }, [createError, isCreateError, toastError])
+
+  useEffect(() => {
+    if (isQueryDetailError) {
+      toastError(buildErrorMessage(queryDetailError));
+    }
+  }, [queryDetailError, isQueryDetailError, toastError])
 
   const onChangeConversation = useCallback(
     (newConversation) => {
@@ -40,7 +105,7 @@ const Chat = () => {
   const setChatHistory = useCallback(
     (chat_history) => {
       if (typeof chat_history === 'function') {
-        setActiveConversation(prev => ({ ...prev, chat_history: chat_history(prev.chat_history) }));
+        setActiveConversation(prev => ({ ...prev, chat_history: chat_history(prev?.chat_history || []) }));
       } else {
         setActiveConversation(prev => ({ ...prev, chat_history }));
       }
@@ -89,7 +154,16 @@ const Chat = () => {
   )
 
   const onCreateConversation = useCallback(
-    () => {
+    async () => {
+      const result = await createConversation({
+        is_private: activeConversation.is_private,
+        name: activeConversation.name,
+        projectId,
+      })
+      setActiveConversation({
+        ...activeConversation,
+        ...result.data,
+      });
       setConversations((prev) => {
         const sortedConversations = stableSort([...prev, activeConversation], (first, second) => {
           return first.name.toLowerCase().localeCompare(second.name.toLowerCase());
@@ -98,7 +172,7 @@ const Chat = () => {
       });
       resetCreateFlag();
     },
-    [activeConversation, resetCreateFlag],
+    [activeConversation, createConversation, projectId, resetCreateFlag],
   )
 
   const settings = useMemo(() => ({
@@ -114,6 +188,7 @@ const Chat = () => {
     onSelectActiveParticipant: setActiveParticipant,
     setIsStreaming,
     onCreateConversation,
+    isLoadingConversation,
   }), [
     activeConversation,
     activeParticipant,
@@ -121,7 +196,8 @@ const Chat = () => {
     onClearActiveParticipant,
     setChatHistory,
     onChangeConversation,
-    onCreateConversation
+    onCreateConversation,
+    isLoadingConversation
   ]);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
   const [collapsedParticipants, setCollapsedParticipants] = useState(false);
@@ -137,16 +213,23 @@ const Chat = () => {
   const boxRef = useRef();
 
   const onSelectConversation = useCallback(
-    (conversation) => {
+    async (conversation) => {
       if (isCreatingConversation) {
         resetCreateFlag();
       }
+      const result = await getConversationDetail({
+        projectId,
+        id: conversation.id
+      })
       if (activeConversation?.id !== conversation.id) {
-        setActiveConversation(conversation);
+        setActiveConversation({
+          ...conversation,
+          ...result.data
+        });
         setActiveParticipant(null)
       }
     },
-    [activeConversation?.id, isCreatingConversation, resetCreateFlag],
+    [activeConversation?.id, getConversationDetail, isCreatingConversation, projectId, resetCreateFlag],
   )
 
   const onSelectParticipant = useCallback(
@@ -280,7 +363,7 @@ const Chat = () => {
       const newConversation = {
         id: uuidv4(),
         name: 'New Conversation',
-        is_public: false,
+        is_private: true,
         participants: [],
         chat_history: [],
       }
@@ -306,6 +389,8 @@ const Chat = () => {
           }
         }}>
           <Conversations
+            isLoadConversations={isLoadConversations}
+            isLoadMoreConversations={isLoadMoreConversations}
             selectedConversationId={activeConversation?.id}
             conversations={conversations}
             onSelectConversation={onSelectConversation}
@@ -313,7 +398,9 @@ const Chat = () => {
             onDeleteConversation={onDeleteConversation}
             collapsed={collapsedConversations}
             onCollapsed={onConversationCollapsed}
+            onLoadMore={onLoadMoreConversations}
           />
+          <ApiToast />
         </Grid>
         <Grid item xs={12} lg={chatBoxLgGridColumns} sx={{
           height: '100%',

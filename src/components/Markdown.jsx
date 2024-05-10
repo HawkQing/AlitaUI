@@ -72,8 +72,8 @@ const Markdown = ({ children }) => {
       code={markedToken.text}
       language={markedToken.lang}
     >
-      {({ className, style, tokens, getLineProps, getTokenProps }) => (
-        <pre className={className} style={style}>
+      {({ className, style = {}, tokens, getLineProps, getTokenProps }) => (
+        <pre className={className} style={{ ...style, whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
           {tokens.map((line, i) => (
             <div key={i} {...getLineProps({ line })}>
               <span>{' '}</span>

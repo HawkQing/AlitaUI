@@ -240,6 +240,18 @@ export const apiSlice = alitaApi.enhanceEndpoints({
       },
       invalidatesTags: (result, error, arg) => [{ type: TAG_TYPE_APPLICATION_DETAILS, id: arg.id }],
     }),
+    stopApplicationTask: build.mutation({
+      query: ({ projectId, task_id }) => {
+        return ({
+          url: apiSlicePath + '/task/prompt_lib/' + projectId + '/' + task_id,
+          method: 'DELETE',
+        });
+      },
+      invalidatesTags: (result, error) => {
+        if (error) return []
+        return []
+      }
+    }),
     applicationDetails: build.query({
       query: ({ projectId, applicationId }) => {
         const url = apiSlicePath + '/application/prompt_lib/' + projectId + '/' + applicationId
@@ -326,5 +338,6 @@ export const {
   useLazyGetApplicationVersionDetailQuery,
   useSaveApplicationNewVersionMutation,
   useDeleteApplicationVersionMutation,
+  useStopApplicationTaskMutation,
 } = apiSlice
 

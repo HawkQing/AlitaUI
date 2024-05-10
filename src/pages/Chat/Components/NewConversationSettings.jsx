@@ -129,7 +129,7 @@ const NewConversationSettings = ({
   const onSwitchPublicPrivate = useCallback((event) => {
     onChangeConversation({
       ...conversation,
-      is_public: event.target.value
+      is_private: event.target.value
     })
   }, [conversation, onChangeConversation]);
 
@@ -269,11 +269,11 @@ const NewConversationSettings = ({
             aria-labelledby="private-public-radio-buttons-group-label"
             name="private-public-radio-buttons-group"
             sx={{ gap: '24px' }}
-            value={conversation?.is_public}
+            value={conversation?.is_private}
             onChange={onSwitchPublicPrivate}
           >
             <FormControlLabel
-              value={false}
+              value={true}
               control={<Radio />}
               label={
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
@@ -284,7 +284,7 @@ const NewConversationSettings = ({
                 </Box>
               } />
             <FormControlLabel
-              value={true}
+              value={false}
               control={<Radio />}
               label={
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}>

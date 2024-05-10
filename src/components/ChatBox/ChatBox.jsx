@@ -2,6 +2,7 @@
 import { useAskAlitaMutation } from '@/api/prompts';
 import {
   ChatBoxMode,
+  ChatParticipantType,
   DEFAULT_MAX_TOKENS,
   DEFAULT_TOP_P,
   PROMPT_PAYLOAD_KEY,
@@ -226,6 +227,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     isApplicationChat,
     setChatHistory,
     chatHistory,
+    activeParticipant: {
+      type: isApplicationChat ? ChatParticipantType.Applications : ChatParticipantType.Prompts
+    }
   })
 
   const {
@@ -448,13 +452,23 @@ const ChatBox = forwardRef((props, boxRef) => {
   const {
     isStreaming,
     onStopAll,
-    onStopStreaming
+    onStopStreaming,
+    isStopError,
+    stopError
   } = useStopStreaming({
     chatHistoryRef,
     chatHistory,
     setChatHistory,
     manualEmit,
   });
+
+  useEffect(() => {
+    if (isStopError) {
+      setToastMessage(buildErrorMessage(stopError));
+      setToastSeverity('error');
+      setShowToast(true);
+    }
+  }, [isStopError, stopError])
 
   const onCopyToClipboard = useCallback(
     (id) => async () => {
@@ -480,13 +494,24 @@ const ChatBox = forwardRef((props, boxRef) => {
     const questionIndex = chatHistory.findIndex(item => item.id === id) - 1;
     const theQuestion = chatHistory[questionIndex]?.content;
     const leftChatHistory = chatHistory.slice(0, questionIndex);
-
-    const payload = generateChatPayload({
+    const payload = !isApplicationChat ? generateChatPayload({
       projectId, prompt_id, context, temperature, max_tokens, top_p, top_k,
       model_name, integration_uid, variables, question: theQuestion, messages,
       chatHistory: leftChatHistory, name, stream: true, currentVersionId
+    }) : generateApplicationStreamingPayload({
+      projectId, application_id, instructions, temperature,
+      max_tokens, top_p, top_k, model_name, integration_uid,
+      variables, question: theQuestion, tools, name, currentVersionId,
+      chatHistory
     })
     payload.message_id = id
+    setChatHistory((prevMessages) => {
+      return prevMessages.map(
+        message => message.id !== id ?
+          message
+          :
+          ({ ...message, content: '', exception: undefined, task_id: undefined }));
+    });
     emit(payload)
   }, [
     chatHistory,
@@ -500,6 +525,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     top_p,
     variables,
     projectId,
+    application_id,
+    instructions,
+    tools,
+    isApplicationChat,
     emit,
     name,
     top_k,
@@ -515,17 +544,22 @@ const ChatBox = forwardRef((props, boxRef) => {
           message => message.id !== id ?
             message
             :
-            ({ ...message, content: 'regenerating...' }));
+            ({ ...message, content: 'regenerating...', exception: undefined, task_id: undefined }));
       });
       chatInput.current?.reset();
       const questionIndex = chatHistory.findIndex(item => item.id === id) - 1;
       const theQuestion = chatHistory[questionIndex]?.content;
       const leftChatHistory = chatHistory.slice(0, questionIndex);
 
-      const payload = generateChatPayload({
+      const payload = !isApplicationChat ? generateChatPayload({
         projectId, prompt_id, context, temperature, max_tokens, top_p, top_k,
         model_name, integration_uid, variables, question: theQuestion, messages,
         chatHistory: leftChatHistory, name, stream: false, currentVersionId
+      }) : generateApplicationStreamingPayload({
+        projectId, application_id, instructions, temperature,
+        max_tokens, top_p, top_k, model_name, integration_uid,
+        variables, question: theQuestion, tools, name, currentVersionId,
+        chatHistory
       })
       payload.message_id = id
       askAlita(payload);
@@ -543,6 +577,10 @@ const ChatBox = forwardRef((props, boxRef) => {
       top_p,
       variables,
       projectId,
+      application_id,
+      instructions,
+      tools,
+      isApplicationChat,
       name,
       top_k,
       currentVersionId,
@@ -674,7 +712,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                       key={message.id}
                       ref={(ref) => (listRefs.current[index] = ref)}
                       answer={message.content}
-                      onStop={onStopStreaming(message.id)}
+                      onStop={onStopStreaming(message)}
                       onCopy={onCopyToClipboard(message.id)}
                       onCopyToMessages={onCopyToMessages(message.id, ROLES.Assistant)}
                       onDelete={onDeleteAnswer(message.id)}
@@ -689,20 +727,14 @@ const ChatBox = forwardRef((props, boxRef) => {
                         key={message.id}
                         ref={(ref) => (listRefs.current[index] = ref)}
                         answer={message.content}
-                        onStop={onStopStreaming(message.id)}
+                        onStop={onStopStreaming(message)}
                         onCopy={onCopyToClipboard(message.id)}
                         onDelete={onDeleteAnswer(message.id)}
                         onRegenerate={USE_STREAM ? onRegenerateAnswerStream(message.id) : onRegenerateAnswer(message.id)}
                         shouldDisableRegenerate={isLoading || isStreaming || Boolean(message.isLoading)}
                         references={message.references}
                         exception={message.exception}
-                        toolActions={message.toolActions || [
-                          // { id: 1, name: 'Tool action 1', content: 'action content', status: ToolActionStatus.complete },
-                          // { id: 2, name: 'Tool action 2', content: 'action content', status: ToolActionStatus.error },
-                          // { id: 3, name: 'Tool action 3', content: 'Some description about the action', status: ToolActionStatus.actionRequired, query: '{"query": "2 + 3 = ?"}' },
-                          // { id: 4, name: 'Tool action 4', content: 'action content', status: ToolActionStatus.processing },
-                          // { id: 5, name: 'Tool action 5', content: 'action content', status: ToolActionStatus.cancelled },
-                        ]}
+                        toolActions={message.toolActions || []}
                         isLoading={Boolean(message.isLoading)}
                         isStreaming={message.isStreaming}
                         created_at={message.created_at}
