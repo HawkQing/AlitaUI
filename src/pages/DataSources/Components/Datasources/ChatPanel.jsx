@@ -220,7 +220,6 @@ const ChatPanel = ({
         role: ROLES.User,
         name,
         content: question,
-        isStreaming: true,
       }]
     })
     const payload = generateDatasourceChatPayload(question, context, chatHistory, chatSettings)
