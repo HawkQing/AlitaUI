@@ -62,7 +62,10 @@ const Chat = () => {
 
   useEffect(() => {
     if (isSuccess) {
-      setConversations(data?.rows || []);
+      const sortedData = stableSort(data?.rows || [], (first, second) => {
+        return -1 * first.created_at.toLowerCase().localeCompare(second.created_at.toLowerCase());
+      });
+      setConversations(sortedData);
     }
   }, [data, data?.rows, isSuccess])
 
