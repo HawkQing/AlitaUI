@@ -130,6 +130,18 @@ export default function DataSourceDetailToolbar({ name, versions, id, owner_id, 
         })
       }
       {(viewMode === ViewMode.Public || projectId != personal_project_id) && <HeaderItemDivider />}
+      {canDelete &&
+        <Tooltip title='Delete datasource' placement='top'>
+          <IconButton
+            aria-label='delete data source'
+            onClick={onDelete}
+            disabled={isLoading}
+          >
+            <DeleteIcon sx={{ fontSize: '1rem' }} fill='white' />
+            {isLoading && <StyledCircleProgress size={16} />}
+          </IconButton>
+        </Tooltip>
+      }
       {viewMode === ViewMode.Public && ADD_TO_COLLECTION_API_IS_READY && 
         <Tooltip title="Add to collection" placement="top">
           <IconButton
@@ -158,18 +170,6 @@ export default function DataSourceDetailToolbar({ name, versions, id, owner_id, 
           </Typography>
           {isLiking && <StyledCircleProgress size={20} />}
         </LongIconButton>}
-      {canDelete &&
-        <Tooltip title='Delete datasource' placement='top'>
-          <IconButton
-            aria-label='delete data source'
-            onClick={onDelete}
-            disabled={isLoading}
-          >
-            <DeleteIcon sx={{ fontSize: '1rem' }} fill='white' />
-            {isLoading && <StyledCircleProgress size={16} />}
-          </IconButton>
-        </Tooltip>
-      }
     </HeaderContainer>
     <AddToCollectionDialog
       open={openDialog}
