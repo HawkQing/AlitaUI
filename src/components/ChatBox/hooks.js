@@ -108,11 +108,17 @@ export const useStopStreaming = ({
     ), 200);
   }, [chatHistoryRef, manualEmit, projectId, setChatHistory, stopApplicationTask, stopDatasourceTask]);
 
+  const stopAllRef = useRef(onStopAll);
+
+  useEffect(() => {
+    stopAllRef.current = onStopAll
+  }, [onStopAll])
+  
   useEffect(() => {
     return () => {
-      onStopAll();
+      stopAllRef.current?.();
     };
-  }, [onStopAll])
+  }, [])
 
   return {
     isStreaming,
