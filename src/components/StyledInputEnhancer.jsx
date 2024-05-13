@@ -3,7 +3,7 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { Box, TextField, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useAutoBlur from '@/components/useAutoBlur';
 
 export const StyledInput = styled(TextField)(({ theme }) => ({
@@ -126,6 +126,13 @@ export default function StyledInputEnhancer(props) {
     ...leftProps
   } = props;
   const [rows, setRows] = useState(collapseContent ? minRows : maxRows);
+  const inputRef = useRef();
+  // for fixing cursor jump to end issue
+  const [cursorPos, setCursorPos] = useState(0)
+  useEffect(() => {
+    inputRef.current.selectionStart = cursorPos;
+    inputRef.current.selectionEnd = cursorPos;
+  }, [cursorPos])
 
   const switchRows = useCallback(() => {
     setRows((prev) => (prev === maxRows ? minRows : maxRows));
@@ -143,6 +150,10 @@ export default function StyledInputEnhancer(props) {
       [onBlur]
     ),
     onChange: useCallback((event) => {
+      // for fixing cursor jump to end issue
+      const currentCursorPos = inputRef.current.selectionStart;
+      setCursorPos(currentCursorPos);
+
       if (onChange)
         onChange(event);
       autoBlur();
@@ -172,6 +183,9 @@ export default function StyledInputEnhancer(props) {
   return (
     <Box position='relative' marginBottom='8px' {...containerProps}>
       <StyledInput
+        //for fixing cursor jump to end issue
+        inputRef={inputRef}
+        
         variant='standard'
         fullWidth
         sx={{
